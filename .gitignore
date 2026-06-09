@@ -1,0 +1,39 @@
+.env
+*.local
+tmp/
+*.diff
+*.log
+
+# Caches
+.gocache/
+go-cache/
+gocache/
+tmp_gocache/
+scratch/
+.antigravitycli/
+
+# Build and Test binaries
+bin/
+*.test
+*.exe
+
+# Compressed Archives
+*.zip
+*.tgz
+*.tar.gz
+
+# Data directories (User information, board posts, and room assets)
+player/
+board/
+rooms/
+room/
+post/
+log/
+
+# Internal reports and porting docs
+PACKAGE_*_REPORT.md
+WAVE_6PACKAGES_SUMMARY.md
+PORTING-GAPS.md
+PORTING_ANALYSIS.md
+
+
