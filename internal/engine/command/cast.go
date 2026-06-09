@@ -438,6 +438,16 @@ var supportedCastSpells = []castSpell{
 	{power: magicPowerCharm, name: "이혼대법", cost: 15},
 	{power: magicPowerCurse, name: "저주", cost: 25},
 	{power: magicPowerRmGong, name: "공포해소", cost: 100},
+	// Tier 3, 4, and 5 offensive spells
+	{power: magicPowerEngulf, name: "낙석", cost: 10},
+	{power: magicPowerBurstFlame, name: "화풍술", cost: 10},
+	{power: magicPowerSteamBlast, name: "화룡대천", cost: 10},
+	{power: magicPowerShatterStone, name: "토합술", cost: 15},
+	{power: magicPowerImmolate, name: "주작현", cost: 15},
+	{power: magicPowerBloodBoil, name: "열사천", cost: 15},
+	{power: magicPowerThunderbolt, name: "파천풍", cost: 25},
+	{power: magicPowerEarthquake, name: "지옥패", cost: 25},
+	{power: magicPowerFlameFill, name: "태양안", cost: 25},
 	// High tier offensive spells from C ospell (level 6/7) - exact MP from C magic tables
 	{power: magicPowerSisix1, name: "천지진동", cost: 35},
 	{power: magicPowerSisix2, name: "천상풍", cost: 35},
