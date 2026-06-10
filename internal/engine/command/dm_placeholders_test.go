@@ -1,6 +1,7 @@
 package command
 
 import (
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
