@@ -22,6 +22,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 env:
   GO_VERSION: "1.25.0"
@@ -69,18 +70,15 @@ jobs:
         run: |
           go test ./... -timeout 300s -v > test.log 2>&1 || (cat test.log && exit 1)
 
-      - name: Upload test log to transfer.sh
+      - name: Create Issue on Failure
         if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          curl --upload-file test.log "https://transfer.sh/test.log" > url.txt
-          echo "Test log uploaded to: $(cat url.txt)"
-          # Also commit to debug-log just in case
-          git config --global user.name "GitHub Action"
-          git config --global user.email "action@github.com"
-          git checkout -B debug-log
-          git add test.log url.txt || true
-          git commit -m "Upload test log from CI failure" || true
-          git push -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/dh-kam/muhan.git debug-log
+          echo '```' > body.txt
+          tail -n 100 test.log >> body.txt
+          echo '```' >> body.txt
+          gh issue create --title "CI Test Failure Log" --body-file body.txt || true
 
   # ──────────────────────────────────────────────────────────
   # 빌드 검증
