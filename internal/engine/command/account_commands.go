@@ -119,6 +119,10 @@ func (s *passwdState) currentPassword(ctx *Context, line string) (Status, error)
 		ctx.WriteString("암호가 변경되지 않았습니다.\n")
 		return StatusDefault, nil
 	}
+	// Re-hash legacy DES password to bcrypt on successful verification.
+	if !legacycrypt.IsBcryptHash(s.hash) {
+		accountRehashBcrypt(s.world, s.sink, s.creature.ID, s.playerID, line)
+	}
 	ctx.WriteString("\n새 암호를 입력하십시요: ")
 	if !SetPendingLineHandler(ctx, s.newPasswordLine) {
 		return StatusDefault, fmt.Errorf("암호 변경 상태를 계속할 수 없습니다")
@@ -157,7 +161,7 @@ func (s *passwdState) confirmPasswordLine(ctx *Context, line string) (Status, er
 		return StatusDefault, nil
 	}
 
-	hash, err := legacycrypt.Hash(line)
+	hash, err := legacycrypt.HashBcrypt(line)
 	if err != nil {
 		ctx.WriteString("암호 변경 기능을 사용할 수 없습니다.\n")
 		ctx.WriteString("암호가 변경되지 않았습니다.\n")
@@ -551,7 +555,12 @@ func NewPlySuicideHandler(world AccountWorld, options ...SuicideOption) Handler 
 			sink:       cfg.sink,
 			aliasStore: cfg.aliasStore,
 			playerID:   player.ID,
+			creatureID: creature.ID,
 			hash:       hash,
+		}
+		// Pass world for bcrypt re-hash if it supports SetCreatureProperty.
+		if pw, ok := world.(PasswordWorld); ok {
+			state.world = pw
 		}
 		ctx.WriteString("당신에 관한 데이터를 완전히 삭제합니다.\n")
 		ctx.WriteString("당신의 현재 암호를 넣어주십시요 : ")
@@ -563,9 +572,11 @@ func NewPlySuicideHandler(world AccountWorld, options ...SuicideOption) Handler 
 }
 
 type suicideState struct {
+	world      PasswordWorld
 	sink       SuicideSink
 	aliasStore AliasStore
 	playerID   model.PlayerID
+	creatureID model.CreatureID
 	hash       string
 }
 
@@ -574,6 +585,10 @@ func (s *suicideState) passwordLine(ctx *Context, line string) (Status, error) {
 		ClearPendingLineHandler(ctx)
 		ctx.WriteString("암호가 틀립니다.\n삭제되지 않았습니다.")
 		return StatusDefault, nil
+	}
+	// Re-hash legacy DES password to bcrypt on successful verification.
+	if !legacycrypt.IsBcryptHash(s.hash) {
+		accountRehashBcrypt(s.world, nil, s.creatureID, s.playerID, line)
 	}
 	ctx.WriteString("찐짜로? (찐짜로/뻥으로)")
 	if !SetPendingLineHandler(ctx, s.confirmLine) {
@@ -702,4 +717,26 @@ func cloneAliases(aliases []PlayerAlias) []PlayerAlias {
 		return nil
 	}
 	return slices.Clone(aliases)
+}
+
+// accountRehashBcrypt transparently upgrades a legacy DES password hash to
+// bcrypt. It is called after a successful DES password verification. Errors
+// are silently ignored so that a re-hash failure never blocks the user.
+func accountRehashBcrypt(world PasswordWorld, sink PasswordSink, creatureID model.CreatureID, playerID model.PlayerID, password string) {
+	if world == nil {
+		return
+	}
+	newHash, err := legacycrypt.HashBcrypt(password)
+	if err != nil {
+		return
+	}
+	if _, err := world.SetCreatureProperty(creatureID, legacyPasswordHashProperty, newHash); err != nil {
+		return
+	}
+	if sink != nil {
+		// Best-effort save through the provided sink; ignore errors.
+		_ = sink.SavePassword(nil, playerID, newHash)
+	} else {
+		accountQueuePlayerSave(world, playerID)
+	}
 }

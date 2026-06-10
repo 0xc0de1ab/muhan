@@ -806,12 +806,22 @@ func (m *serverLoginManager) handlePassword(id session.ID, login serverLoginStat
 		delete(m.sessions, id)
 		return loginCommand("플레이어 정보를 다시 찾을 수 없습니다.\n" + loginNamePrompt), nil
 	}
-	if legacycrypt.Verify(line, legacyPasswordHash(m.world, player)) {
+	storedHash := legacyPasswordHash(m.world, player)
+	if legacycrypt.Verify(line, storedHash) {
 		delete(m.sessions, id)
 		// C5: 로그인 성공 시 IP 실패 카운터 리셋
 		if login.remoteHost != "" {
 			delete(m.ipFailures, login.remoteHost)
 		}
+
+		// C2: bcrypt가 아니면(DES이면) re-hash 후 저장
+		if !legacycrypt.IsBcryptHash(storedHash) {
+			if newHash, err := legacycrypt.HashBcrypt(line); err == nil {
+				_, _ = m.world.SetCreatureProperty(player.CreatureID, "legacyPasswordHash", newHash)
+				_ = m.world.SavePlayer(player.ID)
+			}
+		}
+
 		// S3: 중복 로그인 확인 - 기존 세션 종료
 		m.disconnectDuplicateSession(player.ID)
 		return m.loginSuccessResult(player, login.remoteHost)
@@ -988,7 +998,7 @@ func (m *serverLoginManager) handleCreatePassword(id session.ID, login serverLog
 		m.sessions[id] = login
 		return loginCommand("입력된 암호가 너무 짧습니다.\n암호를 다시 넣으십시요(3자이상 14자이하): "), nil
 	}
-	hash, err := legacycrypt.Hash(line)
+	hash, err := legacycrypt.HashBcrypt(line)
 	if err != nil {
 		return game.UnauthenticatedLineResult{}, err
 	}

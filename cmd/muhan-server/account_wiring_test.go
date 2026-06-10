@@ -107,8 +107,12 @@ func TestServerLoopPasswdPendingConfirmDoesNotRunAfterDisconnect(t *testing.T) {
 		t.Fatal("missing player:alice after closed passwd prompt")
 	}
 	gotHash := legacyPasswordHash(inputs.world, player)
-	if gotHash != oldHash {
-		t.Fatalf("password hash changed after closed passwd prompt: got %q want %q", gotHash, oldHash)
+	// After bcrypt migration, the hash may have been upgraded from DES to
+	// bcrypt during the current-password verification step. The important
+	// invariant is that the original password ("1234") still verifies and
+	// the new password ("newpass") was never applied.
+	if !legacycrypt.Verify("1234", gotHash) {
+		t.Fatalf("original password no longer verifies after closed passwd prompt: hash %q", gotHash)
 	}
 	if legacycrypt.Verify("newpass", gotHash) {
 		t.Fatal("closed passwd prompt changed password to newpass")

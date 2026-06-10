@@ -93,5 +93,33 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
+  # ──────────────────────────────────────────────────────────
+  # 자동 백업 크론 (선택적)
+  #   docker compose --profile backup up -d backup
+  # ──────────────────────────────────────────────────────────
+  backup:
+    image: alpine:3.21
+    container_name: muhan-backup
+    profiles:
+      - backup
+    restart: unless-stopped
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        echo "0 4 * * * /scripts/backup.sh >> /var/log/muhan-backup.log 2>&1" \
+          | crontab -
+        crond -f -l 2
+    volumes:
+      - ${MUHAN_DATA_DIR:-.}:/data:ro
+      - ./scripts/backup.sh:/scripts/backup.sh:ro
+      - backup-data:/data/backups:rw
+    environment:
+      - TZ=${TZ:-Asia/Seoul}
+      - DATA_ROOT=/data
+      - BACKUP_DIR=/data/backups
+      - BACKUP_KEEP=${MUHAN_BACKUP_KEEP:-7}
+
 volumes:
   postgres-data:
+  backup-data:

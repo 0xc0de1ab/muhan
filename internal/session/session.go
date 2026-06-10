@@ -8,11 +8,15 @@ import (
 	"net"
 	"sync"
 	"sync/atomic"
+	"unicode/utf8"
 
 	"muhan/internal/protocol"
 )
 
-const DefaultReadBufferSize = 128
+const (
+	DefaultReadBufferSize = 128
+	MaxInputLineBytes    = 512
+)
 
 type Option func(*Session)
 
@@ -136,6 +140,7 @@ func (s *Session) readLoop(ctx context.Context) error {
 		if n > 0 {
 			lines := s.feedInput(buf[:n])
 			for _, line := range lines {
+				line = truncateUTF8(line, MaxInputLineBytes)
 				if !s.emit(ctx, Event{SessionID: s.id, Kind: EventLine, Line: line}) {
 					return ctx.Err()
 				}
@@ -279,4 +284,17 @@ func (e Event) Error() string {
 		return fmt.Sprintf("%s session %s", e.Kind, e.SessionID)
 	}
 	return fmt.Sprintf("%s session %s: %v", e.Kind, e.SessionID, e.Err)
+}
+
+// truncateUTF8 returns s truncated to at most maxBytes bytes, cutting at a
+// valid UTF-8 boundary so that no rune is split.
+func truncateUTF8(s string, maxBytes int) string {
+	if len(s) <= maxBytes {
+		return s
+	}
+	// Walk backwards from the cut point to find a valid UTF-8 boundary.
+	for maxBytes > 0 && !utf8.RuneStart(s[maxBytes]) {
+		maxBytes--
+	}
+	return s[:maxBytes]
 }

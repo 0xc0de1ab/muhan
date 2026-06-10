@@ -7,6 +7,9 @@ func Verify(password, stored string) bool {
 	if stored == "" {
 		return false
 	}
+	if IsBcryptHash(stored) {
+		return VerifyBcrypt(password, stored)
+	}
 	hash, err := Hash(password)
 	return err == nil && hash == stored
 }

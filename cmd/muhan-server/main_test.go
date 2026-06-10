@@ -16,6 +16,7 @@ import (
 	enginecmd "muhan/internal/engine/command"
 	"muhan/internal/engine/game"
 	"muhan/internal/persist/cbin"
+	"muhan/internal/persist/legacycrypt"
 	"muhan/internal/persist/legacykr"
 	"muhan/internal/session"
 	worldload "muhan/internal/world/load"
@@ -334,8 +335,8 @@ func TestServerLoginCreatesNewPlayerLikeLegacyCreatePly(t *testing.T) {
 			t.Fatalf("created creature stat %s = %d, want %d; stats=%+v", key, got, want, creature.Stats)
 		}
 	}
-	if got := legacyPasswordHash(inputs.world, player); got != "/H.d1bFP9CA" {
-		t.Fatalf("created password hash = %q, want legacy crypt hash for abc", got)
+	if got := legacyPasswordHash(inputs.world, player); !legacycrypt.IsBcryptHash(got) || !legacycrypt.VerifyBcrypt("abc", got) {
+		t.Fatalf("created password hash = %q, want valid bcrypt hash for abc", got)
 	}
 	room, ok := inputs.world.Room("room:00001")
 	if !ok {
@@ -395,8 +396,8 @@ func TestServerLoginCreatePasswordUsesLegacyByteLength(t *testing.T) {
 	if !ok {
 		t.Fatal("accepted create password did not create player")
 	}
-	if got := legacyPasswordHash(inputs.world, player); got != "5uvZujm4.So" {
-		t.Fatalf("created password hash = %q, want legacy EUC-KR crypt hash", got)
+	if got := legacyPasswordHash(inputs.world, player); !legacycrypt.IsBcryptHash(got) || !legacycrypt.VerifyBcrypt("가나다라마바사", got) {
+		t.Fatalf("created password hash = %q, want valid bcrypt hash for 가나다라마바사", got)
 	}
 }
 
