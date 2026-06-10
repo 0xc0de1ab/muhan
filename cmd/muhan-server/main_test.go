@@ -3738,7 +3738,7 @@ func serverTestRuntimeInputs(t *testing.T) runtimeInputs {
 		DisplayName: "DM",
 		PlayerID:    "player:dm",
 		RoomID:      "room:plaza",
-		Stats:       map[string]int{"class": 10},
+		Stats:       map[string]int{"class": 13},
 	})
 	mustAddServerTestPrototype(t, loaded, model.ObjectPrototype{
 		ID:          "prototype:sword",

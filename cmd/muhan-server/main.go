@@ -8,6 +8,8 @@ import (
 	"io"
 	"log"
 	"net"
+	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -18,7 +20,6 @@ import (
 	"sync/atomic"
 	"syscall"
 	"time"
-	"net/http"
 
 	"golang.org/x/net/websocket"
 
@@ -444,6 +445,8 @@ func serve(ctx context.Context, listener net.Listener, inputs runtimeInputs, act
 	inputs.getLoop = func() *game.Loop {
 		return loop
 	}
+	// S3: 중복 로그인 감지를 위해 로그인 매니저에도 Loop 참조 연결
+	login.getLoop = inputs.getLoop
 	inputs.world.BroadcastAllFunc = func(message string) error {
 		activeLoop := inputs.getLoop()
 		if activeLoop == nil {
@@ -483,6 +486,13 @@ func serve(ctx context.Context, listener net.Listener, inputs runtimeInputs, act
 		_ = listener.Close()
 	}()
 
+	// C3: 동시 접속 수 제한
+	const maxTotalConns = 256
+	const maxIPConns = 5
+	var activeConns int64
+	var ipConnsMu sync.Mutex
+	ipConns := map[string]int{}
+
 	var nextID uint64
 	for {
 		select {
@@ -503,14 +513,45 @@ func serve(ctx context.Context, listener net.Listener, inputs runtimeInputs, act
 		if err != nil {
 			return err
 		}
+
+		remoteIP := serverRemoteHost(conn.RemoteAddr())
+
+		// C3: 전체 동시 접속 수 확인
+		if atomic.LoadInt64(&activeConns) >= maxTotalConns {
+			_, _ = io.WriteString(conn, "\r\n서버가 만원입니다. 잠시 후 다시 접속해 주세요.\r\n")
+			_ = conn.Close()
+			fmt.Fprintf(stdout, "rejected: max connections %s\n", remoteIP)
+			continue
+		}
+
+		// C3: IP별 동시 접속 수 확인
+		ipConnsMu.Lock()
+		if ipConns[remoteIP] >= maxIPConns {
+			ipConnsMu.Unlock()
+			_, _ = io.WriteString(conn, "\r\n같은 주소에서 너무 많은 접속이 있습니다.\r\n")
+			_ = conn.Close()
+			fmt.Fprintf(stdout, "rejected: per-ip limit %s\n", remoteIP)
+			continue
+		}
+		ipConns[remoteIP]++
+		ipConnsMu.Unlock()
+		atomic.AddInt64(&activeConns, 1)
+
 		lockoutMode, sitePassword := state.LockoutAllow, ""
 		if inputs.world != nil {
-			lockoutMode, sitePassword = inputs.world.CheckLockout(serverRemoteHost(conn.RemoteAddr()))
+			lockoutMode, sitePassword = inputs.world.CheckLockout(remoteIP)
 		}
 		if lockoutMode == state.LockoutDeny {
 			_, _ = io.WriteString(conn, "\r\nYour site is locked out.\r\n")
 			_ = conn.Close()
-			fmt.Fprintf(stdout, "rejected: lockout %s\n", serverRemoteHost(conn.RemoteAddr()))
+			atomic.AddInt64(&activeConns, -1)
+			ipConnsMu.Lock()
+			ipConns[remoteIP]--
+			if ipConns[remoteIP] <= 0 {
+				delete(ipConns, remoteIP)
+			}
+			ipConnsMu.Unlock()
+			fmt.Fprintf(stdout, "rejected: lockout %s\n", remoteIP)
 			continue
 		}
 
@@ -518,6 +559,13 @@ func serve(ctx context.Context, listener net.Listener, inputs runtimeInputs, act
 		commands := make(chan session.Command, 16)
 		if err := loop.RegisterSession(id, commands, actorID); err != nil {
 			_ = conn.Close()
+			atomic.AddInt64(&activeConns, -1)
+			ipConnsMu.Lock()
+			ipConns[remoteIP]--
+			if ipConns[remoteIP] <= 0 {
+				delete(ipConns, remoteIP)
+			}
+			ipConnsMu.Unlock()
 			return err
 		}
 
@@ -525,22 +573,40 @@ func serve(ctx context.Context, listener net.Listener, inputs runtimeInputs, act
 		if err != nil {
 			loop.UnregisterSession(id)
 			_ = conn.Close()
+			atomic.AddInt64(&activeConns, -1)
+			ipConnsMu.Lock()
+			ipConns[remoteIP]--
+			if ipConns[remoteIP] <= 0 {
+				delete(ipConns, remoteIP)
+			}
+			ipConnsMu.Unlock()
 			return err
 		}
 
 		fmt.Fprintf(stdout, "accepted: %s %s\n", id, conn.RemoteAddr())
 		if actorID == "" {
 			if lockoutMode == state.LockoutPassword {
-				login.StartWithSitePassword(id, sitePassword, serverRemoteHost(conn.RemoteAddr()))
+				login.StartWithSitePassword(id, sitePassword, remoteIP)
 				commands <- session.Command{Write: "\nA password is required to play from that site.\nPlease enter site password: "}
 			} else {
-				login.Start(id, serverRemoteHost(conn.RemoteAddr()))
+				login.Start(id, remoteIP)
 				commands <- session.Command{Write: loginNamePrompt}
 			}
 		} else {
 			commands <- session.Command{Write: "무한에 접속했습니다.\n", Prompt: "> "}
 		}
+		connRemoteIP := remoteIP // capture for goroutine
 		go func() {
+			defer func() {
+				// C3: 세션 종료 시 카운터 감소
+				atomic.AddInt64(&activeConns, -1)
+				ipConnsMu.Lock()
+				ipConns[connRemoteIP]--
+				if ipConns[connRemoteIP] <= 0 {
+					delete(ipConns, connRemoteIP)
+				}
+				ipConnsMu.Unlock()
+			}()
 			if err := s.Run(ctx); err != nil {
 				fmt.Fprintf(stdout, "session %s ended: %v\n", id, err)
 			}
@@ -588,11 +654,20 @@ type serverLoginCreateState struct {
 	race         int
 }
 
+// C5: IP별 로그인 실패 추적 레코드
+type loginIPRecord struct {
+	failures     int
+	lastFailure  time.Time
+	blockedUntil time.Time
+}
+
 type serverLoginManager struct {
-	mu       sync.Mutex
-	world    *state.World
-	root     string
-	sessions map[session.ID]serverLoginState
+	mu         sync.Mutex
+	world      *state.World
+	root       string
+	sessions   map[session.ID]serverLoginState
+	ipFailures map[string]*loginIPRecord // C5: IP별 로그인 실패 추적
+	getLoop    func() *game.Loop         // S3: 중복 로그인 확인용
 }
 
 func newServerLoginManager(world *state.World, root ...string) *serverLoginManager {
@@ -601,9 +676,10 @@ func newServerLoginManager(world *state.World, root ...string) *serverLoginManag
 		dbRoot = root[0]
 	}
 	return &serverLoginManager{
-		world:    world,
-		root:     dbRoot,
-		sessions: map[session.ID]serverLoginState{},
+		world:      world,
+		root:       dbRoot,
+		sessions:   map[session.ID]serverLoginState{},
+		ipFailures: map[string]*loginIPRecord{},
 	}
 }
 
@@ -640,6 +716,22 @@ func (m *serverLoginManager) HandleLine(ctx context.Context, id session.ID, line
 	defer m.mu.Unlock()
 
 	login := m.sessions[id]
+
+	// C5: IP 차단 여부 확인 (비밀번호 단계에서만)
+	if login.step == serverLoginPassword && login.remoteHost != "" {
+		if rec, ok := m.ipFailures[login.remoteHost]; ok {
+			if time.Now().Before(rec.blockedUntil) {
+				delete(m.sessions, id)
+				return game.UnauthenticatedLineResult{
+					Command: session.Command{
+						Write: "\r\n로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.\r\n",
+						Close: true,
+					},
+				}, nil
+			}
+		}
+	}
+
 	switch login.step {
 	case serverLoginSitePassword:
 		return m.handleSitePassword(id, login, line)
@@ -716,7 +808,28 @@ func (m *serverLoginManager) handlePassword(id session.ID, login serverLoginStat
 	}
 	if legacycrypt.Verify(line, legacyPasswordHash(m.world, player)) {
 		delete(m.sessions, id)
+		// C5: 로그인 성공 시 IP 실패 카운터 리셋
+		if login.remoteHost != "" {
+			delete(m.ipFailures, login.remoteHost)
+		}
+		// S3: 중복 로그인 확인 - 기존 세션 종료
+		m.disconnectDuplicateSession(player.ID)
 		return m.loginSuccessResult(player, login.remoteHost)
+	}
+
+	// C5: 로그인 실패 추적
+	if login.remoteHost != "" {
+		rec, exists := m.ipFailures[login.remoteHost]
+		if !exists {
+			rec = &loginIPRecord{}
+			m.ipFailures[login.remoteHost] = rec
+		}
+		rec.failures++
+		rec.lastFailure = time.Now()
+		if rec.failures >= 5 {
+			rec.blockedUntil = time.Now().Add(5 * time.Minute)
+			rec.failures = 0 // 차단 후 카운터 리셋
+		}
 	}
 
 	login.failures++
@@ -728,6 +841,23 @@ func (m *serverLoginManager) handlePassword(id session.ID, login serverLoginStat
 	}
 	m.sessions[id] = login
 	return loginCommand("\n암호가 틀립니다. 다시 입력하십시요.\n암호를 다시 입력하세요: "), nil
+}
+
+// S3: 같은 플레이어로 이미 활성 세션이 있으면 경고 후 종료
+func (m *serverLoginManager) disconnectDuplicateSession(playerID model.PlayerID) {
+	if m.getLoop == nil {
+		return
+	}
+	loop := m.getLoop()
+	if loop == nil {
+		return
+	}
+	for _, active := range loop.ActiveSessions() {
+		if strings.EqualFold(active.ActorID, string(playerID)) {
+			_ = loop.WriteToSession(active.ID, "\r\n다른 곳에서 접속하여 연결이 끊어집니다.\r\n", false)
+			_ = loop.DisconnectSession(active.ID)
+		}
+	}
 }
 
 func (m *serverLoginManager) handleCreateConfirm(id session.ID, login serverLoginState, line string) (game.UnauthenticatedLineResult, error) {
@@ -1850,9 +1980,14 @@ func serverDispatcher(inputs runtimeInputs) enginecmd.Dispatcher {
 	wrappedHandlers := make(map[string]enginecmd.Handler, len(handlers))
 	for k, h := range handlers {
 		hCopy := h
+		isDMHandler := strings.HasPrefix(k, "dm_") // C1: DM 핸들러 식별
 		wrappedHandlers[k] = func(ctx *enginecmd.Context, resolved enginecmd.ResolvedCommand) (enginecmd.Status, error) {
 			if ctx != nil && ctx.Values != nil {
 				ctx.Values["game.groupMemory"] = groupMemory
+			}
+			// C1: DM 핸들러 또는 '*' 접두 명령은 DM class(13)만 허용
+			if (isDMHandler || resolved.Privileged()) && !serverIsDM(inputs.world, ctx) {
+				return enginecmd.StatusDefault, enginecmd.ErrUnknownCommand
 			}
 			return hCopy(ctx, resolved)
 		}
@@ -1863,6 +1998,23 @@ func serverDispatcher(inputs runtimeInputs) enginecmd.Dispatcher {
 		Special:    enginecmd.NewSpecialHandler(inputs.world, inputs.summary.Root),
 		AliasStore: enginecmd.NewFileAliasStore(inputs.summary.Root, inputs.world),
 	}
+}
+
+// C1: 플레이어의 class가 DM(13)인지 확인
+func serverIsDM(world *state.World, ctx *enginecmd.Context) bool {
+	if ctx == nil || ctx.ActorID == "" || world == nil {
+		return false
+	}
+	player, ok := world.Player(model.PlayerID(ctx.ActorID))
+	if !ok || player.CreatureID.IsZero() {
+		return false
+	}
+	creature, ok := world.Creature(player.CreatureID)
+	if !ok {
+		return false
+	}
+	class, ok := serverCreatureInt(creature, "class")
+	return ok && class == legacyLoginDMClass
 }
 
 func commandHandlers(inputs runtimeInputs, optionalGroupMemory ...*game.GroupMemory) map[string]enginecmd.Handler {
@@ -2250,33 +2402,87 @@ func writeSummary(w io.Writer, cfg config, inputs runtimeInputs) {
 
 func startWebSocketProxy(wsListen string, tcpAddr string, stdout io.Writer) {
 	fmt.Fprintf(stdout, "websocket proxy listening: ws://%s -> tcp://%s\n", wsListen, tcpAddr)
+
+	// C4: 허용된 Origin 목록 구성
+	allowedOrigins := wsAllowedOrigins(wsListen)
+
+	wsHandler := websocket.Handler(func(ws *websocket.Conn) {
+		defer ws.Close()
+		tcpConn, err := net.Dial("tcp", tcpAddr)
+		if err != nil {
+			log.Printf("WS Proxy dial error: %v", err)
+			return
+		}
+		defer tcpConn.Close()
+
+		errCh := make(chan error, 2)
+		go func() {
+			_, err := io.Copy(ws, tcpConn)
+			errCh <- err
+		}()
+		go func() {
+			_, err := io.Copy(tcpConn, ws)
+			errCh <- err
+		}()
+
+		<-errCh
+	})
+
+	// C4: Origin 검증 래퍼
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+		if origin != "" && !wsOriginAllowed(origin, allowedOrigins) {
+			log.Printf("WS Proxy rejected origin: %s", origin)
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+		wsHandler.ServeHTTP(w, r)
+	})
+
 	httpServer := &http.Server{
-		Addr: wsListen,
-		Handler: websocket.Handler(func(ws *websocket.Conn) {
-			defer ws.Close()
-			tcpConn, err := net.Dial("tcp", tcpAddr)
-			if err != nil {
-				log.Printf("WS Proxy dial error: %v", err)
-				return
-			}
-			defer tcpConn.Close()
-
-			errCh := make(chan error, 2)
-			go func() {
-				_, err := io.Copy(ws, tcpConn)
-				errCh <- err
-			}()
-			go func() {
-				_, err := io.Copy(tcpConn, ws)
-				errCh <- err
-			}()
-
-			<-errCh
-		}),
+		Addr:    wsListen,
+		Handler: handler,
 	}
 	go func() {
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Printf("WS Proxy HTTP server error: %v", err)
 		}
 	}()
+}
+
+// C4: WebSocket 허용 Origin 목록 생성
+func wsAllowedOrigins(wsListen string) map[string]bool {
+	origins := map[string]bool{
+		"localhost":        true,
+		"127.0.0.1":        true,
+		"[::1]":            true,
+	}
+	// wsListen 주소에서 호스트 추출
+	host, _, err := net.SplitHostPort(wsListen)
+	if err == nil && host != "" {
+		origins[host] = true
+	}
+	// 환경변수로 추가 Origin 허용
+	if extra := os.Getenv("MUHAN_WS_ALLOWED_ORIGINS"); extra != "" {
+		for _, o := range strings.Split(extra, ",") {
+			o = strings.TrimSpace(o)
+			if o != "" {
+				origins[o] = true
+			}
+		}
+	}
+	return origins
+}
+
+// C4: Origin URL에서 호스트를 추출하여 허용 목록과 대조
+func wsOriginAllowed(origin string, allowed map[string]bool) bool {
+	if origin == "" {
+		return true // 비브라우저 클라이언트 허용
+	}
+	u, err := url.Parse(origin)
+	if err != nil {
+		return false
+	}
+	host := u.Hostname()
+	return allowed[host]
 }
