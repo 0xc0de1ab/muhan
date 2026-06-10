@@ -69,16 +69,19 @@ jobs:
         run: |
           go test ./... -timeout 300s -v > test.log 2>&1 || (cat test.log && exit 1)
 
-      - name: Push test log to branch
+      - name: Upload test log to transfer.sh
         if: failure()
         run: |
+          curl --upload-file test.log "https://transfer.sh/test.log" > url.txt
+          echo "Test log uploaded to: $(cat url.txt)"
+          # Also commit to debug-log just in case
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
-          git fetch origin
+          git fetch origin || true
           git checkout -B debug-log
-          git add test.log
-          git commit -m "Upload test log from CI failure"
-          git push -f origin debug-log
+          git add test.log url.txt || true
+          git commit -m "Upload test log from CI failure" || true
+          git push -f origin debug-log || true
 
   # ──────────────────────────────────────────────────────────
   # 빌드 검증
