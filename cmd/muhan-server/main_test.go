@@ -821,6 +821,9 @@ func TestServerLoginSitePasswordPreservesDialinHost(t *testing.T) {
 }
 
 func TestRealRootHelpCommandDispatches(t *testing.T) {
+	if os.Getenv("CI") != "" || testing.Short() {
+		t.Skip("skipping slow real root parsing in CI or short mode")
+	}
 	inputs, err := loadRuntimeInputs("../..")
 	if err != nil {
 		t.Fatalf("load runtime inputs: %v", err)

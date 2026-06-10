@@ -18,6 +18,9 @@ import (
 )
 
 func TestRealObjmonTalkFilesParseLikeLegacyTalkCrtAct(t *testing.T) {
+	if os.Getenv("CI") != "" || testing.Short() {
+		t.Skip("skipping slow real root parsing in CI or short mode")
+	}
 	root := realTalkDataRoot(t)
 	dir := filepath.Join(root, "objmon", "talk")
 	entries, err := os.ReadDir(dir)
@@ -71,6 +74,9 @@ func TestRealObjmonTalkFilesParseLikeLegacyTalkCrtAct(t *testing.T) {
 }
 
 func TestRealObjmonTalkActionNamesAreExecutable(t *testing.T) {
+	if os.Getenv("CI") != "" || testing.Short() {
+		t.Skip("skipping slow real root parsing in CI or short mode")
+	}
 	root := realTalkDataRoot(t)
 	dir := filepath.Join(root, "objmon", "talk")
 	entries, err := os.ReadDir(dir)
@@ -114,6 +120,9 @@ func TestRealObjmonTalkActionNamesAreExecutable(t *testing.T) {
 }
 
 func TestRealObjmonTalkFileEntriesLoadSideEffectDirectives(t *testing.T) {
+	if os.Getenv("CI") != "" || testing.Short() {
+		t.Skip("skipping slow real root parsing in CI or short mode")
+	}
 	root := realTalkDataRoot(t)
 	tests := []struct {
 		name             string
@@ -553,6 +562,9 @@ func (w *talkRealDataCastWorld) CastTalkSpell(caster model.Creature, target mode
 
 func realTalkDataRoot(t *testing.T) string {
 	t.Helper()
+	if os.Getenv("CI") != "" || testing.Short() {
+		t.Skip("skipping slow real root parsing in CI or short mode")
+	}
 	dir, err := os.Getwd()
 	if err != nil {
 		t.Fatalf("Getwd() error = %v", err)

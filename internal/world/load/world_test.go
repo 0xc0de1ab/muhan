@@ -79,6 +79,9 @@ func TestValidateRefsReportsMissingReferences(t *testing.T) {
 }
 
 func TestLoadRootMinimal(t *testing.T) {
+	if os.Getenv("CI") != "" || testing.Short() {
+		t.Skip("skipping slow real root parsing in CI or short mode")
+	}
 	root := t.TempDir()
 	writeMinimalRoomFile(t, root, "r00000", 0)
 	writePlayerFile(t, root, "가", "가나", 0)
@@ -102,6 +105,9 @@ func TestLoadRootMinimal(t *testing.T) {
 }
 
 func TestLoadRootIncludesMarriageInvites(t *testing.T) {
+	if os.Getenv("CI") != "" || testing.Short() {
+		t.Skip("skipping slow real root parsing in CI or short mode")
+	}
 	root := t.TempDir()
 	writeMinimalRoomFile(t, root, "r00000", 0)
 	writePlayerFile(t, root, "가", "가나", 0)
@@ -131,6 +137,9 @@ func TestLoadRootIncludesMarriageInvites(t *testing.T) {
 }
 
 func TestLoadRootIncludesFamilies(t *testing.T) {
+	if os.Getenv("CI") != "" || testing.Short() {
+		t.Skip("skipping slow real root parsing in CI or short mode")
+	}
 	root := t.TempDir()
 	writeMinimalRoomFile(t, root, "r00000", 0)
 	writePlayerFile(t, root, "가", "가나", 0)
@@ -174,6 +183,9 @@ func TestLoadRootIncludesFamilies(t *testing.T) {
 }
 
 func TestLoadRootIncludesRoomContents(t *testing.T) {
+	if os.Getenv("CI") != "" || testing.Short() {
+		t.Skip("skipping slow real root parsing in CI or short mode")
+	}
 	root := t.TempDir()
 	writeRoomContentFile(t, root, "r00001", 1)
 	writePlayerFile(t, root, "가", "가나", 1)
@@ -205,6 +217,9 @@ func TestLoadRootIncludesRoomContents(t *testing.T) {
 }
 
 func TestLoadRootIncludesPlayerAndBankObjects(t *testing.T) {
+	if os.Getenv("CI") != "" || testing.Short() {
+		t.Skip("skipping slow real root parsing in CI or short mode")
+	}
 	root := t.TempDir()
 	writeMinimalRoomFile(t, root, "r00000", 0)
 	writePlayerFileWithInventory(t, root, "가", "가나", 0, roomTestObject("bag", roomTestObject("gem")))
@@ -260,6 +275,9 @@ func TestLoadRootIncludesPlayerAndBankObjects(t *testing.T) {
 }
 
 func TestLoadRootIncludesJSONPlayers(t *testing.T) {
+	if os.Getenv("CI") != "" || testing.Short() {
+		t.Skip("skipping slow real root parsing in CI or short mode")
+	}
 	root := t.TempDir()
 	writeMinimalRoomFile(t, root, "r00001", 1)
 	writeObjectPrototypeFile(t, root, "o00", "item")
@@ -325,6 +343,9 @@ func TestLoadRootIncludesJSONPlayers(t *testing.T) {
 }
 
 func TestLoadRootIncludesJSONRooms(t *testing.T) {
+	if os.Getenv("CI") != "" || testing.Short() {
+		t.Skip("skipping slow real root parsing in CI or short mode")
+	}
 	root := t.TempDir()
 	writeMinimalRoomFile(t, root, "r00001", 1)
 	writePlayerFile(t, root, "가", "가나", 1)

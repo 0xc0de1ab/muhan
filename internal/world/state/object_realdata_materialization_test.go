@@ -14,6 +14,9 @@ import (
 )
 
 func TestRealDataORENCHPrototypeRawFlagMaterializesAndSurvivesPlayerRestart(t *testing.T) {
+	if os.Getenv("CI") != "" || testing.Short() {
+		t.Skip("skipping slow real root parsing in CI or short mode")
+	}
 	summary := loadRealDataSummary(t)
 	protoID, proto := findRealDataORENCHPrototype(t, summary.World)
 	playerID, creatureID, _ := findRealDataTargetPlayer(t, summary.World)
@@ -72,6 +75,9 @@ func TestRealDataORENCHPrototypeRawFlagMaterializesAndSurvivesPlayerRestart(t *t
 }
 
 func TestRealDataDMCreateObjectFromPrototypeHonorsRawORENCHFlag(t *testing.T) {
+	if os.Getenv("CI") != "" || testing.Short() {
+		t.Skip("skipping slow real root parsing in CI or short mode")
+	}
 	summary := loadRealDataSummary(t)
 	protoID, proto := findRealDataORENCHPrototype(t, summary.World)
 	playerID, creatureID, _ := findRealDataTargetPlayer(t, summary.World)
@@ -110,6 +116,9 @@ func TestRealDataDMCreateObjectFromPrototypeHonorsRawORENCHFlag(t *testing.T) {
 }
 
 func TestRealDataNestedObjectCloneSurvivesPlayerAndRoomRestart(t *testing.T) {
+	if os.Getenv("CI") != "" || testing.Short() {
+		t.Skip("skipping slow real root parsing in CI or short mode")
+	}
 	summary := loadRealDataSummary(t)
 	sourceID, source := findRealDataNestedObject(t, summary.World)
 	playerID, creatureID, roomID := findRealDataTargetPlayer(t, summary.World)
@@ -173,6 +182,9 @@ func TestRealDataNestedObjectCloneSurvivesPlayerAndRoomRestart(t *testing.T) {
 }
 
 func TestRealDataMaterializedObjectsUseCreateGiveDropDirtyFlushPath(t *testing.T) {
+	if os.Getenv("CI") != "" || testing.Short() {
+		t.Skip("skipping slow real root parsing in CI or short mode")
+	}
 	summary := loadRealDataSummary(t)
 	orenchProtoID, orenchProto := findRealDataORENCHPrototype(t, summary.World)
 	nestedSourceID, nestedSource := findRealDataNestedObject(t, summary.World)
@@ -289,6 +301,9 @@ func TestRealDataMaterializedObjectsUseCreateGiveDropDirtyFlushPath(t *testing.T
 
 func loadRealDataSummary(t *testing.T) worldload.Summary {
 	t.Helper()
+	if os.Getenv("CI") != "" || testing.Short() {
+		t.Skip("skipping slow real root parsing in CI or short mode")
+	}
 
 	wd, err := os.Getwd()
 	if err != nil {

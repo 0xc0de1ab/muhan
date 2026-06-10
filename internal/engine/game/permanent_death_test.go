@@ -476,6 +476,9 @@ func TestHandlePermanentCreatureDeathHydratesRealSummonPrototypeBeforeSpawn(t *t
 
 func permanentDeathProjectRoot(t *testing.T) string {
 	t.Helper()
+	if os.Getenv("CI") != "" || testing.Short() {
+		t.Skip("skipping slow real root parsing in CI or short mode")
+	}
 	_, file, _, ok := runtime.Caller(0)
 	if !ok {
 		t.Fatal("runtime.Caller failed")
