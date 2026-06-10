@@ -13,7 +13,7 @@ import (
 
 func TestChangHandlerDamagesVisibleMonstersStartsCooldownAndRevealsActor(t *testing.T) {
 	withAttackRolls(t, 1, 2, 1)
-	loaded := utilityCombatWorld(t, legacyClassCaretaker, legacyObjectPole)
+	loaded := utilityCombatWorld(t, model.ClassCaretaker, legacyObjectPole)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = append(alice.Metadata.Tags, "hidden", "PHIDDN", "invisible", "PINVIS")
 	alice.Stats["PHIDDN"] = 1
@@ -88,7 +88,7 @@ func TestChangHandlerRejectsInvalidStates(t *testing.T) {
 			name: "wrong class",
 			mutate: func(loaded *worldload.World) {
 				alice := loaded.Creatures["creature:alice"]
-				alice.Stats["class"] = legacyClassInvincible
+				alice.Stats["class"] = model.ClassInvincible
 				loaded.Creatures[alice.ID] = alice
 			},
 			want: "초인 이상만 쓸수 있는 기술입니다.",
@@ -128,7 +128,7 @@ func TestChangHandlerRejectsInvalidStates(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loaded := utilityCombatWorld(t, legacyClassCaretaker, legacyObjectPole)
+			loaded := utilityCombatWorld(t, model.ClassCaretaker, legacyObjectPole)
 			if tt.mutate != nil {
 				tt.mutate(loaded)
 			}
@@ -149,7 +149,7 @@ func TestChangHandlerRejectsInvalidStates(t *testing.T) {
 }
 
 func TestChangHandlerRespectsCooldownBeforeWeaponTargetAndReveal(t *testing.T) {
-	loaded := utilityCombatWorld(t, legacyClassCaretaker, legacyObjectPole)
+	loaded := utilityCombatWorld(t, model.ClassCaretaker, legacyObjectPole)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = append(alice.Metadata.Tags, "hidden", "PHIDDN", "invisible", "PINVIS")
 	alice.Stats["PHIDDN"] = 1
@@ -189,7 +189,7 @@ func TestChangHandlerRespectsCooldownBeforeWeaponTargetAndReveal(t *testing.T) {
 }
 
 func TestChangHandlerNoTargetsDoesNotConsumeCooldown(t *testing.T) {
-	loaded := utilityCombatWorld(t, legacyClassCaretaker, legacyObjectPole)
+	loaded := utilityCombatWorld(t, model.ClassCaretaker, legacyObjectPole)
 	for id, creature := range loaded.Creatures {
 		if id == "creature:alice" {
 			continue
@@ -216,7 +216,7 @@ func TestChangHandlerNoTargetsDoesNotConsumeCooldown(t *testing.T) {
 
 func TestChangHandlerFailureUsesCooldownWithoutDamage(t *testing.T) {
 	withAttackRolls(t, 22)
-	world := state.NewWorld(utilityCombatWorld(t, legacyClassCaretaker, legacyObjectPole))
+	world := state.NewWorld(utilityCombatWorld(t, model.ClassCaretaker, legacyObjectPole))
 	handler := NewChangHandler(world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -250,7 +250,7 @@ func TestChangHandlerFailureUsesCooldownWithoutDamage(t *testing.T) {
 
 func TestChangHandlerFailureCanBreakDamagedWeaponAndKeepsCooldown(t *testing.T) {
 	withAttackRolls(t, 22, 1)
-	loaded := utilityCombatWorld(t, legacyClassCaretaker, legacyObjectPole)
+	loaded := utilityCombatWorld(t, model.ClassCaretaker, legacyObjectPole)
 	proto := loaded.ObjectPrototypes["prototype:weapon"]
 	proto.Properties["shotsCurrent"] = "1"
 	proto.Properties["shotsMax"] = "4"
@@ -286,7 +286,7 @@ func TestChangHandlerFailureCanBreakDamagedWeaponAndKeepsCooldown(t *testing.T) 
 
 func TestChangHandlerFailureDoesNotBreakShatterproofWeapon(t *testing.T) {
 	withAttackRolls(t, 22)
-	loaded := utilityCombatWorld(t, legacyClassCaretaker, legacyObjectPole)
+	loaded := utilityCombatWorld(t, model.ClassCaretaker, legacyObjectPole)
 	proto := loaded.ObjectPrototypes["prototype:weapon"]
 	proto.Properties["shotsCurrent"] = "1"
 	proto.Properties["shotsMax"] = "4"
@@ -309,7 +309,7 @@ func TestChangHandlerFailureDoesNotBreakShatterproofWeapon(t *testing.T) {
 
 func TestChangHandlerWeaponBreakOnSuccessDoesNotStartCooldown(t *testing.T) {
 	withAttackRolls(t, 1)
-	loaded := utilityCombatWorld(t, legacyClassCaretaker, legacyObjectPole)
+	loaded := utilityCombatWorld(t, model.ClassCaretaker, legacyObjectPole)
 	proto := loaded.ObjectPrototypes["prototype:weapon"]
 	proto.Properties["shotsCurrent"] = "1"
 	loaded.ObjectPrototypes[proto.ID] = proto
@@ -337,7 +337,7 @@ func TestChangHandlerWeaponBreakOnSuccessDoesNotStartCooldown(t *testing.T) {
 
 func TestChoiHandlerRangerDamagesMonsterConsumesMissileChargeAndStartsCooldown(t *testing.T) {
 	withAttackRolls(t, 1, 2, 1, 2, 1)
-	loaded := utilityCombatWorld(t, legacyClassRanger, legacyObjectMissile)
+	loaded := utilityCombatWorld(t, model.ClassRanger, legacyObjectMissile)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 50
 	alice.Stats["level"] = 50
@@ -380,7 +380,7 @@ func TestChoiHandlerRejectsInvalidStates(t *testing.T) {
 			name: "low ranger level",
 			mutate: func(loaded *worldload.World) {
 				alice := loaded.Creatures["creature:alice"]
-				alice.Stats["class"] = legacyClassRanger
+				alice.Stats["class"] = model.ClassRanger
 				alice.Level = 49
 				alice.Stats["level"] = 49
 				loaded.Creatures[alice.ID] = alice
@@ -391,7 +391,7 @@ func TestChoiHandlerRejectsInvalidStates(t *testing.T) {
 			name: "untrained invincible",
 			mutate: func(loaded *worldload.World) {
 				alice := loaded.Creatures["creature:alice"]
-				alice.Stats["class"] = legacyClassInvincible
+				alice.Stats["class"] = model.ClassInvincible
 				alice.Metadata.Tags = nil
 				loaded.Creatures[alice.ID] = alice
 			},
@@ -401,7 +401,7 @@ func TestChoiHandlerRejectsInvalidStates(t *testing.T) {
 			name: "wrong weapon",
 			mutate: func(loaded *worldload.World) {
 				alice := loaded.Creatures["creature:alice"]
-				alice.Stats["class"] = legacyClassRanger
+				alice.Stats["class"] = model.ClassRanger
 				alice.Level = 50
 				alice.Stats["level"] = 50
 				loaded.Creatures[alice.ID] = alice
@@ -415,7 +415,7 @@ func TestChoiHandlerRejectsInvalidStates(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loaded := utilityCombatWorld(t, legacyClassRanger, legacyObjectMissile)
+			loaded := utilityCombatWorld(t, model.ClassRanger, legacyObjectMissile)
 			tt.mutate(loaded)
 			world := state.NewWorld(loaded)
 			ctx := &Context{ActorID: "player:alice"}
@@ -535,7 +535,7 @@ func TestUtilityCombatSkillHandlersCanBeRegisteredByDispatcherAliases(t *testing
 			name: "chang korean",
 			line: "창격술",
 			loaded: func(t *testing.T) *worldload.World {
-				return utilityCombatWorld(t, legacyClassCaretaker, legacyObjectPole)
+				return utilityCombatWorld(t, model.ClassCaretaker, legacyObjectPole)
 			},
 			rolls: []int{1, 1, 1},
 			want:  "창격술로 고블린에게",
@@ -544,7 +544,7 @@ func TestUtilityCombatSkillHandlersCanBeRegisteredByDispatcherAliases(t *testing
 			name: "chang handler",
 			line: "chang",
 			loaded: func(t *testing.T) *worldload.World {
-				return utilityCombatWorld(t, legacyClassCaretaker, legacyObjectPole)
+				return utilityCombatWorld(t, model.ClassCaretaker, legacyObjectPole)
 			},
 			rolls: []int{1, 1, 1},
 			want:  "창격술로 고블린에게",
@@ -553,7 +553,7 @@ func TestUtilityCombatSkillHandlersCanBeRegisteredByDispatcherAliases(t *testing
 			name: "choi korean",
 			line: "최루탄",
 			loaded: func(t *testing.T) *worldload.World {
-				return utilityCombatWorld(t, legacyClassRanger, legacyObjectMissile)
+				return utilityCombatWorld(t, model.ClassRanger, legacyObjectMissile)
 			},
 			rolls: []int{1, 1, 1, 1, 1},
 			want:  "최루탄로 고블린에게",
@@ -562,7 +562,7 @@ func TestUtilityCombatSkillHandlersCanBeRegisteredByDispatcherAliases(t *testing
 			name: "choi handler",
 			line: "choi",
 			loaded: func(t *testing.T) *worldload.World {
-				return utilityCombatWorld(t, legacyClassRanger, legacyObjectMissile)
+				return utilityCombatWorld(t, model.ClassRanger, legacyObjectMissile)
 			},
 			rolls: []int{1, 1, 1, 1, 1},
 			want:  "최루탄로 고블린에게",
@@ -742,7 +742,7 @@ func rmBlind2World(t *testing.T) *worldload.World {
 		PlayerID:    "player:alice",
 		RoomID:      "room:temple",
 		Stats: map[string]int{
-			"class":     legacyClassCaretaker,
+			"class":     model.ClassCaretaker,
 			"level":     80,
 			"hpCurrent": 50,
 			"hpMax":     50,

@@ -259,7 +259,7 @@ const (
 )
 
 func invincibleKickClassRejection(actor model.Creature) string {
-	if creatureClass(actor) < legacyClassInvincible {
+	if creatureClass(actor) < model.ClassInvincible {
 		return "무적 이상만 사용할 수 있는 기술입니다.\n"
 	}
 	if !kickHasBarbarianTraining(actor) {
@@ -269,7 +269,7 @@ func invincibleKickClassRejection(actor model.Creature) string {
 }
 
 func oneKillClassRejection(actor model.Creature) string {
-	if creatureClass(actor) < legacyClassInvincible {
+	if creatureClass(actor) < model.ClassInvincible {
 		return "무적 이상만 사용할 수 있는 기술입니다.\n"
 	}
 	if !attackCreatureHasFlag(actor,
@@ -330,7 +330,7 @@ func invincibleKickStrikeCount(actor model.Creature) int {
 }
 
 func invincibleKickStrikeDamage(actor model.Creature, victim model.Creature) int {
-	if creatureClass(victim) > legacyClassCaretaker {
+	if creatureClass(victim) > model.ClassCaretaker {
 		return 1
 	}
 	return normalizeAttackDamage(statsDamage(actor)*3 + attackRoll(0, maxInt(0, creatureStat(actor, "strength")))*2)
@@ -384,13 +384,13 @@ func oneKillChance(world InventoryWorld, actor model.Creature, victim model.Crea
 }
 
 func oneKillDamage(world InventoryWorld, actor model.Creature, victim model.Creature, weapon model.ObjectInstance) int {
-	if creatureClass(victim) > legacyClassCaretaker {
+	if creatureClass(victim) > model.ClassCaretaker {
 		return 1
 	}
 	multiplierMin := 1
-	if class := creatureClass(actor); class >= legacyClassBulsa {
+	if class := creatureClass(actor); class >= model.ClassBulsa {
 		multiplierMin = 5
-	} else if class == legacyClassCaretaker {
+	} else if class == model.ClassCaretaker {
 		multiplierMin = 3
 	}
 	damage := creatureStat(victim, "hpCurrent")/2 +

@@ -52,7 +52,7 @@ func NewInvinceTrainHandler(world InvinceTrainWorld) Handler {
 			ctx.WriteString("이 곳은 수련장이 아닙니다!")
 			return StatusDefault, nil
 		}
-		if creatureClass(creature) < legacyClassInvincible {
+		if creatureClass(creature) < model.ClassInvincible {
 			ctx.WriteString("무적 이상만 가능합니다.")
 			return StatusDefault, nil
 		}
@@ -120,8 +120,8 @@ func completeInvinceTraining(ctx *Context, world InvinceTrainWorld, playerID mod
 	if err := world.SetCreatureStat(creature.ID, "experience", experience); err != nil {
 		return err
 	}
-	if creatureClass(creature) == legacyClassCaretaker && experience < 100000000 {
-		if err := world.SetCreatureStat(creature.ID, "class", legacyClassInvincible); err != nil {
+	if creatureClass(creature) == model.ClassCaretaker && experience < 100000000 {
+		if err := world.SetCreatureStat(creature.ID, "class", model.ClassInvincible); err != nil {
 			return err
 		}
 	}
@@ -133,7 +133,7 @@ func completeInvinceTraining(ctx *Context, world InvinceTrainWorld, playerID mod
 			return err
 		}
 	}
-	if creatureClass(creature) >= legacyClassInvincible && creatureStat(creature, "pDice") < 5 {
+	if creatureClass(creature) >= model.ClassInvincible && creatureStat(creature, "pDice") < 5 {
 		if err := world.SetCreatureStat(creature.ID, "pDice", (trainingCount+1)/2); err != nil {
 			return err
 		}
@@ -141,8 +141,8 @@ func completeInvinceTraining(ctx *Context, world InvinceTrainWorld, playerID mod
 	if updated, ok := world.Creature(creature.ID); ok {
 		creature = updated
 	}
-	if creatureClass(creature) == legacyClassInvincible {
-		if err := applyClassChangeLevelDown(world, world, player, creature, legacyClassInvincible, experience); err != nil {
+	if creatureClass(creature) == model.ClassInvincible {
+		if err := applyClassChangeLevelDown(world, world, player, creature, model.ClassInvincible, experience); err != nil {
 			return err
 		}
 	}
@@ -153,7 +153,7 @@ func completeInvinceTraining(ctx *Context, world InvinceTrainWorld, playerID mod
 }
 
 func invinceTrainingPrompt(creature model.Creature, trainingCount int) string {
-	if creatureClass(creature) > legacyClassInvincible {
+	if creatureClass(creature) > model.ClassInvincible {
 		return fmt.Sprintf("초인이 무적수련을 하려면 경험치 %d만이 필요합니다.\n무적수련 이후 경험치가 1억이 안되면 무적으로 직업이 바뀝니다.\n무적수련을 하시겠습니까?(예/아니오): ", 200*trainingCount)
 	}
 	return fmt.Sprintf("무적수련을 하려면 경험치 %d만이 필요합니다.\n무적수련을 하시겠습니까?(예/아니오): ", 100*trainingCount)

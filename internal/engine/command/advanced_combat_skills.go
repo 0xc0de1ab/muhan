@@ -246,8 +246,8 @@ func NewTaguHandlerWithDeathFinalizer(world AdvancedCombatSkillWorld, finalizer 
 
 func bnahanClassRejection(actor model.Creature) string {
 	class := creatureClass(actor)
-	if class < legacyClassInvincible {
-		if class == legacyClassBarbarian && attackCreatureLevel(actor) >= 50 {
+	if class < model.ClassInvincible {
+		if class == model.ClassBarbarian && attackCreatureLevel(actor) >= 50 {
 			return ""
 		}
 		return "권법가 레벨 50이상만 쓸수 있는 기술입니다.\n"
@@ -260,8 +260,8 @@ func bnahanClassRejection(actor model.Creature) string {
 
 func taguClassRejection(actor model.Creature) string {
 	class := creatureClass(actor)
-	if class < legacyClassInvincible {
-		if class == legacyClassThief && attackCreatureLevel(actor) >= 50 {
+	if class < model.ClassInvincible {
+		if class == model.ClassThief && attackCreatureLevel(actor) >= 50 {
 			return ""
 		}
 		return "도둑 레벨 50이상만 쓸수 있는 기술입니다.\n"

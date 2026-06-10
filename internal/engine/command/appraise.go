@@ -9,12 +9,12 @@ import (
 )
 
 const (
-	appraiseClassAssassin   = legacyClassAssassin
-	appraiseClassFighter    = legacyClassFighter
-	appraiseClassPaladin    = legacyClassPaladin
-	appraiseClassRanger     = legacyClassRanger
-	appraiseClassThief      = legacyClassThief
-	appraiseClassInvincible = legacyClassInvincible
+	appraiseClassAssassin   = model.ClassAssassin
+	appraiseClassFighter    = model.ClassFighter
+	appraiseClassPaladin    = model.ClassPaladin
+	appraiseClassRanger     = model.ClassRanger
+	appraiseClassThief      = model.ClassThief
+	appraiseClassInvincible = model.ClassInvincible
 
 	legacyObjectSharp       = 0
 	legacyObjectThrust      = 1

@@ -258,7 +258,7 @@ func NewNahanHandlerWithDeathFinalizer(world FormationSkillsWorld, finalizer Att
 }
 
 func eightClassRejection(actor model.Creature) string {
-	if creatureClass(actor) < legacyClassInvincible {
+	if creatureClass(actor) < model.ClassInvincible {
 		return "무적이상만 쓸수 있는 기술입니다.\n"
 	}
 	if !bashHasFighterTraining(actor) {
@@ -346,7 +346,7 @@ func eightEnchantedOnlyGlances(world InventoryWorld, weapon model.ObjectInstance
 }
 
 func nahanClassRejection(actor model.Creature) string {
-	if creatureClass(actor) < legacyClassInvincible {
+	if creatureClass(actor) < model.ClassInvincible {
 		return "무적이상만 쓸수 있는 기술입니다.\n"
 	}
 	if !nahanHasClericTraining(actor) {
@@ -402,9 +402,9 @@ func nahanParticipantMP(participants []model.Creature) int {
 	for _, participant := range participants {
 		mp := creatureStat(participant, "mpCurrent")
 		switch class := creatureClass(participant); {
-		case class > legacyClassInvincible:
+		case class > model.ClassInvincible:
 			total += minInt(1000, mp/2)
-		case class == legacyClassInvincible:
+		case class == model.ClassInvincible:
 			total += mp / 2
 		default:
 			total += mp
@@ -430,7 +430,7 @@ func nahanChance(actor model.Creature, victim model.Creature) int {
 func nahanDamage(actor model.Creature, formationMP int, formationCount int) int {
 	damage := (formationMP / 10) * formationCount
 	damage += (attackRoll(1, maxInt(1, creatureStat(actor, "piety"))) + attackRoll(1, maxInt(1, creatureStat(actor, "intelligence")))) * formationCount
-	if creatureClass(actor) > legacyClassInvincible {
+	if creatureClass(actor) > model.ClassInvincible {
 		damage /= 2
 	}
 	return normalizeAttackDamage(damage)

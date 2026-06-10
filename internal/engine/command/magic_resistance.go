@@ -88,21 +88,21 @@ func spellFail(actor model.Creature) bool {
 
 	var chance int
 	switch class {
-	case legacyClassAssassin:
+	case model.ClassAssassin:
 		chance = (((level+3)/4)+bns)*5 + 30
-	case legacyClassBarbarian:
+	case model.ClassBarbarian:
 		chance = (((level + 3) / 4) + bns) * 5
-	case legacyClassCleric:
+	case model.ClassCleric:
 		chance = (((level+3)/4)+bns)*5 + 65
-	case legacyClassFighter:
+	case model.ClassFighter:
 		chance = (((level+3)/4)+bns)*5 + 10
-	case legacyClassMage:
+	case model.ClassMage:
 		chance = (((level+3)/4)+bns)*5 + 75
-	case legacyClassPaladin:
+	case model.ClassPaladin:
 		chance = (((level+3)/4)+bns)*5 + 50
-	case legacyClassRanger:
+	case model.ClassRanger:
 		chance = (((level+3)/4)+bns)*4 + 56
-	case legacyClassThief:
+	case model.ClassThief:
 		chance = (((level+3)/4)+bns)*6 + 22
 	default:
 		// DM/caretaker etc always succeed per C default:0

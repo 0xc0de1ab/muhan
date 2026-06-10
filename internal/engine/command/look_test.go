@@ -430,7 +430,7 @@ func TestLookHandlerDarkAlwaysRoomHonorsLegacyLightRules(t *testing.T) {
 			setup: func(t *testing.T, loaded *worldload.World) {
 				t.Helper()
 				alice := loaded.Creatures["creature:alice"]
-				alice.Stats = map[string]int{"class": legacyClassCaretaker}
+				alice.Stats = map[string]int{"class": model.ClassCaretaker}
 				loaded.Creatures[alice.ID] = alice
 			},
 			wantVisible: true,
@@ -812,7 +812,7 @@ func TestLookRenderRoomShowsPDMINVPlayersOnlyToDMViewer(t *testing.T) {
 		DisplayName: "DM",
 		PlayerID:    "player:dm",
 		RoomID:      "room:plaza",
-		Stats:       map[string]int{"class": legacyClassDM},
+		Stats:       map[string]int{"class": model.ClassDM},
 	})
 
 	normal := dispatchLookLine(t, loaded, "봐")

@@ -67,7 +67,7 @@ func TestListCharm(t *testing.T) {
 		w.creatures["creature:caretaker"] = model.Creature{
 			ID:          "creature:caretaker",
 			DisplayName: "관리자",
-			Stats:       map[string]int{"class": legacyClassSubDM}, // SUB_DM
+			Stats:       map[string]int{"class": model.ClassSubDM}, // SUB_DM
 		}
 
 		w.players["player:target"] = model.Player{

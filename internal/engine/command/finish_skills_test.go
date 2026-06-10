@@ -177,7 +177,7 @@ func TestScratchHandlerRejectsInvalidInputs(t *testing.T) {
 				alice := loaded.Creatures["creature:alice"]
 				alice.Level = 19
 				alice.Stats["level"] = 19
-				alice.Stats["class"] = legacyClassFighter
+				alice.Stats["class"] = model.ClassFighter
 				loaded.Creatures[alice.ID] = alice
 			},
 			want: "당신의 레벨로는 복권을 긁을 수 없습니다.",
@@ -672,7 +672,7 @@ func finishSkillsWorld(t *testing.T) *worldload.World {
 		Inventory:   model.ObjectRefList{ObjectIDs: []model.ObjectInstanceID{"object:ticket", "object:stone"}},
 		Equipment:   map[string]model.ObjectInstanceID{"wield": "object:bow"},
 		Stats: map[string]int{
-			"class":        legacyClassInvincible,
+			"class":        model.ClassInvincible,
 			"level":        60,
 			"strength":     20,
 			"dexterity":    20,
@@ -691,7 +691,7 @@ func finishSkillsWorld(t *testing.T) *worldload.World {
 		DisplayName: "Bob",
 		PlayerID:    "player:bob",
 		RoomID:      "room:arena",
-		Stats:       map[string]int{"class": legacyClassFighter, "level": 1, "hpCurrent": 30, "hpMax": 30},
+		Stats:       map[string]int{"class": model.ClassFighter, "level": 1, "hpCurrent": 30, "hpMax": 30},
 	})
 	mustAddLookCreature(t, loaded, model.Creature{
 		ID:          "creature:goblin",

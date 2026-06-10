@@ -42,7 +42,7 @@ func dmList(ctx *Context, resolved ResolvedCommand, world DMListWorld) (Status, 
 
 	// 1. Enforce SUB_DM (12+) permission validation.
 	class := creatureClass(creature)
-	if class < legacyClassSubDM {
+	if class < model.ClassSubDM {
 		return StatusPrompt, nil
 	}
 

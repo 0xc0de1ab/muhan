@@ -304,7 +304,7 @@ func magicObjectClassRestricted(world InventoryWorld, creature model.Creature, o
 		return false
 	}
 	class := creatureStat(creature, "class")
-	if class >= legacyClassCaretaker {
+	if class >= model.ClassCaretaker {
 		return false
 	}
 	names := magicClassFlagNames(class)

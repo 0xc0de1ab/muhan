@@ -45,7 +45,7 @@ func dmCast(ctx *Context, resolved ResolvedCommand, world DMCastWorld) (Status, 
 	}
 
 	class := creatureClass(creature)
-	if class < legacyClassSubDM {
+	if class < model.ClassSubDM {
 		return StatusPrompt, nil
 	}
 

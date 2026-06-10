@@ -121,7 +121,7 @@ func TestDMFindMonsterInRoomAppliesFindCrtVisibility(t *testing.T) {
 				ID:          "creature:pdminv",
 				DisplayName: "수호자",
 				RoomID:      "room:1",
-				Stats:       map[string]int{"class": legacyClassCaretaker},
+				Stats:       map[string]int{"class": model.ClassCaretaker},
 				Metadata:    model.Metadata{Tags: []string{"PDMINV"}},
 			},
 			"creature:normal": {
@@ -132,7 +132,7 @@ func TestDMFindMonsterInRoomAppliesFindCrtVisibility(t *testing.T) {
 		},
 	}
 
-	actor := model.Creature{ID: "creature:dm", Stats: map[string]int{"class": legacyClassDM}}
+	actor := model.Creature{ID: "creature:dm", Stats: map[string]int{"class": model.ClassDM}}
 	creature, ok := dmFindMonsterInRoomForActor(world, actor, "room:1", "늑대", 1)
 	if !ok || creature.ID != "creature:visible" {
 		t.Fatalf("visible lookup = %q/%v, want creature:visible/true", creature.ID, ok)

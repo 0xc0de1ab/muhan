@@ -2496,7 +2496,7 @@ func TestDefaultReadScrollMagicEffectHostileStateTargets(t *testing.T) {
 				if alice.Stats == nil {
 					alice.Stats = map[string]int{}
 				}
-				alice.Stats["class"] = legacyClassSubDM
+				alice.Stats["class"] = model.ClassSubDM
 			},
 		},
 		{
@@ -2507,7 +2507,7 @@ func TestDefaultReadScrollMagicEffectHostileStateTargets(t *testing.T) {
 				if alice.Stats == nil {
 					alice.Stats = map[string]int{}
 				}
-				alice.Stats["class"] = legacyClassSubDM
+				alice.Stats["class"] = model.ClassSubDM
 			},
 		},
 	}
@@ -2654,7 +2654,7 @@ func TestMagicEffectBlindRejectsUnauthorizedNonCastUse(t *testing.T) {
 func TestDefaultDrinkMagicEffectBlindSelfRequiresSubDM(t *testing.T) {
 	loaded := drinkWorld(t, "room:tavern", "2", "54")
 	creature := loaded.Creatures["creature:alice"]
-	creature.Stats = map[string]int{"class": legacyClassSubDM}
+	creature.Stats = map[string]int{"class": model.ClassSubDM}
 	loaded.Creatures[creature.ID] = creature
 	runtime := state.NewWorld(loaded)
 	potion := loaded.Objects["object:potion"]
@@ -2709,7 +2709,7 @@ func TestMagicEffectSilenceRejectsUnauthorizedNonCastUse(t *testing.T) {
 func TestDefaultDrinkMagicEffectSilenceSelfRequiresSubDM(t *testing.T) {
 	loaded := drinkWorld(t, "room:tavern", "2", "55")
 	creature := loaded.Creatures["creature:alice"]
-	creature.Stats = map[string]int{"class": legacyClassSubDM}
+	creature.Stats = map[string]int{"class": model.ClassSubDM}
 	loaded.Creatures[creature.ID] = creature
 	runtime := state.NewWorld(loaded)
 	potion := loaded.Objects["object:potion"]
@@ -2771,7 +2771,7 @@ func TestDefaultReadScrollMagicEffectStatusTargetsMonsterBeforePlayer(t *testing
 		t.Run(tt.name, func(t *testing.T) {
 			loaded := readScrollWorld(t, "room:library", "1", tt.power)
 			alice := loaded.Creatures["creature:alice"]
-			alice.Stats["class"] = legacyClassSubDM
+			alice.Stats["class"] = model.ClassSubDM
 			loaded.Creatures[alice.ID] = alice
 			mustAddLookCreature(t, loaded, model.Creature{
 				ID:          "creature:shade-monster",
@@ -2821,9 +2821,9 @@ func TestMagicEffectMagic8HostileStatesExplicitSelfAliasMissesLikeLegacy(t *test
 		class  int
 		want   string
 	}{
-		{name: "blind", effect: magicEffectBlind, class: legacyClassSubDM, want: "그런 사람이 존재하지 않습니다."},
-		{name: "silence", effect: magicEffectSilence, class: legacyClassSubDM, want: "\n그런 사람이 존재하지 않습니다.\n"},
-		{name: "fear", effect: magicEffectFear, class: legacyClassCleric, want: "그런 사람이 존재 하지 않습니다."},
+		{name: "blind", effect: magicEffectBlind, class: model.ClassSubDM, want: "그런 사람이 존재하지 않습니다."},
+		{name: "silence", effect: magicEffectSilence, class: model.ClassSubDM, want: "\n그런 사람이 존재하지 않습니다.\n"},
+		{name: "fear", effect: magicEffectFear, class: model.ClassCleric, want: "그런 사람이 존재 하지 않습니다."},
 	}
 
 	for _, tt := range tests {
@@ -2871,7 +2871,7 @@ func TestMagicEffectStatusPotionsRejectMissingTargetBeforeLookup(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			loaded := readScrollWorld(t, "room:library", "1", tt.power)
 			alice := loaded.Creatures["creature:alice"]
-			alice.Stats["class"] = legacyClassSubDM
+			alice.Stats["class"] = model.ClassSubDM
 			loaded.Creatures[alice.ID] = alice
 			runtime := state.NewWorld(loaded)
 			potion := model.ObjectInstance{ID: "object:status-potion", Properties: map[string]string{"type": "6"}}
@@ -3052,7 +3052,7 @@ func TestDefaultReadScrollMagicEffectProtectionTargetPlayer(t *testing.T) {
 func TestDefaultDrinkMagicEffectRemoveCursePotionSelf(t *testing.T) {
 	loaded := drinkWorld(t, "room:tavern", "2", "43")
 	creature := loaded.Creatures["creature:alice"]
-	creature.Stats["class"] = legacyClassDM
+	creature.Stats["class"] = model.ClassDM
 	weaponID := model.ObjectInstanceID("object:cursed-sword")
 	mustAddLookObject(t, loaded, model.ObjectInstance{
 		ID:                  weaponID,
@@ -3086,7 +3086,7 @@ func TestDefaultDrinkMagicEffectRemoveCursePotionSelf(t *testing.T) {
 func TestDefaultDrinkMagicEffectCursePotionSelf(t *testing.T) {
 	loaded := drinkWorld(t, "room:tavern", "2", "57")
 	creature := loaded.Creatures["creature:alice"]
-	creature.Stats["class"] = legacyClassDM
+	creature.Stats["class"] = model.ClassDM
 	weaponID := model.ObjectInstanceID("object:sword")
 	mustAddLookObject(t, loaded, model.ObjectInstance{
 		ID:                  weaponID,
@@ -3118,7 +3118,7 @@ func TestDefaultDrinkMagicEffectCursePotionSelf(t *testing.T) {
 func TestDefaultReadScrollMagicEffectRemoveCurseRejectsMonster(t *testing.T) {
 	loaded := readScrollWorld(t, "room:library", "1", "43")
 	creature := loaded.Creatures["creature:alice"]
-	creature.Stats["class"] = legacyClassDM
+	creature.Stats["class"] = model.ClassDM
 	loaded.Creatures[creature.ID] = creature
 	mustAddLookCreature(t, loaded, model.Creature{
 		ID:          "creature:merchant",
@@ -3145,7 +3145,7 @@ func TestDefaultReadScrollMagicEffectRemoveCurseRejectsMonster(t *testing.T) {
 func TestDefaultReadScrollMagicEffectCurseRejectsMonster(t *testing.T) {
 	loaded := readScrollWorld(t, "room:library", "1", "57")
 	creature := loaded.Creatures["creature:alice"]
-	creature.Stats["class"] = legacyClassDM
+	creature.Stats["class"] = model.ClassDM
 	loaded.Creatures[creature.ID] = creature
 	mustAddLookCreature(t, loaded, model.Creature{
 		ID:          "creature:merchant",
@@ -3182,7 +3182,7 @@ func TestDefaultReadScrollMagic6CurseEffectsExplicitSelfAliasMissesLikeLegacy(t 
 		t.Run(tt.name, func(t *testing.T) {
 			loaded := readScrollWorld(t, "room:library", "1", tt.magicPower)
 			actor := loaded.Creatures["creature:alice"]
-			actor.Stats["class"] = legacyClassDM
+			actor.Stats["class"] = model.ClassDM
 			weaponID := model.ObjectInstanceID("object:alias-sword")
 			mustAddLookObject(t, loaded, model.ObjectInstance{
 				ID:                  weaponID,

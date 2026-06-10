@@ -165,10 +165,10 @@ func NewKickHandlerWithDeathFinalizer(world KickWorld, finalizer AttackDeathFina
 
 func kickClassRejection(actor model.Creature) string {
 	class := creatureClass(actor)
-	if class != legacyClassBarbarian && class < legacyClassInvincible {
+	if class != model.ClassBarbarian && class < model.ClassInvincible {
 		return "권법가만 쓸수 있는 기술입니다.\n"
 	}
-	if class >= legacyClassInvincible && !kickHasBarbarianTraining(actor) {
+	if class >= model.ClassInvincible && !kickHasBarbarianTraining(actor) {
 		return "\n권법가를 무적수련하지 않았습니다..\n"
 	}
 	return ""
@@ -429,10 +429,10 @@ func kickChance(actor model.Creature, victim model.Creature) int {
 	chance := 50 + (((attackCreatureLevel(actor)+3)/4)-((attackCreatureLevel(victim)+3)/4))*5
 	chance += legacyStatBonus(creatureStat(actor, "strength")) * 3
 	chance += (legacyStatBonus(creatureStat(actor, "dexterity")) - legacyStatBonus(creatureStat(victim, "dexterity"))) * 2
-	if creatureClass(actor) == legacyClassBarbarian {
+	if creatureClass(actor) == model.ClassBarbarian {
 		chance += 10
 	}
-	if creatureClass(actor) > legacyClassInvincible {
+	if creatureClass(actor) > model.ClassInvincible {
 		chance += 5
 	}
 	chance = minInt(85, chance)
@@ -449,7 +449,7 @@ type kickDamageResult struct {
 
 func kickDamage(actor model.Creature, victim model.Creature) kickDamageResult {
 	base := statsDamage(actor) * 8
-	if creatureClass(victim) > legacyClassCaretaker {
+	if creatureClass(victim) > model.ClassCaretaker {
 		return kickDamageResult{actual: 1, ledger: minInt(creatureStat(victim, "hpCurrent"), base)}
 	}
 	return kickDamageResult{actual: base, ledger: minInt(creatureStat(victim, "hpCurrent"), base)}
@@ -458,11 +458,11 @@ func kickDamage(actor model.Creature, victim model.Creature) kickDamageResult {
 func kickInitialCooldown(actor model.Creature) int64 {
 	class := creatureClass(actor)
 	switch {
-	case class >= legacyClassBulsa:
+	case class >= model.ClassBulsa:
 		return 3
-	case class == legacyClassCaretaker:
+	case class == model.ClassCaretaker:
 		return 4
-	case class == legacyClassBarbarian:
+	case class == model.ClassBarbarian:
 		return 3
 	default:
 		return 5
@@ -470,7 +470,7 @@ func kickInitialCooldown(actor model.Creature) int64 {
 }
 
 func kickHitCooldown(actor model.Creature) int64 {
-	if creatureClass(actor) >= legacyClassInvincible {
+	if creatureClass(actor) >= model.ClassInvincible {
 		return int64(10 - minInt(7, creatureStat(actor, "dexterity")/5))
 	}
 	return int64(8 - minInt(5, creatureStat(actor, "dexterity")/5))

@@ -12,7 +12,7 @@ import (
 )
 
 func TestMagicStopHandlerBlocksSpellDamageAndStartsCooldowns(t *testing.T) {
-	loaded := magicStopWorld(t, legacyClassInvincible)
+	loaded := magicStopWorld(t, model.ClassInvincible)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"SRANGER", "hidden", "PHIDDN", "invisible", "PINVIS"}
 	alice.Stats["PHIDDN"] = 1
@@ -93,40 +93,40 @@ func TestMagicStopHandlerRejectsInvalidStates(t *testing.T) {
 	}{
 		{
 			name:  "wrong class",
-			class: legacyClassRanger,
+			class: model.ClassRanger,
 			tags:  []string{"SRANGER"},
 			args:  []string{"고블린"},
 			want:  "무적이상만 쓸 수 있는 기술입니다.",
 		},
 		{
 			name:  "invincible without ranger training",
-			class: legacyClassInvincible,
+			class: model.ClassInvincible,
 			args:  []string{"고블린"},
 			want:  "포졸을 무적수련하지 않았습니다.",
 		},
 		{
 			name:  "missing target",
-			class: legacyClassInvincible,
+			class: model.ClassInvincible,
 			tags:  []string{"SRANGER"},
 			want:  "누구의 혈도를 봉쇄하실려구요?",
 		},
 		{
 			name:  "blind",
-			class: legacyClassInvincible,
+			class: model.ClassInvincible,
 			tags:  []string{"SRANGER", "PBLIND"},
 			args:  []string{"고블린"},
 			want:  "누구의 혈도를 봉쇄하실려구요?",
 		},
 		{
 			name:  "unknown target",
-			class: legacyClassInvincible,
+			class: model.ClassInvincible,
 			tags:  []string{"SRANGER"},
 			args:  []string{"없는"},
 			want:  "그런 괴물은 존재하지 않습니다.",
 		},
 		{
 			name:  "protected monster",
-			class: legacyClassInvincible,
+			class: model.ClassInvincible,
 			tags:  []string{"SRANGER"},
 			args:  []string{"고블린"},
 			mutate: func(loaded *worldload.World) {
@@ -163,7 +163,7 @@ func TestMagicStopHandlerRejectsInvalidStates(t *testing.T) {
 }
 
 func TestMagicStopHandlerAllowsStatBasedRangerTraining(t *testing.T) {
-	loaded := magicStopWorld(t, legacyClassInvincible)
+	loaded := magicStopWorld(t, model.ClassInvincible)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = nil
 	alice.Stats["SRANGER"] = 1
@@ -210,7 +210,7 @@ func TestMagicStopHandlerUsesCustomDeathFinalizer(t *testing.T) {
 }
 
 func TestMagicStopHandlerFailureUsesCooldownWithoutDamage(t *testing.T) {
-	world := state.NewWorld(magicStopWorld(t, legacyClassInvincible))
+	world := state.NewWorld(magicStopWorld(t, model.ClassInvincible))
 	handler := NewMagicStopHandler(world, fixedRoll(100))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -237,13 +237,13 @@ func TestMagicStopHandlerFailureUsesCooldownWithoutDamage(t *testing.T) {
 }
 
 func TestMagicStopCooldownAndDurationHelpers(t *testing.T) {
-	if got := magicStopCooldownSeconds(model.Creature{Stats: map[string]int{"class": legacyClassInvincible}}); got != 20 {
+	if got := magicStopCooldownSeconds(model.Creature{Stats: map[string]int{"class": model.ClassInvincible}}); got != 20 {
 		t.Fatalf("invincible cooldown = %d, want 20", got)
 	}
-	if got := magicStopCooldownSeconds(model.Creature{Stats: map[string]int{"class": legacyClassCaretaker}}); got != 18 {
+	if got := magicStopCooldownSeconds(model.Creature{Stats: map[string]int{"class": model.ClassCaretaker}}); got != 18 {
 		t.Fatalf("caretaker cooldown = %d, want 18", got)
 	}
-	if got := magicStopCooldownSeconds(model.Creature{Stats: map[string]int{"class": legacyClassBulsa}}); got != 16 {
+	if got := magicStopCooldownSeconds(model.Creature{Stats: map[string]int{"class": model.ClassBulsa}}); got != 16 {
 		t.Fatalf("bulsa cooldown = %d, want 16", got)
 	}
 	if got := magicStopSpellCooldownSeconds(
@@ -265,7 +265,7 @@ func TestMagicStopCooldownAndDurationHelpers(t *testing.T) {
 func TestMagicStopHandlerCanBeRegisteredByDispatcher(t *testing.T) {
 	for _, line := range []string{"고블린 혈도봉쇄", "magic_stop 고블린"} {
 		t.Run(line, func(t *testing.T) {
-			world := state.NewWorld(magicStopWorld(t, legacyClassInvincible))
+			world := state.NewWorld(magicStopWorld(t, model.ClassInvincible))
 			dispatcher := magicStopDispatcher(t, world, magicStopRolls(t, 1, 100, 1, 1))
 
 			ctx := &Context{ActorID: "player:alice"}

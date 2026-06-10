@@ -48,7 +48,7 @@ func magicEffectDrainExp(
 		ctx.WriteString("\n당신은 아직 그런 주문을 터득하지 못했습니다.\n")
 		return false, nil
 	}
-	if how == howCast && creatureClass(actor) < legacyClassDM {
+	if how == howCast && creatureClass(actor) < model.ClassDM {
 		ctx.WriteString("\n그런 주문을 외울수 없습니다.\n")
 		return false, nil
 	}
@@ -301,7 +301,7 @@ func magicEffectCharm(
 		}
 
 		_ = magicEffectUpdateTags(world, target, charmTags, nil)
-		if creatureClass(target.creature) < legacyClassDM {
+		if creatureClass(target.creature) < model.ClassDM {
 			_ = magicEffectAddCharmListEntry(world, actor.ID, target.creature)
 		}
 
@@ -366,7 +366,7 @@ func magicEffectRmGong(
 	resolved ResolvedCommand,
 ) (bool, error) {
 	how := determineHow(world, object)
-	if creatureClass(actor) < legacyClassBulsa {
+	if creatureClass(actor) < model.ClassBulsa {
 		ctx.WriteString("아직 당신의 능력으로는 외울수 없는 주문입니다.")
 		return false, nil
 	}

@@ -213,7 +213,7 @@ func TestPobackHandlerRejectsInvalidStates(t *testing.T) {
 			args: []string{"동", "고블린"},
 			mutate: func(loaded *worldload.World) {
 				alice := loaded.Creatures["creature:alice"]
-				alice.Stats["class"] = legacyClassRanger
+				alice.Stats["class"] = model.ClassRanger
 				loaded.Creatures[alice.ID] = alice
 			},
 			want: "무적이상만 쓸수 있는 기술입니다.",
@@ -554,7 +554,7 @@ func TestLionScreamHandlerRejectsInvalidStates(t *testing.T) {
 			name: "wrong class",
 			mutate: func(loaded *worldload.World) {
 				alice := loaded.Creatures["creature:alice"]
-				alice.Stats["class"] = legacyClassFighter
+				alice.Stats["class"] = model.ClassFighter
 				alice.Stats["level"] = 60
 				alice.Level = 60
 				loaded.Creatures[alice.ID] = alice
@@ -575,7 +575,7 @@ func TestLionScreamHandlerRejectsInvalidStates(t *testing.T) {
 			name: "invincible without paladin training",
 			mutate: func(loaded *worldload.World) {
 				alice := loaded.Creatures["creature:alice"]
-				alice.Stats["class"] = legacyClassInvincible
+				alice.Stats["class"] = model.ClassInvincible
 				alice.Metadata.Tags = nil
 				loaded.Creatures[alice.ID] = alice
 			},
@@ -721,7 +721,7 @@ func pobackWorld(t *testing.T) *worldload.World {
 
 	loaded := baseControlSkillWorld(t)
 	alice := loaded.Creatures["creature:alice"]
-	alice.Stats["class"] = legacyClassInvincible
+	alice.Stats["class"] = model.ClassInvincible
 	loaded.Creatures[alice.ID] = alice
 	mustAddLookRoom(t, loaded, model.Room{
 		ID:          "room:east",
@@ -831,7 +831,7 @@ func baseControlSkillWorld(t *testing.T) *worldload.World {
 		Level:       50,
 		Equipment:   map[string]model.ObjectInstanceID{"wield": "object:staff"},
 		Stats: map[string]int{
-			"class":        legacyClassPaladin,
+			"class":        model.ClassPaladin,
 			"level":        50,
 			"thaco":        0,
 			"dexterity":    24,

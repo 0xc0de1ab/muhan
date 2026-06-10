@@ -47,7 +47,7 @@ func NewReturnSquareHandler(world ReturnWorld) Handler {
 			return StatusDefault, nil
 		}
 
-		if creatureLevel(creature) > 20 && creatureClass(creature) < legacyClassInvincible {
+		if creatureLevel(creature) > 20 && creatureClass(creature) < model.ClassInvincible {
 			ctx.WriteString("당신이 귀환하려하자 흑암의 세력이 당신의 도력을 뺏습니다.\n")
 			if setter, ok := world.(interface {
 				SetCreatureStat(model.CreatureID, string, int) error

@@ -32,11 +32,11 @@ func magicEffectObjectSend(
 			return false, nil
 		}
 		class := creatureStat(actor, "class")
-		if class != legacyClassMage && class < legacyClassInvincible {
+		if class != model.ClassMage && class < model.ClassInvincible {
 			ctx.WriteString("\n이 주술은 도술사들만이 사용할 수 있습니다.\n")
 			return false, nil
 		}
-		if class >= legacyClassInvincible && !attackCreatureHasFlag(actor, "SMAGE", "smage") {
+		if class >= model.ClassInvincible && !attackCreatureHasFlag(actor, "SMAGE", "smage") {
 			ctx.WriteString("\n도술사를 무적수련하지 않았습니다..\n")
 			return false, nil
 		}
@@ -98,7 +98,7 @@ func magicEffectObjectSend(
 		ctx.WriteString("\n이벤트 아이템은 다른자에게 보낼 수 없습니다.\n")
 		return false, nil
 	}
-	if creatureStat(actor, "class") < legacyClassDM && objectSendHasDirectQuestOrEventChild(world, object) {
+	if creatureStat(actor, "class") < model.ClassDM && objectSendHasDirectQuestOrEventChild(world, object) {
 		ctx.WriteString("\n전송에 실패했습니다.\n")
 		return false, nil
 	}
@@ -186,7 +186,7 @@ func getCreatureMaxWeight(creature model.Creature) int {
 	level := getCreatureLevel(creature)
 
 	n := 20 + strength*10
-	if class == legacyClassBarbarian {
+	if class == model.ClassBarbarian {
 		n += ((level + 3) / 4) * 10
 	}
 	return n

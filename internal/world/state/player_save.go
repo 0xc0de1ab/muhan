@@ -41,11 +41,11 @@ func (w *World) SavePlayer(playerID model.PlayerID) error {
 		return fmt.Errorf("save player: world state is nil")
 	}
 
-	w.mu.RLock()
+	w.rLockDomains(true, true, true, true, true, true, true)
 	dbRoot := w.dbRoot
 	player, ok := w.players[playerID]
 	if !ok {
-		w.mu.RUnlock()
+		w.rUnlockDomains(true, true, true, true, true, true, true)
 		return fmt.Errorf("save player %s: player not found", playerID)
 	}
 
@@ -84,7 +84,7 @@ func (w *World) SavePlayer(playerID model.PlayerID) error {
 			}
 		}
 	}
-	w.mu.RUnlock()
+	w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	if dbRoot == "" {
 		if testHarnessPersistenceDisabled() {
@@ -202,8 +202,8 @@ func (w *World) MergePlayerSaveIntoWorld(save PlayerSaveData) error {
 		return nil
 	}
 
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 
 	// Merge player
 	w.players[save.Player.ID] = save.Player
@@ -235,7 +235,7 @@ func (w *World) FlushActivePlayersAndBanks() error {
 		return nil
 	}
 
-	w.mu.RLock()
+	w.rLockDomains(true, true, true, true, true, true, true)
 	playerIDs := make([]model.PlayerID, 0, len(w.players))
 	for pid := range w.players {
 		playerIDs = append(playerIDs, pid)
@@ -246,7 +246,7 @@ func (w *World) FlushActivePlayersAndBanks() error {
 			familyBankIDs = append(familyBankIDs, bid)
 		}
 	}
-	w.mu.RUnlock()
+	w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	var firstErr error
 	for _, pid := range playerIDs {
@@ -269,14 +269,14 @@ func (w *World) FlushActivePlayersAndBanks() error {
 
 	// D: On full active flush (shutdown etc.) also persist current floor objects for all rooms
 	// that have any runtime objects. This is the reliable path for complete world state.
-	w.mu.RLock()
+	w.rLockDomains(true, true, true, true, true, true, true)
 	roomIDsWithFloor := make([]model.RoomID, 0)
 	for rid, room := range w.rooms {
 		if len(room.Objects.ObjectIDs) > 0 {
 			roomIDsWithFloor = append(roomIDsWithFloor, rid)
 		}
 	}
-	w.mu.RUnlock()
+	w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	for _, rid := range roomIDsWithFloor {
 		if err := w.SaveRoomObjects(rid); err != nil && firstErr == nil {
@@ -377,11 +377,11 @@ func (w *World) SaveRoomObjects(roomID model.RoomID) error {
 		return fmt.Errorf("save room objects: room id required")
 	}
 
-	w.mu.RLock()
+	w.rLockDomains(true, true, true, true, true, true, true)
 	dbRoot := w.dbRoot
 	room, ok := w.rooms[roomID]
 	if !ok {
-		w.mu.RUnlock()
+		w.rUnlockDomains(true, true, true, true, true, true, true)
 		return fmt.Errorf("save room objects %s: room not found", roomID)
 	}
 	properties := maps.Clone(room.Properties)
@@ -411,7 +411,7 @@ func (w *World) SaveRoomObjects(roomID model.RoomID) error {
 			toProcess = append(toProcess, co.Contents.ObjectIDs...)
 		}
 	}
-	w.mu.RUnlock()
+	w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	if dbRoot == "" {
 		return fmt.Errorf("save room objects %s: dbRoot not set", roomID)
@@ -503,8 +503,8 @@ func (w *World) MergeRoomObjectsSaveIntoWorld(save RoomObjectsSave) error {
 		return nil
 	}
 
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 
 	room, ok := w.rooms[save.RoomID]
 	if !ok {

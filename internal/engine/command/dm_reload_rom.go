@@ -24,7 +24,7 @@ func dmReloadRom(ctx *Context, resolved ResolvedCommand, world DMReloadRomWorld)
 		return StatusPrompt, nil
 	}
 
-	if dmReloadRomCreatureClass(creature) < legacyClassDM {
+	if dmReloadRomCreatureClass(creature) < model.ClassDM {
 		return StatusPrompt, nil
 	}
 

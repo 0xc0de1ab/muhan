@@ -22,7 +22,7 @@ func TestMagicEffectMendSelf(t *testing.T) {
 	creature.Level = 8
 	creature.Metadata.Tags = []string{"SMENDW"}
 	creature.Stats = map[string]int{
-		"class":        legacyClassCleric,
+		"class":        model.ClassCleric,
 		"level":        8,
 		"intelligence": 15,
 		"piety":        15,
@@ -80,7 +80,7 @@ func TestMagicEffectMendTarget(t *testing.T) {
 	aliceCreature.Level = 8
 	aliceCreature.Metadata.Tags = []string{"SMENDW"}
 	aliceCreature.Stats = map[string]int{
-		"class":        legacyClassCleric,
+		"class":        model.ClassCleric,
 		"level":        8,
 		"intelligence": 15,
 		"piety":        15,
@@ -201,7 +201,7 @@ func TestMagicEffectRoomVigor(t *testing.T) {
 	aliceCreature.Level = 30
 	aliceCreature.Metadata.Tags = []string{"SRVIGO"}
 	aliceCreature.Stats = map[string]int{
-		"class":        legacyClassCleric,
+		"class":        model.ClassCleric,
 		"level":        30,
 		"intelligence": 30,
 		"piety":        30,
@@ -299,7 +299,7 @@ func TestMagicEffectRoomVigorLegacyRestrictions(t *testing.T) {
 			name:   "wand still requires learned spell",
 			object: model.ObjectInstance{ID: "object:wand", Properties: map[string]string{"type": "8"}},
 			config: func(alice *model.Creature) {
-				alice.Stats = map[string]int{"class": legacyClassCleric, "mpCurrent": 20}
+				alice.Stats = map[string]int{"class": model.ClassCleric, "mpCurrent": 20}
 			},
 			want: "당신은 아직 그런 주문을 터득하지 못했습니다.",
 		},
@@ -308,7 +308,7 @@ func TestMagicEffectRoomVigorLegacyRestrictions(t *testing.T) {
 			object: model.ObjectInstance{ID: "object:scroll", Properties: map[string]string{"type": "7"}},
 			config: func(alice *model.Creature) {
 				alice.Metadata.Tags = []string{"SRVIGO"}
-				alice.Stats = map[string]int{"class": legacyClassMage, "mpCurrent": 20}
+				alice.Stats = map[string]int{"class": model.ClassMage, "mpCurrent": 20}
 			},
 			want: "이 주술은 불제자만이 사용할 수 있습니다.",
 		},
@@ -317,7 +317,7 @@ func TestMagicEffectRoomVigorLegacyRestrictions(t *testing.T) {
 			object: model.ObjectInstance{ID: "object:wand", Properties: map[string]string{"type": "8"}},
 			config: func(alice *model.Creature) {
 				alice.Metadata.Tags = []string{"SRVIGO"}
-				alice.Stats = map[string]int{"class": legacyClassInvincible, "mpCurrent": 20}
+				alice.Stats = map[string]int{"class": model.ClassInvincible, "mpCurrent": 20}
 			},
 			want: "\n불제자를 무적수련하지 않았습니다..\n",
 		},
@@ -326,7 +326,7 @@ func TestMagicEffectRoomVigorLegacyRestrictions(t *testing.T) {
 			object: model.ObjectInstance{ID: "object:wand", Properties: map[string]string{"type": "8"}},
 			config: func(alice *model.Creature) {
 				alice.Metadata.Tags = []string{"SRVIGO"}
-				alice.Stats = map[string]int{"class": legacyClassCleric, "mpCurrent": 11}
+				alice.Stats = map[string]int{"class": model.ClassCleric, "mpCurrent": 11}
 			},
 			want: "당신의 도력이 부족합니다",
 		},
@@ -369,7 +369,7 @@ func TestMagicEffectRestore(t *testing.T) {
 		creature := loaded.Creatures["creature:alice"]
 		creature.RoomID = "room:church"
 		creature.Stats = map[string]int{
-			"class":     legacyClassCaretaker,
+			"class":     model.ClassCaretaker,
 			"hpCurrent": 5,
 			"hpMax":     20,
 			"mpCurrent": 5,
@@ -422,7 +422,7 @@ func TestMagicEffectRestore(t *testing.T) {
 		creature := loaded.Creatures["creature:alice"]
 		creature.RoomID = "room:church"
 		creature.Stats = map[string]int{
-			"class":     legacyClassCaretaker,
+			"class":     model.ClassCaretaker,
 			"hpCurrent": 5,
 			"hpMax":     20,
 			"mpCurrent": 5,
@@ -474,7 +474,7 @@ func TestMagicEffectRestoreSelfRejectsLegacyNoOpStates(t *testing.T) {
 		{
 			name: "mp already max",
 			stats: map[string]int{
-				"class":     legacyClassCaretaker,
+				"class":     model.ClassCaretaker,
 				"hpCurrent": 5,
 				"hpMax":     20,
 				"mpCurrent": 20,
@@ -485,7 +485,7 @@ func TestMagicEffectRestoreSelfRejectsLegacyNoOpStates(t *testing.T) {
 		{
 			name: "invincible self cast",
 			stats: map[string]int{
-				"class":     legacyClassInvincible,
+				"class":     model.ClassInvincible,
 				"hpCurrent": 5,
 				"hpMax":     20,
 				"mpCurrent": 5,
@@ -496,7 +496,7 @@ func TestMagicEffectRestoreSelfRejectsLegacyNoOpStates(t *testing.T) {
 		{
 			name: "low class cast",
 			stats: map[string]int{
-				"class":     legacyClassFighter,
+				"class":     model.ClassFighter,
 				"hpCurrent": 5,
 				"hpMax":     20,
 				"mpCurrent": 5,
@@ -541,7 +541,7 @@ func TestCastRestoreDoesNotDeductGenericMPCostLikeLegacy(t *testing.T) {
 	loaded := castWorld(t, "room:dojo", 30)
 	creature := loaded.Creatures["creature:alice"]
 	creature.Metadata.Tags = append(creature.Metadata.Tags, "SRESTO")
-	creature.Stats["class"] = legacyClassCaretaker
+	creature.Stats["class"] = model.ClassCaretaker
 	creature.Stats["hpCurrent"] = 5
 	creature.Stats["mpMax"] = 40
 	loaded.Creatures[creature.ID] = creature

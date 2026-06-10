@@ -46,8 +46,8 @@ func (w *World) CheckCreatureItems(creatureID model.CreatureID) {
 	if w == nil {
 		return
 	}
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 
 	creature, ok := w.creatures[creatureID]
 	if !ok {

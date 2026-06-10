@@ -89,7 +89,6 @@ type BankSaveBundle struct {
 	Objects       []ObjectInstance `json:"objects,omitempty"`
 }
 
-
 type ObjectPrototype struct {
 	ID          PrototypeID       `json:"id"`
 	Kind        ObjectKind        `json:"kind,omitempty"`

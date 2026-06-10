@@ -45,7 +45,7 @@ func dmPurge(ctx *Context, resolved ResolvedCommand, world DMPurgeWorld) (Status
 	}
 
 	class := creatureClass(creature)
-	if class < legacyClassSubDM {
+	if class < model.ClassSubDM {
 		return StatusPrompt, nil
 	}
 

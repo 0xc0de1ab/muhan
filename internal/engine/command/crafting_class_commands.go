@@ -150,7 +150,7 @@ func NewChangeClassHandler(world CraftingClassWorld, starters ...ClassChangeStar
 
 		targetClass := changeClassRoomTarget(room)
 		currentClass := creatureClass(creature)
-		if currentClass > legacyClassThief {
+		if currentClass > model.ClassThief {
 			ctx.WriteString("당신은 직업전환을 할 수 없는 직업을 갖고 있습니다.\n")
 			return StatusDefault, nil
 		}
@@ -518,7 +518,7 @@ func (s *weaponForgePromptState) applyObjectProperties(world weaponForgeMutation
 }
 
 func classCannotUseDiamondForgeMaterial(class int) bool {
-	return class == legacyClassCleric || class == legacyClassPaladin || class == legacyClassMage
+	return class == model.ClassCleric || class == model.ClassPaladin || class == model.ClassMage
 }
 
 func legacyWeaponForgePrototypeID(choice int) model.PrototypeID {
@@ -608,7 +608,7 @@ func applyClassChangeLevelDown(mutator classChangeMutationWorld, world CraftingC
 		level--
 		if !upDamageCleared && trainActorHasAnyFlag(player, creature, "PUPDMG", "upDamage", "upDmg") {
 			upDamageCleared = true
-			if class < legacyClassInvincible {
+			if class < model.ClassInvincible {
 				hpMax -= 50
 				mpMax -= 50
 				pDice -= 2

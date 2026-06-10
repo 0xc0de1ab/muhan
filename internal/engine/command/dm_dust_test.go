@@ -199,8 +199,8 @@ func TestDMDust_SavedTargetWithoutActiveSessionIsNotFound(t *testing.T) {
 			"player:bob":   {ID: "player:bob", CreatureID: "creature:bob"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}, DisplayName: "Alice"},
-			"creature:bob":   {ID: "creature:bob", Stats: map[string]int{"class": legacyClassSubDM}, DisplayName: "Bob"},
+			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}, DisplayName: "Alice"},
+			"creature:bob":   {ID: "creature:bob", Stats: map[string]int{"class": model.ClassSubDM}, DisplayName: "Bob"},
 		},
 		dustCalled: make(map[model.PlayerID]bool),
 	}
@@ -258,7 +258,7 @@ func TestDMDust_TargetIsDM(t *testing.T) {
 		},
 		creatures: map[model.CreatureID]model.Creature{
 			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": 12}, DisplayName: "Alice"},
-			"creature:bob":   {ID: "creature:bob", Stats: map[string]int{"class": legacyClassSubDM}, DisplayName: "Bob"},
+			"creature:bob":   {ID: "creature:bob", Stats: map[string]int{"class": model.ClassSubDM}, DisplayName: "Bob"},
 		},
 		dustCalled: make(map[model.PlayerID]bool),
 	}
@@ -431,8 +431,8 @@ func TestDMDustUsesParsedTargetSlotLikeCWhenArgsMissing(t *testing.T) {
 			"player:bob":   {ID: "player:bob", CreatureID: "creature:bob", RoomID: "room:100"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}, DisplayName: "Alice"},
-			"creature:bob":   {ID: "creature:bob", Stats: map[string]int{"class": legacyClassFighter}, DisplayName: "Bob"},
+			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}, DisplayName: "Alice"},
+			"creature:bob":   {ID: "creature:bob", Stats: map[string]int{"class": model.ClassFighter}, DisplayName: "Bob"},
 		},
 		dustCalled: make(map[model.PlayerID]bool),
 	}

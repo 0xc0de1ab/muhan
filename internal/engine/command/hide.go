@@ -53,7 +53,7 @@ func NewHideHandler(world HideWorld, roll SearchRollFunc) Handler {
 
 func hideCooldownInterval(creature model.Creature) int64 {
 	switch creatureStat(creature, "class") {
-	case legacyClassThief, legacyClassAssassin, legacyClassRanger:
+	case model.ClassThief, model.ClassAssassin, model.ClassRanger:
 		return 5
 	default:
 		return 15
@@ -169,9 +169,9 @@ func hideSelfChance(creature model.Creature) int {
 	dexBonus := legacyStatBonus(creatureStat(creature, "dexterity"))
 	var chance int
 	switch {
-	case class == legacyClassThief || class == legacyClassAssassin || class >= legacyClassCaretaker:
+	case class == model.ClassThief || class == model.ClassAssassin || class >= model.ClassCaretaker:
 		chance = minInt(90, 5+6*((level+3)/4)+3*dexBonus)
-	case class == legacyClassRanger:
+	case class == model.ClassRanger:
 		chance = 5 + 10*((level+3)/4) + 3*dexBonus
 	default:
 		chance = minInt(90, 5+2*((level+3)/4)+3*dexBonus)
@@ -190,9 +190,9 @@ func hideObjectChance(creature model.Creature) int {
 	}
 	dexBonus := legacyStatBonus(creatureStat(creature, "dexterity"))
 	switch {
-	case class == legacyClassThief || class == legacyClassAssassin:
+	case class == model.ClassThief || class == model.ClassAssassin:
 		return minInt(90, 10+5*((level+3)/4)+5*dexBonus)
-	case class == legacyClassRanger:
+	case class == model.ClassRanger:
 		return 5 + 9*((level+3)/4) + 3*dexBonus
 	default:
 		return minInt(90, 5+3*((level+3)/4)+3*dexBonus)

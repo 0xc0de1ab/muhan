@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"muhan/internal/commandspec"
+	"muhan/internal/world/model"
 	"muhan/internal/world/state"
 )
 
@@ -182,7 +183,7 @@ func TestSetHandlerFamilyReturnUsesCreatureFamilyFlag(t *testing.T) {
 func TestSetHandlerPrivilegedSettingsUseCreatureClass(t *testing.T) {
 	loaded := emptyInventoryWorld(t)
 	creature := loaded.Creatures["creature:alice"]
-	creature.Stats = map[string]int{"class": legacyClassSubDM}
+	creature.Stats = map[string]int{"class": model.ClassSubDM}
 	loaded.Creatures[creature.ID] = creature
 	runtime := state.NewWorld(loaded)
 	dispatcher := settingsDispatcher(t, runtime)

@@ -218,7 +218,7 @@ func newUtilityAreaSkillHandler(world UtilityCombatSkillWorld, skill utilityArea
 }
 
 func changClassRejection(actor model.Creature) string {
-	if creatureClass(actor) < legacyClassCaretaker {
+	if creatureClass(actor) < model.ClassCaretaker {
 		return "초인 이상만 쓸수 있는 기술입니다.\n"
 	}
 	return ""
@@ -226,8 +226,8 @@ func changClassRejection(actor model.Creature) string {
 
 func choiClassRejection(actor model.Creature) string {
 	class := creatureClass(actor)
-	if class < legacyClassInvincible {
-		if class == legacyClassRanger && attackCreatureLevel(actor) >= 50 {
+	if class < model.ClassInvincible {
+		if class == model.ClassRanger && attackCreatureLevel(actor) >= 50 {
 			return ""
 		}
 		return "포졸 레벨 50이상만 쓸수 있는 기술입니다.\n"

@@ -67,7 +67,7 @@ func NewPrepareHandler(world PrepareWorld) Handler {
 }
 
 func prepareCooldownInterval(actor model.Creature) int64 {
-	if creatureClass(actor) == legacyClassDM {
+	if creatureClass(actor) == model.ClassDM {
 		return 0
 	}
 	return prepareCooldownSeconds

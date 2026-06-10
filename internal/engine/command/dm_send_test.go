@@ -33,9 +33,9 @@ func TestDMSend_PermissionDenied(t *testing.T) {
 		name  string
 		class int
 	}{
-		{name: "regular class", class: legacyClassInvincible},
-		{name: "caretaker below SUB_DM", class: legacyClassCaretaker},
-		{name: "bulsa below SUB_DM", class: legacyClassBulsa},
+		{name: "regular class", class: model.ClassInvincible},
+		{name: "caretaker below SUB_DM", class: model.ClassCaretaker},
+		{name: "bulsa below SUB_DM", class: model.ClassBulsa},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			world := &mockDMSendWorld{
@@ -136,9 +136,9 @@ func TestDMSend_Broadcast(t *testing.T) {
 		},
 		creatures: map[model.CreatureID]model.Creature{
 			"creature:alice":   {ID: "creature:alice", Stats: map[string]int{"class": 13}, DisplayName: "Alice"}, // DM
-			"creature:bob":     {ID: "creature:bob", Stats: map[string]int{"class": legacyClassCaretaker}, DisplayName: "Bob"},
-			"creature:charlie": {ID: "creature:charlie", Stats: map[string]int{"class": legacyClassInvincible}, DisplayName: "Charlie"},
-			"creature:dave":    {ID: "creature:dave", Stats: map[string]int{"class": legacyClassSubDM}, DisplayName: "Dave"},
+			"creature:bob":     {ID: "creature:bob", Stats: map[string]int{"class": model.ClassCaretaker}, DisplayName: "Bob"},
+			"creature:charlie": {ID: "creature:charlie", Stats: map[string]int{"class": model.ClassInvincible}, DisplayName: "Charlie"},
+			"creature:dave":    {ID: "creature:dave", Stats: map[string]int{"class": model.ClassSubDM}, DisplayName: "Dave"},
 		},
 	}
 
@@ -216,8 +216,8 @@ func TestDMSend_BroadcastVerbFinalRawInput(t *testing.T) {
 			"player:bob":   {ID: "player:bob", CreatureID: "creature:bob"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassDM}, DisplayName: "Alice"},
-			"creature:bob":   {ID: "creature:bob", Stats: map[string]int{"class": legacyClassCaretaker}, DisplayName: "Bob"},
+			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassDM}, DisplayName: "Alice"},
+			"creature:bob":   {ID: "creature:bob", Stats: map[string]int{"class": model.ClassCaretaker}, DisplayName: "Bob"},
 		},
 	}
 
@@ -269,8 +269,8 @@ func TestDMSendVerbFinalRawInputPreservesLegacyCutCommandTrailingSpaces(t *testi
 			"player:bob":   {ID: "player:bob", CreatureID: "creature:bob"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassDM}, DisplayName: "Alice"},
-			"creature:bob":   {ID: "creature:bob", Stats: map[string]int{"class": legacyClassCaretaker}, DisplayName: "Bob"},
+			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassDM}, DisplayName: "Alice"},
+			"creature:bob":   {ID: "creature:bob", Stats: map[string]int{"class": model.ClassCaretaker}, DisplayName: "Bob"},
 		},
 	}
 

@@ -42,7 +42,7 @@ func dmAddRom(ctx *Context, resolved ResolvedCommand, world DMAddRomWorld) (Stat
 	}
 
 	class := creatureClass(creature)
-	if class < legacyClassDM {
+	if class < model.ClassDM {
 		return StatusPrompt, nil
 	}
 

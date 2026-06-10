@@ -44,7 +44,7 @@ func dmSpy(ctx *Context, resolved ResolvedCommand, world DMSpyWorld) (Status, er
 
 	// 1. It validates player class permissions: SUB_DM (12+).
 	class := creatureClass(creature)
-	if class < legacyClassSubDM {
+	if class < model.ClassSubDM {
 		return StatusPrompt, nil
 	}
 

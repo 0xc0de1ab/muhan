@@ -144,7 +144,7 @@ func TestBnahanHandlerRejectsInvalidStates(t *testing.T) {
 			name: "wrong class",
 			mutate: func(loaded *worldload.World) {
 				alice := loaded.Creatures["creature:alice"]
-				alice.Stats["class"] = legacyClassFighter
+				alice.Stats["class"] = model.ClassFighter
 				loaded.Creatures[alice.ID] = alice
 			},
 			want: "권법가 레벨 50이상만 쓸수 있는 기술입니다.",
@@ -153,7 +153,7 @@ func TestBnahanHandlerRejectsInvalidStates(t *testing.T) {
 			name: "barbarian below level",
 			mutate: func(loaded *worldload.World) {
 				alice := loaded.Creatures["creature:alice"]
-				alice.Stats["class"] = legacyClassBarbarian
+				alice.Stats["class"] = model.ClassBarbarian
 				alice.Stats["level"] = 49
 				alice.Level = 49
 				loaded.Creatures[alice.ID] = alice
@@ -490,7 +490,7 @@ func TestTaguHandlerRejectsInvalidStates(t *testing.T) {
 			args: []string{"고블린"},
 			mutate: func(loaded *worldload.World) {
 				alice := loaded.Creatures["creature:alice"]
-				alice.Stats["class"] = legacyClassFighter
+				alice.Stats["class"] = model.ClassFighter
 				loaded.Creatures[alice.ID] = alice
 			},
 			want: "도둑 레벨 50이상만 쓸수 있는 기술입니다.",
@@ -500,7 +500,7 @@ func TestTaguHandlerRejectsInvalidStates(t *testing.T) {
 			args: []string{"고블린"},
 			mutate: func(loaded *worldload.World) {
 				alice := loaded.Creatures["creature:alice"]
-				alice.Stats["class"] = legacyClassThief
+				alice.Stats["class"] = model.ClassThief
 				alice.Stats["level"] = 49
 				alice.Level = 49
 				loaded.Creatures[alice.ID] = alice
@@ -650,7 +650,7 @@ func advancedCombatWorld(t *testing.T) *worldload.World {
 		Level:       50,
 		Equipment:   map[string]model.ObjectInstanceID{"wield": "object:staff"},
 		Stats: map[string]int{
-			"class":        legacyClassInvincible,
+			"class":        model.ClassInvincible,
 			"level":        50,
 			"strength":     24,
 			"dexterity":    24,
@@ -670,7 +670,7 @@ func advancedCombatWorld(t *testing.T) *worldload.World {
 		DisplayName: "Bob",
 		PlayerID:    "player:bob",
 		RoomID:      "room:arena",
-		Stats:       map[string]int{"class": legacyClassFighter, "level": 1, "hpCurrent": 50, "hpMax": 50},
+		Stats:       map[string]int{"class": model.ClassFighter, "level": 1, "hpCurrent": 50, "hpMax": 50},
 	})
 	mustAddLookCreature(t, loaded, model.Creature{
 		ID:          "creature:goblin",

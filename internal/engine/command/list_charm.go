@@ -40,7 +40,7 @@ func listCharm(ctx *Context, resolved ResolvedCommand, world ListCharmWorld) (St
 	}
 
 	class := creatureClass(creature)
-	if class < legacyClassSubDM {
+	if class < model.ClassSubDM {
 		return StatusPrompt, nil
 	}
 

@@ -131,7 +131,7 @@ func NewMagicStopHandlerWithDeathFinalizer(world MagicStopWorld, rng SearchRollF
 
 func magicStopClassRejection(actor model.Creature) string {
 	class := creatureClass(actor)
-	if class < legacyClassInvincible {
+	if class < model.ClassInvincible {
 		return "무적이상만 쓸 수 있는 기술입니다.\n"
 	}
 	if !magicStopHasRangerTraining(actor) {
@@ -151,10 +151,10 @@ func magicStopHasRangerTraining(actor model.Creature) bool {
 
 func magicStopCooldownSeconds(actor model.Creature) int64 {
 	class := creatureClass(actor)
-	if class >= legacyClassBulsa {
+	if class >= model.ClassBulsa {
 		return 16
 	}
-	if class == legacyClassCaretaker {
+	if class == model.ClassCaretaker {
 		return 18
 	}
 	return 20
@@ -170,9 +170,9 @@ func magicStopDamage(actor model.Creature, target model.Creature, rng SearchRoll
 	hpUnit := creatureStat(target, "hpCurrent") / 20
 	class := creatureClass(actor)
 	switch {
-	case class >= legacyClassBulsa:
+	case class >= model.ClassBulsa:
 		return rng(1, class) * hpUnit
-	case class == legacyClassCaretaker:
+	case class == model.ClassCaretaker:
 		return rng(3, class) * hpUnit
 	default:
 		return rng(5, class) * hpUnit

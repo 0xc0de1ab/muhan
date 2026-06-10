@@ -11,7 +11,7 @@ import (
 )
 
 func TestTrackHandlerIgnoresTargetArgsLikeLegacyRoomTrack(t *testing.T) {
-	loaded := trackWorld(t, legacyClassRanger)
+	loaded := trackWorld(t, model.ClassRanger)
 	room := loaded.Rooms["room:plaza"]
 	room.Properties = map[string]string{"track": "east"}
 	loaded.Rooms[room.ID] = room
@@ -33,7 +33,7 @@ func TestTrackHandlerIgnoresTargetArgsLikeLegacyRoomTrack(t *testing.T) {
 }
 
 func TestTrackHandlerDoesNotTrackAdjacentTargetsLikeLegacy(t *testing.T) {
-	loaded := trackWorld(t, legacyClassRanger)
+	loaded := trackWorld(t, model.ClassRanger)
 	moveTrackPlayerToRoom(loaded, "player:bob", "creature:bob", "room:east")
 	world := state.NewWorld(loaded)
 	handler := newTrackHandler(world, fixedRoll(1))
@@ -49,7 +49,7 @@ func TestTrackHandlerDoesNotTrackAdjacentTargetsLikeLegacy(t *testing.T) {
 }
 
 func TestTrackHandlerReportsLegacyRoomTrackWithoutTarget(t *testing.T) {
-	loaded := trackWorld(t, legacyClassRanger)
+	loaded := trackWorld(t, model.ClassRanger)
 	room := loaded.Rooms["room:plaza"]
 	room.Properties = map[string]string{"track": "west"}
 	loaded.Rooms[room.ID] = room
@@ -71,7 +71,7 @@ func TestTrackHandlerReportsLegacyRoomTrackWithoutTarget(t *testing.T) {
 }
 
 func TestTrackHandlerIgnoresMissingTargetLikeLegacy(t *testing.T) {
-	loaded := trackWorld(t, legacyClassRanger)
+	loaded := trackWorld(t, model.ClassRanger)
 	moveTrackPlayerToRoom(loaded, "player:bob", "creature:bob", "room:far")
 	world := state.NewWorld(loaded)
 	handler := newTrackHandler(world, fixedRoll(1))
@@ -93,8 +93,8 @@ func TestTrackHandlerRejectsClassAndBlindActor(t *testing.T) {
 		tags  []string
 		want  string
 	}{
-		{name: "wrong class", class: legacyClassFighter, want: "포졸만 쓸수 있는 명령입니다."},
-		{name: "blind", class: legacyClassRanger, tags: []string{"blind"}, want: "당신은 눈이 멀어 있습니다. 도저히 추적을 할 수 없습니다."},
+		{name: "wrong class", class: model.ClassFighter, want: "포졸만 쓸수 있는 명령입니다."},
+		{name: "blind", class: model.ClassRanger, tags: []string{"blind"}, want: "당신은 눈이 멀어 있습니다. 도저히 추적을 할 수 없습니다."},
 	}
 
 	for _, tt := range tests {
@@ -119,7 +119,7 @@ func TestTrackHandlerRejectsClassAndBlindActor(t *testing.T) {
 }
 
 func TestTrackHandlerCanBeRegisteredByDispatcher(t *testing.T) {
-	loaded := trackWorld(t, legacyClassRanger)
+	loaded := trackWorld(t, model.ClassRanger)
 	room := loaded.Rooms["room:plaza"]
 	room.Properties = map[string]string{"track": "east"}
 	loaded.Rooms[room.ID] = room
@@ -149,7 +149,7 @@ func TestTrackHandlerCanBeRegisteredByDispatcher(t *testing.T) {
 }
 
 func TestTrackHandlerReportsLegacyNoRoomTrack(t *testing.T) {
-	world := state.NewWorld(trackWorld(t, legacyClassRanger))
+	world := state.NewWorld(trackWorld(t, model.ClassRanger))
 	handler := newTrackHandler(world, fixedRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -163,10 +163,10 @@ func TestTrackHandlerReportsLegacyNoRoomTrack(t *testing.T) {
 }
 
 func TestTrackHandlerFailureAndCooldownLikeLegacy(t *testing.T) {
-	loaded := trackWorld(t, legacyClassRanger)
+	loaded := trackWorld(t, model.ClassRanger)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 1
-	alice.Stats = map[string]int{"class": legacyClassRanger, "level": 1, "dexterity": 10}
+	alice.Stats = map[string]int{"class": model.ClassRanger, "level": 1, "dexterity": 10}
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
 	handler := newTrackHandler(world, fixedRoll(100))
@@ -190,7 +190,7 @@ func TestTrackHandlerFailureAndCooldownLikeLegacy(t *testing.T) {
 }
 
 func TestTrackHandlerClearsHiddenBeforeCooldownLikeLegacy(t *testing.T) {
-	loaded := trackWorld(t, legacyClassRanger)
+	loaded := trackWorld(t, model.ClassRanger)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"hidden", "PHIDDN"}
 	alice.Stats["PHIDDN"] = 1

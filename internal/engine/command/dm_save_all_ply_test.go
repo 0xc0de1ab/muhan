@@ -38,13 +38,13 @@ func TestDMSaveAllPly_Handler(t *testing.T) {
 		name  string
 		class int
 	}{
-		{name: "ordinary", class: legacyClassFighter},
-		{name: "invincible", class: legacyClassInvincible},
+		{name: "ordinary", class: model.ClassFighter},
+		{name: "invincible", class: model.ClassInvincible},
 		{name: "zonemaker", class: legacyClassZoneMaker},
-		{name: "caretaker", class: legacyClassCaretaker},
-		{name: "bulsa", class: legacyClassBulsa},
-		{name: "sub dm", class: legacyClassSubDM},
-		{name: "dm", class: legacyClassDM},
+		{name: "caretaker", class: model.ClassCaretaker},
+		{name: "bulsa", class: model.ClassBulsa},
+		{name: "sub dm", class: model.ClassSubDM},
+		{name: "dm", class: model.ClassDM},
 	} {
 		t.Run("caster saves all like C - "+tt.name, func(t *testing.T) {
 			world := &mockDMSaveAllPlyWorld{
@@ -129,7 +129,7 @@ func TestDMSaveAllPly_Handler(t *testing.T) {
 				"creature:caster": {
 					ID: "creature:caster",
 					Stats: map[string]int{
-						"class": legacyClassDM,
+						"class": model.ClassDM,
 					},
 				},
 			},

@@ -87,10 +87,10 @@ func NewAngelHandler(world AngelWorld, rng SearchRollFunc) Handler {
 func angelClassRejection(actor model.Creature) string {
 	class := creatureClass(actor)
 	level := attackCreatureLevel(actor)
-	if class < legacyClassInvincible && !(class == legacyClassMage && level >= 50) {
+	if class < model.ClassInvincible && !(class == model.ClassMage && level >= 50) {
 		return "도술사 50 이상만 사용할 수 있는 기술입니다.\n"
 	}
-	if class >= legacyClassInvincible && !angelHasMageTraining(actor) {
+	if class >= model.ClassInvincible && !angelHasMageTraining(actor) {
 		return "\n도술사를 무적수련하지 않았습니다..\n"
 	}
 	return ""

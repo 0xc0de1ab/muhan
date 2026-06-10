@@ -16,7 +16,7 @@ var (
 	ErrMoveDirectionRequired = errors.New("move direction required")
 )
 
-const moveDMClass = legacyClassDM
+const moveDMClass = model.ClassDM
 
 type MoveWorld interface {
 	LookWorld
@@ -472,7 +472,7 @@ func handleMoveHiddenSneak(ctx *Context, world MoveWorld, viewer LookViewer, roo
 	}
 	class := creatureClass(actor)
 	hidden := attackCreatureHasFlag(actor, "hidden", "phiddn", "PHIDDN")
-	if (class == legacyClassAssassin || class == legacyClassThief || class > legacyClassInvincible) && hidden {
+	if (class == model.ClassAssassin || class == model.ClassThief || class > model.ClassInvincible) && hidden {
 		if mrand(1, 100) <= sneakChance(actor) {
 			return false, nil
 		}
@@ -492,7 +492,7 @@ func handleMoveHiddenSneak(ctx *Context, world MoveWorld, viewer LookViewer, roo
 			if creatureHasAnyFlag(monster, "blocksExits", "MBLOCK", "mblock") &&
 				sneakMonsterTargetsActor(world, monster.ID, viewer.PlayerID, actor) &&
 				!attackCreatureHasFlag(actor, "invisible", "pinvis", "PINVIS") &&
-				class < legacyClassSubDM {
+				class < model.ClassSubDM {
 				monsterName := attackCreatureName(monster)
 				ctx.WriteString(monsterName + "가 당신의 길을 가로막습니다.\n")
 				return true, nil
@@ -633,9 +633,9 @@ func guardedMoveExitBlocker(world MoveWorld, viewer LookViewer, room model.Room,
 	}
 	actor, actorOK := moveViewerCreature(world, viewer)
 	class := moveCreatureClass(actor, actorOK)
-	threshold := legacyClassSubDM
+	threshold := model.ClassSubDM
 	if handler == "sneak" {
-		threshold = legacyClassCaretaker
+		threshold = model.ClassCaretaker
 	}
 	actorInvisible := moveViewerHasAnyFlag(world, viewer, "invisible", "PINVIS")
 	for _, creatureID := range room.CreatureIDs {

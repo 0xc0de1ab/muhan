@@ -136,7 +136,7 @@ func findLegacyMonsterTarget(
 }
 
 func legacyFindCrtVisible(creature model.Creature, detectInvisible bool) bool {
-	if creatureClass(creature) >= legacyClassCaretaker && creatureHasAnyFlag(creature, "PDMINV", "dmInvisible", "pdminv") {
+	if creatureClass(creature) >= model.ClassCaretaker && creatureHasAnyFlag(creature, "PDMINV", "dmInvisible", "pdminv") {
 		return false
 	}
 	if !detectInvisible && creatureHasAnyFlag(creature, "MINVIS", "minvis", "invisible") {
@@ -367,7 +367,7 @@ func creatureHasFlag(creature model.Creature, names ...string) bool {
 
 func isCaretakerOrFamilyBoss(creature model.Creature) bool {
 	class := creatureClass(creature)
-	if class >= legacyClassCaretaker {
+	if class >= model.ClassCaretaker {
 		return true
 	}
 	return creatureHasFlag(creature, "PFMBOS", "familyBoss", "familyBossFlag")
@@ -773,7 +773,7 @@ func NewTransExpHandler(world TransExpWorld) Handler {
 
 		targetClass := creatureClass(targetCrt)
 		targetLevel := creatureStat(targetCrt, "level")
-		if targetLevel > 80 || targetClass == legacyClassInvincible {
+		if targetLevel > 80 || targetClass == model.ClassInvincible {
 			ctx.WriteString("당신은 그사람에게 경험치를 줄 수 없습니다.")
 			return StatusDefault, nil
 		}

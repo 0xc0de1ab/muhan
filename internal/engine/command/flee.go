@@ -212,7 +212,7 @@ func applyFleeExperiencePenalty(ctx *Context, world FleeWorld, creature model.Cr
 	if statsLevel := creatureStat(creature, "level"); statsLevel > level {
 		level = statsLevel
 	}
-	if class != legacyClassPaladin || level <= 20 {
+	if class != model.ClassPaladin || level <= 20 {
 		return nil
 	}
 	loss := ((level + 3) / 4) * 10

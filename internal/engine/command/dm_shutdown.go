@@ -43,7 +43,7 @@ func dmShutdown(ctx *Context, resolved ResolvedCommand, world DMShutdownWorld) (
 	}
 
 	class := creatureClass(creature)
-	if class < legacyClassDM {
+	if class < model.ClassDM {
 		return StatusPrompt, nil
 	}
 

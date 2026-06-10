@@ -292,10 +292,10 @@ func energySkillActor(world LookWorld, viewer LookViewer, handler string) (model
 
 func powerClassRejection(actor model.Creature) string {
 	class := creatureClass(actor)
-	if class != legacyClassFighter && class < legacyClassInvincible {
+	if class != model.ClassFighter && class < model.ClassInvincible {
 		return "검사만 사용할 수 있는 기술입니다.\n"
 	}
-	if class >= legacyClassInvincible && !powerHasFighterTraining(actor) {
+	if class >= model.ClassInvincible && !powerHasFighterTraining(actor) {
 		return "\n검사를 무적수련하지 않았습니다..\n"
 	}
 	return ""
@@ -339,10 +339,10 @@ func powerApplySuccess(world EnergySkillBuffWorld, player model.Player, actor mo
 
 func accurateClassRejection(actor model.Creature) string {
 	class := creatureClass(actor)
-	if class != legacyClassAssassin && class != legacyClassThief && class < legacyClassInvincible {
+	if class != model.ClassAssassin && class != model.ClassThief && class < model.ClassInvincible {
 		return "자객과 도둑만 사용할 수 있는 기술입니다.\n"
 	}
-	if class >= legacyClassInvincible && !accurateHasAssassinOrThiefTraining(actor) {
+	if class >= model.ClassInvincible && !accurateHasAssassinOrThiefTraining(actor) {
 		return "\n자객이나 도둑을 무적수련하지 않았습니다..\n"
 	}
 	return ""
@@ -392,7 +392,7 @@ func accurateApplySuccess(world EnergySkillBuffWorld, player model.Player, actor
 }
 
 func absorbClassRejection(actor model.Creature) string {
-	if creatureClass(actor) < legacyClassInvincible {
+	if creatureClass(actor) < model.ClassInvincible {
 		return "무적이상만 쓸 수 있는 기술입니다.\n"
 	}
 	if !absorbHasMageTraining(actor) {
@@ -419,9 +419,9 @@ func absorbChance(actor model.Creature, target model.Creature) int {
 func absorbDamage(actor model.Creature, rng SearchRollFunc) int {
 	maxRoll := 5
 	class := creatureClass(actor)
-	if class >= legacyClassBulsa {
+	if class >= model.ClassBulsa {
 		maxRoll = 15
-	} else if class == legacyClassCaretaker {
+	} else if class == model.ClassCaretaker {
 		maxRoll = 10
 	}
 	damage := rng(1, maxRoll) * ((attackCreatureLevel(actor) + 3) / 4)

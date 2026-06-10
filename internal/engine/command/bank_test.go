@@ -375,12 +375,12 @@ func TestBankInventoryHandlerStoreAllQuestItemsRequireDMLikeLegacy(t *testing.T)
 	}{
 		{
 			name:       "invincible still skips quest item",
-			class:      legacyClassInvincible,
+			class:      model.ClassInvincible,
 			wantOutput: "당신은 보관시킬 물건을 아무것도 갖고 있지 않습니다.",
 		},
 		{
 			name:       "DM can bulk store quest item",
-			class:      legacyClassDM,
+			class:      model.ClassDM,
 			wantOutput: "당신은 성물을 보관시켰습니다.\n",
 			wantStored: true,
 		},

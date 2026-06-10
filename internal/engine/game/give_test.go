@@ -522,7 +522,7 @@ func TestGiveHandlerDetectInvisibleUsesPropertyBackedCreatureFlags(t *testing.T)
 }
 
 func TestGiveHandlerTargetVisibilityUsesPropertyBackedCreatureFlags(t *testing.T) {
-	world := giveTestWorldWithOptions(t, giveTestWorldOptions{bobStats: map[string]int{"class": legacyClassCaretaker}})
+	world := giveTestWorldWithOptions(t, giveTestWorldOptions{bobStats: map[string]int{"class": model.ClassCaretaker}})
 	if _, err := world.SetCreatureProperty("creature:bob", "flags", "PDMINV"); err != nil {
 		t.Fatalf("SetCreatureProperty() error = %v", err)
 	}

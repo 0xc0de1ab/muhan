@@ -241,10 +241,10 @@ func defenseDefaultRoll(min int, max int) int {
 func reflectClassRejection(actor model.Creature) string {
 	class := creatureClass(actor)
 	level := attackCreatureLevel(actor)
-	if class < legacyClassInvincible && !(class == legacyClassFighter && level >= 50) {
+	if class < model.ClassInvincible && !(class == model.ClassFighter && level >= 50) {
 		return "검사 레벨 50이상만 쓸수 있는 기술입니다.\n"
 	}
-	if class >= legacyClassInvincible && !reflectHasFighterTraining(actor) {
+	if class >= model.ClassInvincible && !reflectHasFighterTraining(actor) {
 		return "\n검사를 무적수련하지 않았습니다..\n"
 	}
 	return ""
@@ -296,10 +296,10 @@ func reflectApplySuccess(world ReflectWorld, player model.Player, actor model.Cr
 func shadowClassRejection(actor model.Creature) string {
 	class := creatureClass(actor)
 	level := attackCreatureLevel(actor)
-	if class < legacyClassInvincible && !(class == legacyClassAssassin && level >= 50) {
+	if class < model.ClassInvincible && !(class == model.ClassAssassin && level >= 50) {
 		return "자객 레벨 50이상만 쓸수 있는 기술입니다.\n"
 	}
-	if class >= legacyClassInvincible && !shadowHasAssassinTraining(actor) {
+	if class >= model.ClassInvincible && !shadowHasAssassinTraining(actor) {
 		return "\n자객을 무적수련하지 않았습니다..\n"
 	}
 	return ""
@@ -348,15 +348,15 @@ func shadowCloneCount(actor model.Creature) int {
 	class := creatureClass(actor)
 	count := shadowNormalCloneCount
 	switch {
-	case class > legacyClassInvincible:
+	case class > model.ClassInvincible:
 		count = shadowCaretakerPlusCloneCount
-	case class == legacyClassInvincible && shadowHasAssassinTraining(actor):
+	case class == model.ClassInvincible && shadowHasAssassinTraining(actor):
 		count = shadowInvincibleCloneCount
 	}
 	if attackCreatureHasFlag(actor, "YELLOWI", "yellowI") {
 		count++
 	}
-	if class == legacyClassBulsa {
+	if class == model.ClassBulsa {
 		count++
 	}
 	return count

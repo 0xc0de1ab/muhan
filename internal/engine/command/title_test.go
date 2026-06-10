@@ -303,7 +303,7 @@ func titleRuntime(t *testing.T, customTitle string) *state.World {
 		PlayerID:    "player:alice",
 		RoomID:      "room:plaza",
 		Level:       1,
-		Stats:       map[string]int{"class": legacyClassFighter, "level": 1},
+		Stats:       map[string]int{"class": model.ClassFighter, "level": 1},
 		Properties:  properties,
 	})
 	return state.NewWorld(loaded)

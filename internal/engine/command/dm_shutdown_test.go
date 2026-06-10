@@ -247,7 +247,7 @@ func TestDMShutdownUsesParsedNowSlotWithoutSyntheticArgs(t *testing.T) {
 			"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice": {ID: "creature:alice", RoomID: "room:1", Stats: map[string]int{"class": legacyClassDM}},
+			"creature:alice": {ID: "creature:alice", RoomID: "room:1", Stats: map[string]int{"class": model.ClassDM}},
 		},
 	}
 	ctx := &Context{ActorID: "player:alice"}

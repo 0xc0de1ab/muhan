@@ -15,11 +15,11 @@ func magicEffectEnchant(ctx *Context, world StatusWorld, actor model.Creature, s
 	how := determineHow(world, sourceObject)
 	class := creatureStat(actor, "class")
 	if how == howCast {
-		if class != legacyClassMage && class < legacyClassInvincible {
+		if class != model.ClassMage && class < model.ClassInvincible {
 			ctx.WriteString("\n도술사들만이 주술을 걸수있습니다.\n")
 			return false, nil
 		}
-		if class >= legacyClassInvincible && !attackCreatureHasFlag(actor, "SMAGE", "smage") {
+		if class >= model.ClassInvincible && !attackCreatureHasFlag(actor, "SMAGE", "smage") {
 			ctx.WriteString("\n도술사를 무적수련하지 않았습니다..\n")
 			return false, nil
 		}
@@ -56,7 +56,7 @@ func magicEffectEnchant(ctx *Context, world StatusWorld, actor model.Creature, s
 		if err != nil {
 			return false, err
 		}
-		if !available && class < legacyClassCaretaker {
+		if !available && class < model.ClassCaretaker {
 			ctx.WriteString("\n당신은 탈진해서 더 이상 주술을 걸수 없습니다.\n좀 쉬어야겠는데요?\n")
 			return false, nil
 		}
@@ -67,7 +67,7 @@ func magicEffectEnchant(ctx *Context, world StatusWorld, actor model.Creature, s
 
 	var adj int
 	level := creatureStat(actor, "level")
-	if how == howCast && (class == legacyClassMage || class >= legacyClassInvincible) {
+	if how == howCast && (class == model.ClassMage || class >= model.ClassInvincible) {
 		adj = (((level+3)/4)-5)/5 + 1
 		if adj > 3 {
 			adj = 3
@@ -79,7 +79,7 @@ func magicEffectEnchant(ctx *Context, world StatusWorld, actor model.Creature, s
 	if attackCreatureHasFlag(actor, "YELLOWI", "yellowI") {
 		adj = 4
 	}
-	if class >= legacyClassBulsa {
+	if class >= model.ClassBulsa {
 		adj = 5
 	}
 

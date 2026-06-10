@@ -191,10 +191,10 @@ func revealBashActor(ctx *Context, world revealActorWorld, roomID model.RoomID, 
 
 func bashClassRejection(actor model.Creature) string {
 	class := creatureClass(actor)
-	if class != legacyClassFighter && class < legacyClassInvincible {
+	if class != model.ClassFighter && class < model.ClassInvincible {
 		return "검사만 쓸수 있는 기술입니다.\n"
 	}
-	if class >= legacyClassInvincible && !bashHasFighterTraining(actor) {
+	if class >= model.ClassInvincible && !bashHasFighterTraining(actor) {
 		return "\n검사를 무적수련하지 않았습니다..\n"
 	}
 	return ""
@@ -272,7 +272,7 @@ func bashMaybeSpendWield(
 	weapon model.ObjectInstance,
 ) (model.ObjectInstance, bool, error) {
 	shots, hasShots := objectIntProperty(world, weapon, "shotsCurrent")
-	if hasShots && creatureClass(actor) >= legacyClassInvincible && shots > 0 {
+	if hasShots && creatureClass(actor) >= model.ClassInvincible && shots > 0 {
 		updated, _, consumed, err := world.ConsumeCreatureObjectCharge(weapon.ID, actor.ID, false)
 		if err != nil {
 			return model.ObjectInstance{}, false, err
@@ -302,7 +302,7 @@ func bashChance(actor model.Creature, victim model.Creature) int {
 	chance := 50 + (((attackCreatureLevel(actor)+3)/4)-((attackCreatureLevel(victim)+3)/4))*10
 	chance += legacyStatBonus(creatureStat(actor, "strength")) * 3
 	chance += (legacyStatBonus(creatureStat(actor, "dexterity")) - legacyStatBonus(creatureStat(victim, "dexterity"))) * 2
-	if creatureClass(actor) == legacyClassBarbarian {
+	if creatureClass(actor) == model.ClassBarbarian {
 		chance += 5
 	}
 	chance = minInt(85, chance)
@@ -321,7 +321,7 @@ func bashDamage(world InventoryWorld, actor model.Creature, victim model.Creatur
 	damage := normalizeAttackDamage(objectDamage(world, weapon)*3 + statsDamage(actor)*2)
 	hp := creatureStat(victim, "hpCurrent")
 	actual := minInt(hp/3, damage)
-	if creatureClass(victim) > legacyClassCaretaker {
+	if creatureClass(victim) > model.ClassCaretaker {
 		actual = 1
 	}
 	return bashDamageResult{
@@ -349,11 +349,11 @@ func bashLegacyWeaponProficiencyGain(victim model.Creature, rawDamage int) int {
 func bashInitialCooldown(actor model.Creature) int64 {
 	class := creatureClass(actor)
 	switch {
-	case class >= legacyClassBulsa:
+	case class >= model.ClassBulsa:
 		return 3
-	case class == legacyClassCaretaker:
+	case class == model.ClassCaretaker:
 		return 4
-	case class == legacyClassFighter:
+	case class == model.ClassFighter:
 		return 3
 	default:
 		return 5

@@ -35,7 +35,7 @@ func dmStat(ctx *Context, resolved ResolvedCommand, world DMStatWorld) (Status, 
 	}
 
 	classVal := creatureClass(creature)
-	if classVal != legacyClassZoneMaker && classVal < legacyClassSubDM {
+	if classVal != legacyClassZoneMaker && classVal < model.ClassSubDM {
 		return StatusPrompt, nil
 	}
 
@@ -86,7 +86,7 @@ func dmStat(ctx *Context, resolved ResolvedCommand, world DMStatWorld) (Status, 
 		}
 
 		if ply_ptr2_ok {
-			if checkFlag(ply_ptr2, "PDMINV") && classVal < legacyClassDM {
+			if checkFlag(ply_ptr2, "PDMINV") && classVal < model.ClassDM {
 				ply_ptr2 = creature
 			}
 		}
@@ -115,7 +115,7 @@ func dmStat(ctx *Context, resolved ResolvedCommand, world DMStatWorld) (Status, 
 	}
 
 	if targetCrtFound {
-		if checkFlag(targetCrt, "PDMINV") && classVal < legacyClassSubDM {
+		if checkFlag(targetCrt, "PDMINV") && classVal < model.ClassSubDM {
 			ctx.WriteString("그런건 없습니다.\n")
 			return StatusDefault, nil
 		}

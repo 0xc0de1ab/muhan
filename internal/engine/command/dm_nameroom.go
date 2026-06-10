@@ -43,7 +43,7 @@ func dmNameroom(ctx *Context, resolved ResolvedCommand, world DMNameroomWorld) (
 	}
 
 	class := creatureClass(creature)
-	if class < legacyClassDM {
+	if class < model.ClassDM {
 		return StatusPrompt, nil
 	}
 

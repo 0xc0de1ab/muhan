@@ -15,7 +15,7 @@ func TestForgeHandlerValidatesForgeRoom(t *testing.T) {
 	world := state.NewWorld(craftingClassWorld(t, model.Room{
 		ID:          "room:00610",
 		DisplayName: "광장",
-	}, legacyClassFighter, 100000))
+	}, model.ClassFighter, 100000))
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewForgeHandler(world, nil)(ctx, ResolvedCommand{})
@@ -32,7 +32,7 @@ func TestForgeHandlerCallsStarterInForgeRoom(t *testing.T) {
 		ID:          "room:00610",
 		DisplayName: "대장간",
 		Metadata:    model.Metadata{Tags: []string{"forge"}},
-	}, legacyClassFighter, 100000))
+	}, model.ClassFighter, 100000))
 	starter := &recordingWeaponForgeStarter{status: StatusDoPrompt}
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -53,7 +53,7 @@ func TestForgeHandlerDefaultConversationCreatesWeapon(t *testing.T) {
 		ID:          "room:00610",
 		DisplayName: "대장간",
 		Metadata:    model.Metadata{Tags: []string{"forge"}},
-	}, legacyClassFighter, 100000))
+	}, model.ClassFighter, 100000))
 
 	var pending PendingLineHandler
 	ctx := craftingClassPromptContext(&pending)
@@ -118,7 +118,7 @@ func TestForgeHandlerRejectsDiamondMaterialForMagicClasses(t *testing.T) {
 		ID:          "room:00610",
 		DisplayName: "대장간",
 		Metadata:    model.Metadata{Tags: []string{"forge"}},
-	}, legacyClassMage, 100000))
+	}, model.ClassMage, 100000))
 
 	var pending PendingLineHandler
 	ctx := craftingClassPromptContext(&pending)
@@ -137,7 +137,7 @@ func TestForgeHandlerChoiceParsingMatchesCFirstByte(t *testing.T) {
 		ID:          "room:00610",
 		DisplayName: "대장간",
 		Metadata:    model.Metadata{Tags: []string{"forge"}},
-	}, legacyClassFighter, 100000))
+	}, model.ClassFighter, 100000))
 
 	var pending PendingLineHandler
 	ctx := craftingClassPromptContext(&pending)
@@ -160,7 +160,7 @@ func TestForgeHandlerNameValidationMatchesLegacyBytesAndPreservesText(t *testing
 		ID:          "room:00610",
 		DisplayName: "대장간",
 		Metadata:    model.Metadata{Tags: []string{"forge"}},
-	}, legacyClassFighter, 100000))
+	}, model.ClassFighter, 100000))
 
 	var pending PendingLineHandler
 	ctx := craftingClassPromptContext(&pending)
@@ -203,7 +203,7 @@ func TestForgeHandlerConfirmMatchesCLiteralYes(t *testing.T) {
 		ID:          "room:00610",
 		DisplayName: "대장간",
 		Metadata:    model.Metadata{Tags: []string{"forge"}},
-	}, legacyClassFighter, 100000))
+	}, model.ClassFighter, 100000))
 
 	var pending PendingLineHandler
 	ctx := craftingClassPromptContext(&pending)
@@ -230,7 +230,7 @@ func TestNewForgeHandlerRequiresLegacyRoom611(t *testing.T) {
 		ID:          "room:00610",
 		DisplayName: "대장간",
 		Metadata:    model.Metadata{Tags: []string{"forge"}},
-	}, legacyClassFighter, 100000))
+	}, model.ClassFighter, 100000))
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewNewForgeHandler(world, nil)(ctx, ResolvedCommand{})
@@ -247,7 +247,7 @@ func TestNewForgeHandlerCallsStarterInLegacyRoom611(t *testing.T) {
 		ID:          "room:00611",
 		DisplayName: "특별 대장간",
 		Metadata:    model.Metadata{Tags: []string{"forge"}},
-	}, legacyClassFighter, 100000))
+	}, model.ClassFighter, 100000))
 	starter := &recordingWeaponForgeStarter{status: StatusDoPrompt}
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -268,7 +268,7 @@ func TestNewForgeHandlerDefaultConversationCreatesHighGradeWeapon(t *testing.T) 
 		ID:          "room:00611",
 		DisplayName: "특별 대장간",
 		Metadata:    model.Metadata{Tags: []string{"forge"}},
-	}, legacyClassFighter, 100000))
+	}, model.ClassFighter, 100000))
 
 	var pending PendingLineHandler
 	ctx := craftingClassPromptContext(&pending)
@@ -316,35 +316,35 @@ func TestChangeClassHandlerRejectsLegacyConditions(t *testing.T) {
 		{
 			name:       "blind",
 			roomTags:   []string{"train", "trainingBit4"},
-			class:      legacyClassFighter,
+			class:      model.ClassFighter,
 			experience: 100000,
 			playerTags: []string{"blind"},
 			want:       "당신은 눈이 멀어 직업전환을 할 수 없습니다!\n",
 		},
 		{
 			name:       "not training room",
-			class:      legacyClassFighter,
+			class:      model.ClassFighter,
 			experience: 100000,
 			want:       "이 곳은 수련장이 아닙니다!\n",
 		},
 		{
 			name:       "unsupported class",
 			roomTags:   []string{"train", "trainingBit4"},
-			class:      legacyClassInvincible,
+			class:      model.ClassInvincible,
 			experience: 100000,
 			want:       "당신은 직업전환을 할 수 없는 직업을 갖고 있습니다.\n",
 		},
 		{
 			name:       "same class training room",
 			roomTags:   []string{"train", "trainingBit4"},
-			class:      legacyClassMage,
+			class:      model.ClassMage,
 			experience: 100000,
 			want:       "직업전환을 하려면 자신이 수련하는곳에서는 할 수 없습니다.\n",
 		},
 		{
 			name:       "not enough experience",
 			roomTags:   []string{"train", "trainingBit4"},
-			class:      legacyClassFighter,
+			class:      model.ClassFighter,
 			experience: 99999,
 			want:       "직업전환을 하려면 경험치 10만이 필요합니다.\n",
 		},
@@ -380,7 +380,7 @@ func TestChangeClassHandlerCallsStarterAfterValidation(t *testing.T) {
 		ID:          "room:00610",
 		DisplayName: "수련장",
 		Metadata:    model.Metadata{Tags: []string{"train", "trainingBit4"}},
-	}, legacyClassFighter, 100000))
+	}, model.ClassFighter, 100000))
 	starter := &recordingClassChangeStarter{status: StatusDoPrompt}
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -391,12 +391,12 @@ func TestChangeClassHandlerCallsStarterAfterValidation(t *testing.T) {
 	if status != StatusDoPrompt || ctx.OutputString() != "class change started\n" {
 		t.Fatalf("status/output = %d/%q", status, ctx.OutputString())
 	}
-	if !starter.called || starter.request.CurrentClass != legacyClassFighter || starter.request.TargetClass != legacyClassMage {
+	if !starter.called || starter.request.CurrentClass != model.ClassFighter || starter.request.TargetClass != model.ClassMage {
 		t.Fatalf("starter request = called:%v %+v", starter.called, starter.request)
 	}
 
 	creature, _ := world.Creature("creature:alice")
-	if creature.Stats["class"] != legacyClassFighter || creature.Stats["experience"] != 100000 {
+	if creature.Stats["class"] != model.ClassFighter || creature.Stats["experience"] != 100000 {
 		t.Fatalf("default handler path mutated creature: class=%d exp=%d", creature.Stats["class"], creature.Stats["experience"])
 	}
 }
@@ -406,7 +406,7 @@ func TestChangeClassHandlerDefaultConversationMutatesOnYes(t *testing.T) {
 		ID:          "room:00610",
 		DisplayName: "수련장",
 		Metadata:    model.Metadata{Tags: []string{"train", "trainingBit4"}},
-	}, legacyClassFighter, 150000))
+	}, model.ClassFighter, 150000))
 	if _, err := world.SetCreatureLevel("creature:alice", 40); err != nil {
 		t.Fatalf("SetCreatureLevel() error = %v", err)
 	}
@@ -426,7 +426,7 @@ func TestChangeClassHandlerDefaultConversationMutatesOnYes(t *testing.T) {
 
 	runCraftingClassPending(t, ctx, &pending, "예", StatusDefault)
 	creature, _ := world.Creature("creature:alice")
-	if creature.Stats["class"] != legacyClassMage || creature.Stats["experience"] != 50000 {
+	if creature.Stats["class"] != model.ClassMage || creature.Stats["experience"] != 50000 {
 		t.Fatalf("class/exp = %d/%d", creature.Stats["class"], creature.Stats["experience"])
 	}
 	if wantLevel := legacyExperienceToLevel(50000); creature.Stats["level"] != wantLevel || creature.Level != wantLevel {
@@ -442,7 +442,7 @@ func TestChangeClassHandlerCallsLegacyEffectHooks(t *testing.T) {
 		ID:          "room:00610",
 		DisplayName: "수련장",
 		Metadata:    model.Metadata{Tags: []string{"train", "trainingBit4"}},
-	}, legacyClassFighter, 150000))
+	}, model.ClassFighter, 150000))
 	if err := base.SetCreatureStat("creature:alice", "familyFlag", 1); err != nil {
 		t.Fatalf("SetCreatureStat(familyFlag) error = %v", err)
 	}
@@ -461,7 +461,7 @@ func TestChangeClassHandlerCallsLegacyEffectHooks(t *testing.T) {
 	if world.combatStatsCreatureID != "creature:alice" {
 		t.Fatalf("combat stats hook creature = %q", world.combatStatsCreatureID)
 	}
-	if world.familyName != "Alice" || world.familyClass != legacyClassMage || world.familyDailyExpndMax != 7 {
+	if world.familyName != "Alice" || world.familyClass != model.ClassMage || world.familyDailyExpndMax != 7 {
 		t.Fatalf("family hook = name:%q class:%d daily:%d", world.familyName, world.familyClass, world.familyDailyExpndMax)
 	}
 }
@@ -471,7 +471,7 @@ func TestChangeClassHandlerFamilyHookFailureDoesNotRollbackLegacyMutation(t *tes
 		ID:          "room:00610",
 		DisplayName: "수련장",
 		Metadata:    model.Metadata{Tags: []string{"train", "trainingBit4"}},
-	}, legacyClassFighter, 150000))
+	}, model.ClassFighter, 150000))
 	if err := base.SetCreatureStat("creature:alice", "familyFlag", 1); err != nil {
 		t.Fatalf("SetCreatureStat(familyFlag) error = %v", err)
 	}
@@ -499,10 +499,10 @@ func TestChangeClassHandlerFamilyHookFailureDoesNotRollbackLegacyMutation(t *tes
 	}
 
 	creature, _ := world.Creature("creature:alice")
-	if creature.Stats["class"] != legacyClassMage || creature.Stats["experience"] != 50000 {
-		t.Fatalf("class/exp after hook failure = %d/%d, want %d/50000", creature.Stats["class"], creature.Stats["experience"], legacyClassMage)
+	if creature.Stats["class"] != model.ClassMage || creature.Stats["experience"] != 50000 {
+		t.Fatalf("class/exp after hook failure = %d/%d, want %d/50000", creature.Stats["class"], creature.Stats["experience"], model.ClassMage)
 	}
-	if world.familyName != "Alice" || world.familyClass != legacyClassMage || world.familyDailyExpndMax != 7 {
+	if world.familyName != "Alice" || world.familyClass != model.ClassMage || world.familyDailyExpndMax != 7 {
 		t.Fatalf("family hook = name:%q class:%d daily:%d", world.familyName, world.familyClass, world.familyDailyExpndMax)
 	}
 }
@@ -545,7 +545,7 @@ func TestChangeClassHandlerDefaultConversationCancelsOnNo(t *testing.T) {
 		ID:          "room:00610",
 		DisplayName: "수련장",
 		Metadata:    model.Metadata{Tags: []string{"train", "trainingBit4"}},
-	}, legacyClassFighter, 150000))
+	}, model.ClassFighter, 150000))
 
 	var pending PendingLineHandler
 	ctx := craftingClassPromptContext(&pending)
@@ -554,7 +554,7 @@ func TestChangeClassHandlerDefaultConversationCancelsOnNo(t *testing.T) {
 	}
 	runCraftingClassPending(t, ctx, &pending, "아니오", StatusDefault)
 	creature, _ := world.Creature("creature:alice")
-	if creature.Stats["class"] != legacyClassFighter || creature.Stats["experience"] != 150000 {
+	if creature.Stats["class"] != model.ClassFighter || creature.Stats["experience"] != 150000 {
 		t.Fatalf("class/exp mutated on cancel = %d/%d", creature.Stats["class"], creature.Stats["experience"])
 	}
 	if ctx.OutputString() != "직업전환이 되지 않았습니다" {
@@ -572,7 +572,7 @@ func TestCraftingClassDispatcherKeys(t *testing.T) {
 		ID:          "room:00611",
 		DisplayName: "수련장 겸 대장간",
 		Metadata:    model.Metadata{Tags: []string{"forge", "train", "trainingBit4"}},
-	}, legacyClassFighter, 100000))
+	}, model.ClassFighter, 100000))
 	dispatcher := Dispatcher{
 		Registry: registry,
 		Handlers: map[string]Handler{

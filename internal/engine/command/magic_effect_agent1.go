@@ -115,7 +115,7 @@ func magicEffectRestore(
 	how := determineHow(world, object)
 	targetStr := strings.TrimSpace(getArg(resolved, 1))
 
-	if how == howCast && creatureClass(actor) < legacyClassInvincible {
+	if how == howCast && creatureClass(actor) < model.ClassInvincible {
 		ctx.WriteString("\n당신은 그 주술을 사용할 능력이 없습니다.\n")
 		return false, nil
 	}
@@ -144,7 +144,7 @@ func magicEffectRestore(
 			ctx.WriteString("\n당신은 도주천 주술이 필요없습니다.\n")
 			return false, nil
 		}
-		if creatureClass(actor) == legacyClassInvincible && how == howCast {
+		if creatureClass(actor) == model.ClassInvincible && how == howCast {
 			ctx.WriteString("\n자신에게 외울수 없습니다.\n")
 			return false, nil
 		}

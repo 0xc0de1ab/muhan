@@ -734,7 +734,7 @@ func TestMoveHandlerKeepsHiddenOnSuccessfulMovementSneakLikeLegacy(t *testing.T)
 			withMoveTrapRolls(t, 1)
 			loaded := moveWorldWithEastExit(t, nil, "room:east")
 			setMoveTrapActorStats(t, loaded, map[string]int{
-				"class":     legacyClassThief,
+				"class":     model.ClassThief,
 				"level":     50,
 				"dexterity": 50,
 				"PHIDDN":    1,
@@ -760,7 +760,7 @@ func TestMoveHandlerKeepsHiddenOnSuccessfulMovementSneakLikeLegacy(t *testing.T)
 func TestMoveHandlerClearsHiddenForNonSneakClassLikeLegacy(t *testing.T) {
 	loaded := moveWorldWithEastExit(t, nil, "room:east")
 	setMoveTrapActorStats(t, loaded, map[string]int{
-		"class":  legacyClassFighter,
+		"class":  model.ClassFighter,
 		"PHIDDN": 1,
 	})
 	alice := loaded.Creatures["creature:alice"]
@@ -790,7 +790,7 @@ func TestMoveHandlerFailedMovementSneakClearsHiddenAndContinuesLikeLegacy(t *tes
 	withMoveTrapRolls(t, 100)
 	loaded := moveWorldWithEastExit(t, nil, "room:east")
 	setMoveTrapActorStats(t, loaded, map[string]int{
-		"class":     legacyClassThief,
+		"class":     model.ClassThief,
 		"level":     1,
 		"dexterity": 0,
 		"PHIDDN":    1,
@@ -833,7 +833,7 @@ func TestMoveHandlerFailedMovementSneakCanBeBlockedByEnemyMblockLikeLegacy(t *te
 			withMoveTrapRolls(t, 100)
 			loaded := moveWorldWithEastExit(t, nil, "room:east")
 			setMoveTrapActorStats(t, loaded, map[string]int{
-				"class":     legacyClassThief,
+				"class":     model.ClassThief,
 				"level":     1,
 				"dexterity": 0,
 				"PHIDDN":    1,
@@ -872,7 +872,7 @@ func TestMoveHandlerFailedMovementSneakIgnoresEnemyMblockWithPINVISLikeLegacy(t 
 	withMoveTrapRolls(t, 100)
 	loaded := moveWorldWithEastExit(t, nil, "room:east")
 	setMoveTrapActorStats(t, loaded, map[string]int{
-		"class":     legacyClassThief,
+		"class":     model.ClassThief,
 		"level":     1,
 		"dexterity": 0,
 		"PHIDDN":    1,

@@ -63,32 +63,32 @@ func TestDMCreateCrt_Permissions(t *testing.T) {
 	}{
 		{
 			name:       "regular class below SUB_DM",
-			class:      legacyClassInvincible,
+			class:      model.ClassInvincible,
 			wantStatus: StatusPrompt,
 			wantOutput: "",
 		},
 		{
 			name:       "caretaker below SUB_DM",
-			class:      legacyClassCaretaker,
+			class:      model.ClassCaretaker,
 			wantStatus: StatusPrompt,
 			wantOutput: "",
 		},
 		{
 			name:       "bulsa below SUB_DM",
-			class:      legacyClassBulsa,
+			class:      model.ClassBulsa,
 			wantStatus: StatusPrompt,
 			wantOutput: "",
 		},
 		{
 			name:        "class equal to SUB_DM",
-			class:       legacyClassSubDM,
+			class:       model.ClassSubDM,
 			wantStatus:  StatusDefault,
 			wantOutput:  "",
 			wantSpawned: 1,
 		},
 		{
 			name:        "class above SUB_DM",
-			class:       legacyClassDM,
+			class:       model.ClassDM,
 			wantStatus:  StatusDefault,
 			wantOutput:  "",
 			wantSpawned: 1,
@@ -186,7 +186,7 @@ func TestDMCreateCrt_PrototypeNotFound(t *testing.T) {
 func TestDMCreateCrt_CreatureBackedActorUsesLegacyCreaturePointer(t *testing.T) {
 	world := &mockDMCreateCrtWorld{
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:dm": {ID: "creature:dm", RoomID: "room:1", Stats: map[string]int{"class": legacyClassSubDM}},
+			"creature:dm": {ID: "creature:dm", RoomID: "room:1", Stats: map[string]int{"class": model.ClassSubDM}},
 		},
 		rooms: map[model.RoomID]model.Room{
 			"room:1": {ID: "room:1"},
@@ -229,7 +229,7 @@ func TestDMCreateCrtFallsBackToPlayerRoomWhenCreatureRoomMissing(t *testing.T) {
 			"player:dm": {ID: "player:dm", CreatureID: "creature:dm", RoomID: "room:1"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": legacyClassSubDM}},
+			"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": model.ClassSubDM}},
 		},
 		rooms: map[model.RoomID]model.Room{
 			"room:1": {ID: "room:1"},

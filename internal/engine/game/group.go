@@ -423,7 +423,7 @@ func NewGroupTalkHandler(world GroupWorld, groups *GroupMemory) enginecmd.Handle
 		actorClass := actorGroupClass(world, ctx.ActorID)
 		sendGroupTalk := func(actorID string, leaderTarget bool) error {
 			if actorHasGroupFlag(world, actorID, "PIGNOR", "ignoreTalk", "talkIgnore", "ignoreAllTalk") &&
-				actorClass < legacyClassCaretaker &&
+				actorClass < model.ClassCaretaker &&
 				!actorHasGroupDMInvisible(world, actorID) {
 				name := playerDisplayName(world, actorID)
 				if leaderTarget {

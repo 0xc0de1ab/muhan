@@ -95,7 +95,7 @@ func NewPoisonMonHandlerWithDeathFinalizer(world PoisonMonWorld, finalizer Attac
 
 func poisonMonClassRejection(actor model.Creature) string {
 	class := creatureClass(actor)
-	if class < legacyClassInvincible {
+	if class < model.ClassInvincible {
 		return "무적이상만 쓸 수 있는 기술입니다.\n"
 	}
 	if !poisonMonHasAssassinTraining(actor) {
@@ -116,9 +116,9 @@ func poisonMonHasAssassinTraining(actor model.Creature) bool {
 func poisonMonCooldownSeconds(actor model.Creature) int64 {
 	class := creatureClass(actor)
 	switch {
-	case class >= legacyClassBulsa:
+	case class >= model.ClassBulsa:
 		return 16
-	case class == legacyClassCaretaker:
+	case class == model.ClassCaretaker:
 		return 18
 	default:
 		return 20
@@ -212,7 +212,7 @@ func poisonMonDamage(actor model.Creature, victim model.Creature) int {
 	}
 	class := creatureClass(actor)
 	minRoll := 5
-	if class == legacyClassCaretaker {
+	if class == model.ClassCaretaker {
 		minRoll = 3
 	}
 	return attackRoll(minRoll, class) * unit

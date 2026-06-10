@@ -613,7 +613,7 @@ func legacyGiveCreatureEqualTerms(creature model.Creature) []string {
 }
 
 func legacyGiveFindCrtVisible(creature model.Creature, detectInvisible bool) bool {
-	if giveCreatureClass(creature) >= legacyClassCaretaker && giveCreatureHasFlag(creature, "PDMINV", "dmInvisible", "pdminv") {
+	if giveCreatureClass(creature) >= model.ClassCaretaker && giveCreatureHasFlag(creature, "PDMINV", "dmInvisible", "pdminv") {
 		return false
 	}
 	if !detectInvisible && giveCreatureHasFlag(creature, "MINVIS", "minvis", "invisible") {
@@ -971,7 +971,7 @@ func giveCreatureMaxWeight(creature model.Creature) int {
 		level = creatureStat(creature, "level")
 	}
 	maxWeight := 20 + strength*10
-	if creatureStat(creature, "class") == legacyClassBarbarian {
+	if creatureStat(creature, "class") == model.ClassBarbarian {
 		maxWeight += ((level + 3) / 4) * 10
 	}
 	return maxWeight

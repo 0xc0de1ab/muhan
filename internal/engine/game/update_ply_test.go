@@ -308,8 +308,8 @@ func TestCreatureStatNormalizesStatAndPropertyKeys(t *testing.T) {
 	if got := creatureStat(creature, "mpCurrent"); got != 5 {
 		t.Fatalf("normalized property = %d, want 5", got)
 	}
-	if got := creatureClass(model.Creature{Stats: map[string]int{"CLASS": legacyClassDM}}); got != legacyClassDM {
-		t.Fatalf("creatureClass(normalized stat) = %d, want %d", got, legacyClassDM)
+	if got := creatureClass(model.Creature{Stats: map[string]int{"CLASS": model.ClassDM}}); got != model.ClassDM {
+		t.Fatalf("creatureClass(normalized stat) = %d, want %d", got, model.ClassDM)
 	}
 }
 
@@ -343,11 +343,11 @@ func TestUpdatePlayerStatuses_IdleTimeout(t *testing.T) {
 
 	w.creatures["creature:alice"] = model.Creature{
 		ID:    "creature:alice",
-		Stats: map[string]int{"class": legacyClassBarbarian},
+		Stats: map[string]int{"class": model.ClassBarbarian},
 	}
 	w.creatures["creature:bob"] = model.Creature{
 		ID:    "creature:bob",
-		Stats: map[string]int{"class": legacyClassBarbarian},
+		Stats: map[string]int{"class": model.ClassBarbarian},
 	}
 	w.players["player:alice"] = model.Player{ID: "player:alice", CreatureID: "creature:alice"}
 	w.players["player:bob"] = model.Player{ID: "player:bob", CreatureID: "creature:bob"}
@@ -381,7 +381,7 @@ func TestUpdatePlayerStatuses_IdleTimeout(t *testing.T) {
 	}{time: 1000 - 301, ok: true}
 	w.creatures["creature:admin"] = model.Creature{
 		ID:    "creature:admin",
-		Stats: map[string]int{"class": legacyClassDM},
+		Stats: map[string]int{"class": model.ClassDM},
 	}
 	w.players["player:admin"] = model.Player{ID: "player:admin", CreatureID: "creature:admin"}
 
@@ -409,7 +409,7 @@ func TestUpdatePlayerStatuses_StatusExpiration(t *testing.T) {
 			Tags: []string{"PHASTE", "PPOWER", "PUPDMG", "PSLAYE", "PMEDIT", "PPRAYD", "ANSIC"},
 		},
 		Stats: map[string]int{
-			"class":        legacyClassBarbarian,
+			"class":        model.ClassBarbarian,
 			"level":        20,
 			"dexterity":    20,
 			"strength":     20,
@@ -495,7 +495,7 @@ func TestUpdatePlayerStatuses_StatusExpiration(t *testing.T) {
 func TestUpdatePlyProficiencySubDMUsesCPrivilegedTables(t *testing.T) {
 	subDM := model.Creature{
 		Stats: map[string]int{
-			"class":            legacyClassSubDM,
+			"class":            model.ClassSubDM,
 			"proficiencySharp": 1024,
 			"realmFire":        2048,
 		},
@@ -514,7 +514,7 @@ func TestUpdatePlyProficiencySubDMUsesCPrivilegedTables(t *testing.T) {
 	}
 
 	thief := model.Creature{Stats: map[string]int{
-		"class":            legacyClassThief,
+		"class":            model.ClassThief,
 		"proficiencySharp": 1024,
 	}}
 	if got := profic(thief, 0); got != 4 {
@@ -527,7 +527,7 @@ func TestComputeTHACOSumsCWeaponAndMagicProficiencyTotals(t *testing.T) {
 	creature := model.Creature{
 		ID: "creature:alice",
 		Stats: map[string]int{
-			"class":         legacyClassFighter,
+			"class":         model.ClassFighter,
 			"level":         20,
 			"proficiency/0": 1024,
 			"proficiency/1": 1024,
@@ -568,7 +568,7 @@ func TestUpdatePlyCreatureHasAnyFlagReadsStatBackedLegacyFlags(t *testing.T) {
 func TestUpdatePlyCombatCalculationsReadStatBackedLegacyFlags(t *testing.T) {
 	w := newMockUpdatePlyWorld()
 	baseStats := map[string]int{
-		"class":        legacyClassFighter,
+		"class":        model.ClassFighter,
 		"level":        1,
 		"constitution": 50,
 		"dexterity":    50,
@@ -616,7 +616,7 @@ func TestUpdatePlayerStatuses_Regeneration(t *testing.T) {
 		ID:     "creature:alice",
 		RoomID: "room:1",
 		Stats: map[string]int{
-			"class":        legacyClassBarbarian,
+			"class":        model.ClassBarbarian,
 			"constitution": 18,
 			"hpCurrent":    50,
 			"hpMax":        100,
@@ -662,7 +662,7 @@ func TestUpdatePlayerStatuses_Regeneration(t *testing.T) {
 		ID:     "creature:alice",
 		RoomID: "room:1",
 		Stats: map[string]int{
-			"class":        legacyClassBarbarian,
+			"class":        model.ClassBarbarian,
 			"constitution": 18,
 			"hpCurrent":    50,
 			"hpMax":        100,
@@ -705,7 +705,7 @@ func TestUpdatePlayerStatuses_PoisonAndDisease(t *testing.T) {
 			Tags: []string{"PPOISN", "ANSIC"},
 		},
 		Stats: map[string]int{
-			"class":        legacyClassBarbarian,
+			"class":        model.ClassBarbarian,
 			"constitution": 15, // bonus = 1
 			"hpCurrent":    50,
 			"hpMax":        100,
@@ -754,7 +754,7 @@ func TestUpdatePlayerStatuses_PoisonAndDisease(t *testing.T) {
 			Tags: []string{"PDISEA", "ANSIC"},
 		},
 		Stats: map[string]int{
-			"class":        legacyClassBarbarian,
+			"class":        model.ClassBarbarian,
 			"constitution": 15, // bonus = 1
 			"hpCurrent":    50,
 			"hpMax":        100,
@@ -801,7 +801,7 @@ func TestUpdatePlayerStatusesReadsStatBackedPoisonFlag(t *testing.T) {
 		ID:     "creature:alice",
 		RoomID: "room:1",
 		Stats: map[string]int{
-			"class":        legacyClassBarbarian,
+			"class":        model.ClassBarbarian,
 			"constitution": 15,
 			"hpCurrent":    50,
 			"hpMax":        100,
@@ -844,7 +844,7 @@ func TestUpdatePlayerStatuses_RoomDamage(t *testing.T) {
 		ID:     "creature:alice",
 		RoomID: "room:1",
 		Stats: map[string]int{
-			"class":        legacyClassBarbarian,
+			"class":        model.ClassBarbarian,
 			"constitution": 15, // bonus = 1
 			"hpCurrent":    50,
 			"hpMax":        100,
@@ -887,7 +887,7 @@ func TestUpdatePlayerStatuses_Death(t *testing.T) {
 			Tags: []string{"PPOISN"},
 		},
 		Stats: map[string]int{
-			"class":        legacyClassBarbarian,
+			"class":        model.ClassBarbarian,
 			"constitution": 10,
 			"hpCurrent":    1, // Low HP, next tick of poison will kill
 			"hpMax":        100,
@@ -972,7 +972,7 @@ func TestUpdatePlayerStatuses_LightDecayAndSave(t *testing.T) {
 			"held": lightObjID,
 		},
 		Stats: map[string]int{
-			"class":     legacyClassBarbarian,
+			"class":     model.ClassBarbarian,
 			"hpCurrent": 100,
 			"hpMax":     100,
 		},
@@ -1048,7 +1048,7 @@ func TestUpdatePlayerStatusesLightReadsPropertyBackedLegacyFlags(t *testing.T) {
 					"held": lightObjID,
 				},
 				Stats: map[string]int{
-					"class":     legacyClassBarbarian,
+					"class":     model.ClassBarbarian,
 					"hpCurrent": 100,
 					"hpMax":     100,
 				},
@@ -1079,7 +1079,7 @@ func TestUpdatePlayerStatuses_CombatSkillsExpiration(t *testing.T) {
 			Tags: []string{"PREFLECT", "PSHADOW", "PABSORB", "PCHOI", "ANSIC"},
 		},
 		Stats: map[string]int{
-			"class":        legacyClassBarbarian,
+			"class":        model.ClassBarbarian,
 			"level":        20,
 			"dexterity":    20,
 			"strength":     20,
@@ -1160,7 +1160,7 @@ func TestWimpyAutoFleeTick(t *testing.T) {
 			Tags: []string{"PWIMPY"},
 		},
 		Stats: map[string]int{
-			"class":      legacyClassBarbarian,
+			"class":      model.ClassBarbarian,
 			"hpCurrent":  15,
 			"hpMax":      100,
 			"wimpyValue": 20,
@@ -1217,7 +1217,7 @@ func TestWimpyAutoFleeTick_NoThreat(t *testing.T) {
 			Tags: []string{"PWIMPY"},
 		},
 		Stats: map[string]int{
-			"class":      legacyClassBarbarian,
+			"class":      model.ClassBarbarian,
 			"hpCurrent":  15,
 			"hpMax":      100,
 			"wimpyValue": 20,

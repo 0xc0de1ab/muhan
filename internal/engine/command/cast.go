@@ -79,7 +79,7 @@ func NewCastHandler(world CastWorld, effect CastEffectFunc) Handler {
 
 		class := creatureClass(creature)
 		now := timeNow().Unix()
-		if class != legacyClassDM && class != legacyClassSubDM {
+		if class != model.ClassDM && class != model.ClassSubDM {
 			remaining, used, err := world.UseCreatureCooldown(creature.ID, "spell", now, 0)
 			if err != nil {
 				return StatusDefault, err
@@ -91,7 +91,7 @@ func NewCastHandler(world CastWorld, effect CastEffectFunc) Handler {
 		}
 
 		if _, isOffensive := magicEffectDamageDiceForPower(spell.power); isOffensive {
-			if class == legacyClassFighter {
+			if class == model.ClassFighter {
 				ctx.WriteString("당신은 공격주문을 쓸 수 없는 직업을 갖고 있습니다.")
 				return StatusDefault, nil
 			}
@@ -100,7 +100,7 @@ func NewCastHandler(world CastWorld, effect CastEffectFunc) Handler {
 		// Enforce spell learning (S_ISSET equivalent) for CAST path to match C magic*.c checks.
 		// DMs bypass; potions/scrolls/zap bypass as in C (guarded by how==CAST).
 		// Uses studySpells mapping for exact tag fidelity.
-		if tag := spellTagForPower(spell.power); tag != "" && class < legacyClassDM && !castEffectHandlesLearnedCheck(spell.power) {
+		if tag := spellTagForPower(spell.power); tag != "" && class < model.ClassDM && !castEffectHandlesLearnedCheck(spell.power) {
 			if !castActorKnowsSpell(player, creature, studySpell{power: spell.power, tag: tag}) {
 				ctx.WriteString(castUnlearnedMessage(spell.power))
 				return StatusDefault, nil
@@ -132,11 +132,11 @@ func NewCastHandler(world CastWorld, effect CastEffectFunc) Handler {
 
 		var cooldownSec int64
 		switch {
-		case class == legacyClassCleric || class == legacyClassMage || class == legacyClassCaretaker:
+		case class == model.ClassCleric || class == model.ClassMage || class == model.ClassCaretaker:
 			cooldownSec = 3
-		case class == legacyClassBulsa:
+		case class == model.ClassBulsa:
 			cooldownSec = 2
-		case class == legacyClassDM || class == legacyClassSubDM:
+		case class == model.ClassDM || class == model.ClassSubDM:
 			cooldownSec = 1
 		default:
 			cooldownSec = 5

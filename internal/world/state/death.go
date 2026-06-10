@@ -32,37 +32,37 @@ type playerDeathClassStatBonusEntry struct {
 }
 
 var playerDeathClassStatBonuses = map[int]playerDeathClassStatBonusEntry{
-	stateLegacyClassAssassin:   {55, 40, 5, 2, 1, 6, 0},
-	stateLegacyClassBarbarian:  {57, 40, 7, 1, 2, 3, 1},
-	stateLegacyClassCleric:     {54, 50, 4, 3, 1, 4, 0},
-	stateLegacyClassFighter:    {56, 50, 6, 1, 1, 5, 0},
-	stateLegacyClassMage:       {54, 50, 4, 3, 1, 3, 0},
-	stateLegacyClassPaladin:    {55, 50, 5, 2, 1, 4, 0},
-	stateLegacyClassRanger:     {56, 40, 6, 2, 2, 2, 0},
-	stateLegacyClassThief:      {55, 50, 5, 2, 2, 2, 1},
-	stateLegacyClassInvincible: {400, 250, 4, 4, 2, 4, 0},
-	stateLegacyClassCaretaker:  {50, 50, 5, 5, 5, 5, 5},
-	stateLegacyClassBulsa:      {50, 50, 5, 5, 5, 5, 5},
-	stateLegacyClassSubDM:      {50, 50, 5, 5, 5, 5, 5},
-	stateLegacyClassDM:         {50, 50, 7, 4, 5, 5, 5},
-	0:                          {1, 1, 1, 1, 1, 1, 1},
+	model.ClassAssassin:   {55, 40, 5, 2, 1, 6, 0},
+	model.ClassBarbarian:  {57, 40, 7, 1, 2, 3, 1},
+	model.ClassCleric:     {54, 50, 4, 3, 1, 4, 0},
+	model.ClassFighter:    {56, 50, 6, 1, 1, 5, 0},
+	model.ClassMage:       {54, 50, 4, 3, 1, 3, 0},
+	model.ClassPaladin:    {55, 50, 5, 2, 1, 4, 0},
+	model.ClassRanger:     {56, 40, 6, 2, 2, 2, 0},
+	model.ClassThief:      {55, 50, 5, 2, 2, 2, 1},
+	model.ClassInvincible: {400, 250, 4, 4, 2, 4, 0},
+	model.ClassCaretaker:  {50, 50, 5, 5, 5, 5, 5},
+	model.ClassBulsa:      {50, 50, 5, 5, 5, 5, 5},
+	model.ClassSubDM:      {50, 50, 5, 5, 5, 5, 5},
+	model.ClassDM:         {50, 50, 7, 4, 5, 5, 5},
+	0:                     {1, 1, 1, 1, 1, 1, 1},
 }
 
 var playerDeathLevelCycleTable = map[int][10]int{
-	0:                          {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	stateLegacyClassAssassin:   {playerDeathLegacyStatCON, playerDeathLegacyStatPTY, playerDeathLegacyStatSTR, playerDeathLegacyStatINT, playerDeathLegacyStatDEX, playerDeathLegacyStatINT, playerDeathLegacyStatDEX, playerDeathLegacyStatPTY, playerDeathLegacyStatSTR, playerDeathLegacyStatDEX},
-	stateLegacyClassBarbarian:  {playerDeathLegacyStatINT, playerDeathLegacyStatDEX, playerDeathLegacyStatPTY, playerDeathLegacyStatCON, playerDeathLegacyStatSTR, playerDeathLegacyStatCON, playerDeathLegacyStatDEX, playerDeathLegacyStatSTR, playerDeathLegacyStatPTY, playerDeathLegacyStatSTR},
-	stateLegacyClassCleric:     {playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatCON, playerDeathLegacyStatPTY, playerDeathLegacyStatINT, playerDeathLegacyStatPTY, playerDeathLegacyStatINT, playerDeathLegacyStatDEX, playerDeathLegacyStatCON, playerDeathLegacyStatINT},
-	stateLegacyClassFighter:    {playerDeathLegacyStatPTY, playerDeathLegacyStatINT, playerDeathLegacyStatDEX, playerDeathLegacyStatCON, playerDeathLegacyStatSTR, playerDeathLegacyStatCON, playerDeathLegacyStatINT, playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatSTR},
-	stateLegacyClassMage:       {playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatPTY, playerDeathLegacyStatCON, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatINT, playerDeathLegacyStatDEX, playerDeathLegacyStatPTY, playerDeathLegacyStatINT},
-	stateLegacyClassPaladin:    {playerDeathLegacyStatDEX, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatSTR, playerDeathLegacyStatPTY, playerDeathLegacyStatSTR, playerDeathLegacyStatINT, playerDeathLegacyStatPTY, playerDeathLegacyStatCON, playerDeathLegacyStatPTY},
-	stateLegacyClassRanger:     {playerDeathLegacyStatPTY, playerDeathLegacyStatSTR, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatDEX, playerDeathLegacyStatCON, playerDeathLegacyStatDEX, playerDeathLegacyStatSTR, playerDeathLegacyStatINT, playerDeathLegacyStatDEX},
-	stateLegacyClassThief:      {playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatPTY, playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatSTR, playerDeathLegacyStatCON, playerDeathLegacyStatDEX, playerDeathLegacyStatPTY, playerDeathLegacyStatDEX},
-	stateLegacyClassInvincible: {playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatPTY, playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatPTY},
-	stateLegacyClassCaretaker:  {playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatPTY, playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatPTY},
-	stateLegacyClassBulsa:      {playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatPTY, playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatPTY},
-	stateLegacyClassSubDM:      {playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatPTY, playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatPTY},
-	stateLegacyClassDM:         {playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatPTY, playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatPTY},
+	0:                     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	model.ClassAssassin:   {playerDeathLegacyStatCON, playerDeathLegacyStatPTY, playerDeathLegacyStatSTR, playerDeathLegacyStatINT, playerDeathLegacyStatDEX, playerDeathLegacyStatINT, playerDeathLegacyStatDEX, playerDeathLegacyStatPTY, playerDeathLegacyStatSTR, playerDeathLegacyStatDEX},
+	model.ClassBarbarian:  {playerDeathLegacyStatINT, playerDeathLegacyStatDEX, playerDeathLegacyStatPTY, playerDeathLegacyStatCON, playerDeathLegacyStatSTR, playerDeathLegacyStatCON, playerDeathLegacyStatDEX, playerDeathLegacyStatSTR, playerDeathLegacyStatPTY, playerDeathLegacyStatSTR},
+	model.ClassCleric:     {playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatCON, playerDeathLegacyStatPTY, playerDeathLegacyStatINT, playerDeathLegacyStatPTY, playerDeathLegacyStatINT, playerDeathLegacyStatDEX, playerDeathLegacyStatCON, playerDeathLegacyStatINT},
+	model.ClassFighter:    {playerDeathLegacyStatPTY, playerDeathLegacyStatINT, playerDeathLegacyStatDEX, playerDeathLegacyStatCON, playerDeathLegacyStatSTR, playerDeathLegacyStatCON, playerDeathLegacyStatINT, playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatSTR},
+	model.ClassMage:       {playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatPTY, playerDeathLegacyStatCON, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatINT, playerDeathLegacyStatDEX, playerDeathLegacyStatPTY, playerDeathLegacyStatINT},
+	model.ClassPaladin:    {playerDeathLegacyStatDEX, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatSTR, playerDeathLegacyStatPTY, playerDeathLegacyStatSTR, playerDeathLegacyStatINT, playerDeathLegacyStatPTY, playerDeathLegacyStatCON, playerDeathLegacyStatPTY},
+	model.ClassRanger:     {playerDeathLegacyStatPTY, playerDeathLegacyStatSTR, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatDEX, playerDeathLegacyStatCON, playerDeathLegacyStatDEX, playerDeathLegacyStatSTR, playerDeathLegacyStatINT, playerDeathLegacyStatDEX},
+	model.ClassThief:      {playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatPTY, playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatSTR, playerDeathLegacyStatCON, playerDeathLegacyStatDEX, playerDeathLegacyStatPTY, playerDeathLegacyStatDEX},
+	model.ClassInvincible: {playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatPTY, playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatPTY},
+	model.ClassCaretaker:  {playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatPTY, playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatPTY},
+	model.ClassBulsa:      {playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatPTY, playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatPTY},
+	model.ClassSubDM:      {playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatPTY, playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatPTY},
+	model.ClassDM:         {playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatPTY, playerDeathLegacyStatSTR, playerDeathLegacyStatDEX, playerDeathLegacyStatINT, playerDeathLegacyStatCON, playerDeathLegacyStatPTY},
 }
 
 func expToLev(exp int) int {
@@ -92,11 +92,11 @@ func (w *World) PlayerDeath(playerID model.PlayerID, attackerID model.CreatureID
 		return fmt.Errorf("player death: world state is nil")
 	}
 
-	w.mu.Lock()
+	w.lockDomains(true, true, true, true, true, true, true)
 	unlocked := false
 	defer func() {
 		if !unlocked {
-			w.mu.Unlock()
+			w.unlockDomains(true, true, true, true, true, true, true)
 		}
 	}()
 
@@ -155,7 +155,7 @@ func (w *World) PlayerDeath(playerID model.PlayerID, attackerID model.CreatureID
 		} else {
 			if experience/15 > 200000 {
 				experience -= 200000
-			} else if class > 9 { // 9 is legacyClassInvincible (INVINCIBLE)
+			} else if class > 9 { // 9 is model.ClassInvincible (INVINCIBLE)
 				experience -= 500000
 			} else {
 				experience -= experience / 15
@@ -261,7 +261,7 @@ func (w *World) PlayerDeath(playerID model.PlayerID, attackerID model.CreatureID
 	// Safe now because dirty uses separate dirtyMu (no deadlock with world.mu held).
 	w.MarkPlayerDirty(playerID)
 	// Unlock before SavePlayer (death is critical durability point - explicit sync Save kept)
-	w.mu.Unlock()
+	w.unlockDomains(true, true, true, true, true, true, true)
 	unlocked = true
 
 	// 8. Call SavePlayer (explicit for death; mutation already marked)
@@ -519,7 +519,7 @@ func playerDeathApplyLegacyDownLevelsLocked(player *model.Player, creature *mode
 		level--
 		if !upDamageCleared && playerDeathHasUpDamage(*player, *creature) {
 			upDamageCleared = true
-			if class < stateLegacyClassInvincible {
+			if class < model.ClassInvincible {
 				hpMax -= 50
 				mpMax -= 50
 				pDice -= 2

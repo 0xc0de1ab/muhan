@@ -64,7 +64,7 @@ func NewTeachHandler(world TeachWorld) Handler {
 			return StatusDefault, nil
 		}
 		class := creatureClass(actor)
-		if class != legacyClassMage && class != legacyClassCleric && class < legacyClassInvincible {
+		if class != model.ClassMage && class != model.ClassCleric && class < model.ClassInvincible {
 			ctx.WriteString("\n도술사와 불제자만이 전수시킬 수 있는 능력이 있습니다.\n")
 			return StatusDefault, nil
 		}
@@ -106,23 +106,23 @@ func NewTeachHandler(world TeachWorld) Handler {
 		}
 
 		spell = spellsToTeach[0]
-		if spell.level == 1 && class != legacyClassCleric && class < legacyClassInvincible {
+		if spell.level == 1 && class != model.ClassCleric && class < model.ClassInvincible {
 			ctx.WriteString("\n그 주문을 다른 사람에게 전수시킬 수 없습니다.\n")
 			return StatusDefault, nil
 		}
-		if spell.level == 2 && class != legacyClassMage && class < legacyClassInvincible {
+		if spell.level == 2 && class != model.ClassMage && class < model.ClassInvincible {
 			ctx.WriteString("\n그 주문을 다른 사람에게 전수시킬 수 없습니다.\n")
 			return StatusDefault, nil
 		}
-		if spell.level == 3 && class < legacyClassInvincible {
+		if spell.level == 3 && class < model.ClassInvincible {
 			ctx.WriteString("\n그 주문을 다른 사람에게 전수시킬 수 없습니다.\n")
 			return StatusDefault, nil
 		}
-		if spell.level == 4 && class < legacyClassCaretaker {
+		if spell.level == 4 && class < model.ClassCaretaker {
 			ctx.WriteString("\n그 주문을 다른 사람에게 전수시킬 수 없습니다.\n")
 			return StatusDefault, nil
 		}
-		if spell.level == 5 && class < legacyClassSubDM {
+		if spell.level == 5 && class < model.ClassSubDM {
 			ctx.WriteString("\n그 주문을 다른 사람에게 전수시킬 수 없습니다.\n")
 			return StatusDefault, nil
 		}

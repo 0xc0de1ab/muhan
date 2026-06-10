@@ -11,8 +11,8 @@ import (
 
 // Note:
 // legacyClassZoneMaker is defined in dm_placeholders.go
-// legacyClassSubDM is defined in settings.go
-// legacyClassDM is defined in peek.go
+// model.ClassSubDM is defined in settings.go
+// model.ClassDM is defined in peek.go
 // getActiveSessions is defined in magic_effect_agent4.go
 
 type DMTeleportWorld interface {
@@ -52,7 +52,7 @@ func dmTeleport(ctx *Context, resolved ResolvedCommand, world DMTeleportWorld) (
 
 	// 1. Validate class permissions (ZONEMAKER or SUB_DM+)
 	class := creatureClass(creature)
-	if class != legacyClassZoneMaker && class < legacyClassSubDM {
+	if class != legacyClassZoneMaker && class < model.ClassSubDM {
 		return StatusPrompt, nil
 	}
 
@@ -81,7 +81,7 @@ func dmTeleport(ctx *Context, resolved ResolvedCommand, world DMTeleportWorld) (
 		}
 
 		// Check if targetRoom has RSHOPP flag and caster is ZONEMAKER or SUB_DM
-		if class == legacyClassZoneMaker || class == legacyClassSubDM {
+		if class == legacyClassZoneMaker || class == model.ClassSubDM {
 			prevRoomID := model.RoomID(fmt.Sprintf("room:%d", roomNum-1))
 			if prevRoom, ok := world.Room(prevRoomID); ok {
 				if roomHasAnyFlag(prevRoom, "shoppe", "shop", "RSHOPP") {
@@ -110,8 +110,8 @@ func dmTeleport(ctx *Context, resolved ResolvedCommand, world DMTeleportWorld) (
 		targetPlayer, targetCreature, found := findWho(ctx, world, targetName)
 
 		// Validation: If not found, target is caster, or target is invisible SUB_DM+ and caster is class < SUB_DM
-		isTargetSubDMOrHigher := creatureClass(targetCreature) >= legacyClassSubDM
-		isCasterBelowSubDM := class < legacyClassSubDM
+		isTargetSubDMOrHigher := creatureClass(targetCreature) >= model.ClassSubDM
+		isCasterBelowSubDM := class < model.ClassSubDM
 		isTargetInvisible := isPlayerDMInvisible(targetCreature)
 
 		if !found || targetPlayer.ID == player.ID || (isTargetSubDMOrHigher && isCasterBelowSubDM && isTargetInvisible) {
@@ -139,8 +139,8 @@ func dmTeleport(ctx *Context, resolved ResolvedCommand, world DMTeleportWorld) (
 	targetPlayer, targetCreature, found := findWho(ctx, world, targetName)
 
 	// Validation: if target not found, target is caster, or target is DM and is invisible and caster is not DM
-	isTargetDM := creatureClass(targetCreature) == legacyClassDM
-	isCasterNotDM := class < legacyClassDM
+	isTargetDM := creatureClass(targetCreature) == model.ClassDM
+	isCasterNotDM := class < model.ClassDM
 	isTargetInvisible := isPlayerDMInvisible(targetCreature)
 
 	if !found || targetPlayer.ID == player.ID || (isTargetDM && isCasterNotDM && isTargetInvisible) {

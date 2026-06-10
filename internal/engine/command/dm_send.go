@@ -31,7 +31,7 @@ func dmSend(ctx *Context, resolved ResolvedCommand, world DMSendWorld) (Status, 
 	}
 
 	class := creatureClass(creature)
-	if class < legacyClassSubDM {
+	if class < model.ClassSubDM {
 		return StatusPrompt, nil
 	}
 
@@ -55,7 +55,7 @@ func dmSend(ctx *Context, resolved ResolvedCommand, world DMSendWorld) (Status, 
 		if !ok {
 			continue
 		}
-		if creatureClass(targetCrt) >= legacyClassCaretaker {
+		if creatureClass(targetCrt) >= model.ClassCaretaker {
 			if s.ID == ctx.SessionID {
 				ctx.WriteString(broadcastMsg)
 			} else {

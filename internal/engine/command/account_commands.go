@@ -541,7 +541,7 @@ func NewPlySuicideHandler(world AccountWorld, options ...SuicideOption) Handler 
 		if err != nil {
 			return StatusDefault, err
 		}
-		if creatureClass(creature) < legacyClassInvincible && accountCreatureLevel(creature) < 6 {
+		if creatureClass(creature) < model.ClassInvincible && accountCreatureLevel(creature) < 6 {
 			ctx.WriteString("레벨 5이하는 자살 할 수 없습니다.\n")
 			return StatusDefault, nil
 		}

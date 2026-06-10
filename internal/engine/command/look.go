@@ -258,7 +258,7 @@ func lookCreatureSeesInDark(creature model.Creature) bool {
 	case legacyRaceElf, legacyRaceDwarf:
 		return true
 	}
-	return creatureClass(creature) >= legacyClassCaretaker
+	return creatureClass(creature) >= model.ClassCaretaker
 }
 
 func lookRoomHasPlayerLight(world LookWorld, room model.Room, viewer LookViewer) bool {
@@ -1586,7 +1586,7 @@ func playerCreatureVisibleInRoomLook(creature model.Creature, viewer LookViewer,
 
 func viewerSeesDMInvisible(world LookWorld, viewer LookViewer) bool {
 	_, creature, ok := lookViewerActor(world, viewer)
-	return ok && creatureClass(creature) >= legacyClassDM
+	return ok && creatureClass(creature) >= model.ClassDM
 }
 
 func creatureHPDead(creature model.Creature) bool {

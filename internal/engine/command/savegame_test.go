@@ -65,10 +65,10 @@ func TestSaveGameHandlerUsesLegacyLevelMessagesWhenWorldAvailable(t *testing.T) 
 		level int
 		want  string
 	}{
-		{name: "low level regular class", class: legacyClassFighter, level: 5, want: saveGameLowLevelMessage},
-		{name: "level six regular class", class: legacyClassFighter, level: 6, want: ""},
-		{name: "level seven regular class", class: legacyClassFighter, level: 7, want: saveGameSavedMessage},
-		{name: "low level invincible", class: legacyClassInvincible, level: 1, want: ""},
+		{name: "low level regular class", class: model.ClassFighter, level: 5, want: saveGameLowLevelMessage},
+		{name: "level six regular class", class: model.ClassFighter, level: 6, want: ""},
+		{name: "level seven regular class", class: model.ClassFighter, level: 7, want: saveGameSavedMessage},
+		{name: "low level invincible", class: model.ClassInvincible, level: 1, want: ""},
 	}
 
 	for _, tt := range tests {

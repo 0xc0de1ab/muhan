@@ -46,7 +46,7 @@ func dmParam(ctx *Context, resolved ResolvedCommand, world DMParamWorld) (Status
 	}
 
 	class := creatureClass(creature)
-	if class < legacyClassDM {
+	if class < model.ClassDM {
 		return StatusPrompt, nil
 	}
 

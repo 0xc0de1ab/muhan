@@ -252,7 +252,7 @@ func perceptionDefaultRoll(min int, max int) int {
 }
 
 func redEyeClassRejection(actor model.Creature) string {
-	if creatureClass(actor) < legacyClassInvincible {
+	if creatureClass(actor) < model.ClassInvincible {
 		return "무적 이상만 사용할 수 있는 기술입니다.\n"
 	}
 	if !redEyeHasPaladinTraining(actor) {
@@ -271,7 +271,7 @@ func redEyeHasPaladinTraining(actor model.Creature) bool {
 }
 
 func thiefStatClassRejection(actor model.Creature) string {
-	if creatureClass(actor) < legacyClassInvincible {
+	if creatureClass(actor) < model.ClassInvincible {
 		return "무적 이상만 사용할 수 있는 기술입니다.\n"
 	}
 	if !thiefStatHasTraining(actor) {
@@ -579,7 +579,7 @@ func findThiefStatOwner(
 }
 
 func thiefStatOwnerHiddenLikeLegacy(actor model.Creature, owner model.Creature) bool {
-	return creatureClass(actor) < legacyClassDM && attackCreatureHasFlag(owner, "PDMINV", "pdminv", "dmInvisible")
+	return creatureClass(actor) < model.ClassDM && attackCreatureHasFlag(owner, "PDMINV", "pdminv", "dmInvisible")
 }
 
 func findThiefStatObject(
@@ -783,31 +783,31 @@ func thiefStatRaceName(creature model.Creature) string {
 
 func thiefStatClassName(class int) string {
 	switch class {
-	case legacyClassAssassin:
+	case model.ClassAssassin:
 		return "자객"
-	case legacyClassBarbarian:
+	case model.ClassBarbarian:
 		return "권법가"
-	case legacyClassCleric:
+	case model.ClassCleric:
 		return "불제자"
-	case legacyClassFighter:
+	case model.ClassFighter:
 		return "검사"
-	case legacyClassMage:
+	case model.ClassMage:
 		return "도술사"
-	case legacyClassPaladin:
+	case model.ClassPaladin:
 		return "무사"
-	case legacyClassRanger:
+	case model.ClassRanger:
 		return "포졸"
-	case legacyClassThief:
+	case model.ClassThief:
 		return "도둑"
-	case legacyClassInvincible:
+	case model.ClassInvincible:
 		return "무적"
-	case legacyClassCaretaker:
+	case model.ClassCaretaker:
 		return "관리자"
-	case legacyClassBulsa:
+	case model.ClassBulsa:
 		return "불사"
-	case legacyClassSubDM:
+	case model.ClassSubDM:
 		return "부운영자"
-	case legacyClassDM:
+	case model.ClassDM:
 		return "운영자"
 	default:
 		return fmt.Sprintf("%d", class)

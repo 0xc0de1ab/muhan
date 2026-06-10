@@ -52,7 +52,7 @@ func magicEffectBless(ctx *Context, world StatusWorld, actor model.Creature, obj
 		}
 		class := creatureClass(actor)
 		level := creatureStat(actor, "level")
-		if class == legacyClassCleric || class == legacyClassPaladin {
+		if class == model.ClassCleric || class == model.ClassPaladin {
 			interval += int64(60 * ((level + 3) / 4))
 		}
 		if room, ok := world.Room(actor.RoomID); ok {
@@ -154,7 +154,7 @@ func magicEffectProtection(ctx *Context, world StatusWorld, actor model.Creature
 		}
 		class := creatureClass(actor)
 		level := creatureStat(actor, "level")
-		if class == legacyClassCleric || class == legacyClassPaladin {
+		if class == model.ClassCleric || class == model.ClassPaladin {
 			interval += int64(60 * ((level + 3) / 4))
 		}
 		if room, ok := world.Room(actor.RoomID); ok {

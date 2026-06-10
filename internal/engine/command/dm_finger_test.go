@@ -84,7 +84,7 @@ func TestDMFinger(t *testing.T) {
 				"player:dm": {ID: "player:dm", CreatureID: "creature:dm"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 			args:       []string{},
 			wantStatus: StatusDefault,
@@ -97,7 +97,7 @@ func TestDMFinger(t *testing.T) {
 				"player:dm": {ID: "player:dm", CreatureID: "creature:dm"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 			args:         []string{"@1.2.3.4"},
 			fingerOutput: "finger result\n",
@@ -114,7 +114,7 @@ func TestDMFinger(t *testing.T) {
 				"player:dm": {ID: "player:dm", CreatureID: "creature:dm"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 			args:       []string{"@1.2.3.4", "bob"},
 			wantStatus: StatusDefault,
@@ -130,7 +130,7 @@ func TestDMFinger(t *testing.T) {
 				"player:dm": {ID: "player:dm", CreatureID: "creature:dm"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 			args:       []string{"@1.2.3.4", "bob", "extra"},
 			wantStatus: StatusDefault,
@@ -146,7 +146,7 @@ func TestDMFinger(t *testing.T) {
 				"player:dm": {ID: "player:dm", CreatureID: "creature:dm"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 			args:       []string{"bob"},
 			wantStatus: StatusDefault,
@@ -160,7 +160,7 @@ func TestDMFinger(t *testing.T) {
 				"player:target": {ID: "player:target", DisplayName: "target", CreatureID: "creature:target"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:dm":     {ID: "creature:dm", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:dm":     {ID: "creature:dm", Stats: map[string]int{"class": model.ClassSubDM}},
 				"creature:target": {ID: "creature:target", DisplayName: "target", Properties: map[string]string{"address": "8.8.8.8"}},
 			},
 			activeSessions: []testActiveSession{
@@ -178,7 +178,7 @@ func TestDMFinger(t *testing.T) {
 				"player:target1": {ID: "player:target1", DisplayName: "target1", CreatureID: "creature:target1"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:dm":      {ID: "creature:dm", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:dm":      {ID: "creature:dm", Stats: map[string]int{"class": model.ClassSubDM}},
 				"creature:target1": {ID: "creature:target1", DisplayName: "target1", Properties: map[string]string{"address": "8.8.8.8"}},
 			},
 			activeSessions: []testActiveSession{
@@ -206,7 +206,7 @@ func TestDMFinger(t *testing.T) {
 				},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:dm":      {ID: "creature:dm", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:dm":      {ID: "creature:dm", Stats: map[string]int{"class": model.ClassSubDM}},
 				"creature:target2": {ID: "creature:target2", DisplayName: "target2"},
 			},
 			activeSessions: []testActiveSession{
@@ -247,7 +247,7 @@ func TestDMFinger(t *testing.T) {
 				"player:dm": {ID: "player:dm", CreatureID: "creature:dm"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 			args:            []string{"@1.1.1.1"},
 			fingerErr:       errDummy,
@@ -323,7 +323,7 @@ func TestDMFingerUsesParsedSlotsLikeCWhenArgsMissing(t *testing.T) {
 			"player:dm": {ID: "player:dm", CreatureID: "creature:dm"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": legacyClassSubDM}},
+			"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": model.ClassSubDM}},
 		},
 	}
 	ctx := &Context{ActorID: "player:dm"}

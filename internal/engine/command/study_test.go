@@ -133,20 +133,20 @@ func TestStudyHandlerAppliesMagicItemRestrictions(t *testing.T) {
 	}{
 		{
 			name:          "good only rejects evil actor and drops scroll",
-			creatureStats: map[string]int{"alignment": -101, "level": 20, "class": legacyClassFighter},
+			creatureStats: map[string]int{"alignment": -101, "level": 20, "class": model.ClassFighter},
 			objectTags:    []string{"goodOnly"},
 			want:          "\n연마를 끝마치자 귀환 주문서의 형체가 화염에 휩싸이며 어디론가 사라져\n 버렸습니다.\n",
 			wantDropped:   true,
 		},
 		{
 			name:          "class selective rejects unlisted class",
-			creatureStats: map[string]int{"level": 20, "class": legacyClassFighter},
+			creatureStats: map[string]int{"level": 20, "class": model.ClassFighter},
 			protoProps:    map[string]string{"classSelective": "1", "classMage": "1"},
 			want:          "\n당신의 직업상 귀환 주문서의 비법을 연마할 수 없습니다.\n",
 		},
 		{
 			name:          "ndice above actor level rejects scroll",
-			creatureStats: map[string]int{"level": 4, "class": legacyClassFighter},
+			creatureStats: map[string]int{"level": 4, "class": model.ClassFighter},
 			objectProps:   map[string]string{"nDice": "5"},
 			want:          "\n당신의 능력으로는 귀환 주문서의 내용을 파악하지 못해 연마할 수 없습니다.",
 		},

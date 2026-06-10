@@ -35,7 +35,7 @@ func dmCreateCrt(ctx *Context, resolved ResolvedCommand, world DMCreateCrtWorld)
 	}
 
 	class := creatureClass(creature)
-	if class < legacyClassSubDM {
+	if class < model.ClassSubDM {
 		return StatusPrompt, nil
 	}
 

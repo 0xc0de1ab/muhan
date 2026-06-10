@@ -189,7 +189,7 @@ func TestDMPermUsesParsedTargetSlotAndOrdinalLikeCWhenArgsMissing(t *testing.T) 
 			"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice": {ID: "creature:alice", RoomID: "room:1", Stats: map[string]int{"class": legacyClassDM}},
+			"creature:alice": {ID: "creature:alice", RoomID: "room:1", Stats: map[string]int{"class": model.ClassDM}},
 		},
 		rooms: map[model.RoomID]model.Room{
 			"room:1": {
@@ -252,7 +252,7 @@ func TestDMPermAppliesFindObjInvisibleVisibility(t *testing.T) {
 				"creature:alice": {
 					ID:       "creature:alice",
 					RoomID:   "room:1",
-					Stats:    map[string]int{"class": legacyClassDM},
+					Stats:    map[string]int{"class": model.ClassDM},
 					Metadata: model.Metadata{Tags: actorTags},
 				},
 			},

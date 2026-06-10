@@ -68,7 +68,7 @@ func NewGetHandler(world GetWorld) Handler {
 			}
 		}
 		if getUsesRoomPickupGate(world, room, resolved) {
-			if guard, ok := getRoomPickupGuard(world, room, creature.ID); ok && creatureClass(creature) < legacyClassCaretaker {
+			if guard, ok := getRoomPickupGuard(world, room, creature.ID); ok && creatureClass(creature) < model.ClassCaretaker {
 				ctx.WriteString(RenderGetRoomGuardBlock(guard))
 				return StatusDefault, nil
 			}
@@ -1251,7 +1251,7 @@ func getTakeCreatureMaxWeight(creature model.Creature) int {
 		level = creatureStat(creature, "level")
 	}
 	maxWeight := 20 + strength*10
-	if creatureStat(creature, "class") == legacyClassBarbarian {
+	if creatureStat(creature, "class") == model.ClassBarbarian {
 		maxWeight += ((level + 3) / 4) * 10
 	}
 	return maxWeight

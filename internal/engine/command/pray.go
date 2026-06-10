@@ -75,10 +75,10 @@ func NewPrayHandler(world PrayWorld, rng SearchRollFunc) Handler {
 
 func prayClassRejection(creature model.Creature) string {
 	class := creatureClass(creature)
-	if class != legacyClassCleric && class != legacyClassPaladin && class < legacyClassInvincible {
+	if class != model.ClassCleric && class != model.ClassPaladin && class < model.ClassInvincible {
 		return "불제자와 무사만이 신께 기원할 수 있습니다.\n"
 	}
-	if class >= legacyClassInvincible && !prayHasClericOrPaladinTraining(creature) {
+	if class >= model.ClassInvincible && !prayHasClericOrPaladinTraining(creature) {
 		return "\n불제자나 무사를 무적수련하지 않았습니다..\n"
 	}
 	return ""

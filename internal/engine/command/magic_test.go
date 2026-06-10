@@ -59,10 +59,10 @@ func mockCastWorld(t *testing.T) (*state.World, *load.World) {
 	}
 
 	// Add players
-	addPlayer("alice", "Alice", legacyClassCleric, 50, 80) // Cleric
-	addPlayer("bob", "Bob", legacyClassMage, 50, 80)       // Mage
-	addPlayer("charlie", "Charlie", legacyClassDM, 50, 80) // DM
-	addPlayer("dave", "Dave", legacyClassFighter, 50, 80)  // Fighter
+	addPlayer("alice", "Alice", model.ClassCleric, 50, 80) // Cleric
+	addPlayer("bob", "Bob", model.ClassMage, 50, 80)       // Mage
+	addPlayer("charlie", "Charlie", model.ClassDM, 50, 80) // DM
+	addPlayer("dave", "Dave", model.ClassFighter, 50, 80)  // Fighter
 
 	w := state.NewWorld(loaded)
 	return w, loaded
@@ -455,7 +455,7 @@ func TestOffensiveSpellsDiceAndResistance(t *testing.T) {
 	world, _ := mockCastWorld(t)
 
 	// Update Alice's class to Mage so she can cast 동설주 (cold)
-	_ = world.SetCreatureStat("creature:alice", "class", legacyClassMage)
+	_ = world.SetCreatureStat("creature:alice", "class", model.ClassMage)
 	_ = world.SetCreatureStat("creature:alice", "intelligence", 10)
 	_ = world.SetCreatureStat("creature:alice", "piety", 10)
 	_, _ = world.UpdateCreatureTags("creature:alice", []string{"PCHAOS"}, nil)
@@ -559,7 +559,7 @@ func TestOffensiveSpellsDiceAndResistance(t *testing.T) {
 
 func TestOffensiveSpellMissingTargetUsesLegacyMessage(t *testing.T) {
 	world, _ := mockCastWorld(t)
-	_ = world.SetCreatureStat("creature:alice", "class", legacyClassMage)
+	_ = world.SetCreatureStat("creature:alice", "class", model.ClassMage)
 	_ = world.SetCreatureStat("creature:alice", "mpCurrent", 50)
 	_, _ = world.UpdateCreatureTags("creature:alice", []string{"SFIREB"}, nil)
 
@@ -579,7 +579,7 @@ func TestOffensiveSpellMissingTargetUsesLegacyMessage(t *testing.T) {
 
 func TestOffensiveSpellRevealsPINVISBeforeTargetLookupLikeLegacy(t *testing.T) {
 	world, _ := mockCastWorld(t)
-	_ = world.SetCreatureStat("creature:alice", "class", legacyClassMage)
+	_ = world.SetCreatureStat("creature:alice", "class", model.ClassMage)
 	_ = world.SetCreatureStat("creature:alice", "mpCurrent", 50)
 	_ = world.SetCreatureStat("creature:alice", "PINVIS", 1)
 	_, _ = world.UpdateCreatureTags("creature:alice", []string{"SFIREB", "PINVIS", "invisible"}, nil)
@@ -619,7 +619,7 @@ func TestOffensiveSelfCastSkipsSpellFailLikeLegacy(t *testing.T) {
 	}()
 
 	world, _ := mockCastWorld(t)
-	_ = world.SetCreatureStat("creature:alice", "class", legacyClassMage)
+	_ = world.SetCreatureStat("creature:alice", "class", model.ClassMage)
 	_ = world.SetCreatureStat("creature:alice", "mpCurrent", 3)
 	_ = world.SetCreatureStat("creature:alice", "hpCurrent", 80)
 	_, _ = world.UpdateCreatureTags("creature:alice", []string{"SHURTS"}, nil)
@@ -651,7 +651,7 @@ func TestOffensiveSelfCastSkipsSpellFailLikeLegacy(t *testing.T) {
 func TestOffensiveSelfCastLethalDamageLeavesOneHPLikeLegacy(t *testing.T) {
 	withAttackRolls(t, 8)
 	world, _ := mockCastWorld(t)
-	_ = world.SetCreatureStat("creature:alice", "class", legacyClassMage)
+	_ = world.SetCreatureStat("creature:alice", "class", model.ClassMage)
 	_ = world.SetCreatureStat("creature:alice", "mpCurrent", 3)
 	_ = world.SetCreatureStat("creature:alice", "hpCurrent", 2)
 	_, _ = world.UpdateCreatureTags("creature:alice", []string{"SHURTS"}, nil)
@@ -682,7 +682,7 @@ func TestOffensiveExplicitSelfTargetsAreNotSelfCastLikeLegacy(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			world, _ := mockCastWorld(t)
-			_ = world.SetCreatureStat("creature:alice", "class", legacyClassMage)
+			_ = world.SetCreatureStat("creature:alice", "class", model.ClassMage)
 			_ = world.SetCreatureStat("creature:alice", "mpCurrent", 50)
 			_ = world.SetCreatureStat("creature:alice", "hpCurrent", 80)
 			_, _ = world.UpdateCreatureTags("creature:alice", []string{"SFIREB"}, nil)
@@ -708,7 +708,7 @@ func TestOffensiveExplicitSelfTargetsAreNotSelfCastLikeLegacy(t *testing.T) {
 
 func TestOffensiveSpellRejectsCharmedPlayerBeforeDamageLikeLegacy(t *testing.T) {
 	world, _ := mockCastWorld(t)
-	_ = world.SetCreatureStat("creature:alice", "class", legacyClassMage)
+	_ = world.SetCreatureStat("creature:alice", "class", model.ClassMage)
 	_ = world.SetCreatureStat("creature:alice", "mpCurrent", 50)
 	_ = world.SetCreatureStat("creature:bob", "hpCurrent", 80)
 	_, _ = world.UpdateCreatureTags("creature:alice", []string{"SFIREB", "PCHARM", "PCHAOS"}, nil)
@@ -778,7 +778,7 @@ func TestOffensiveSpellPlayerGateMatchesLegacyPvPConditions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			world, _ := mockCastWorld(t)
-			_ = world.SetCreatureStat("creature:alice", "class", legacyClassMage)
+			_ = world.SetCreatureStat("creature:alice", "class", model.ClassMage)
 			_ = world.SetCreatureStat("creature:alice", "mpCurrent", 50)
 			_ = world.SetCreatureStat("creature:bob", "hpCurrent", 80)
 			_, _ = world.UpdateCreatureTags("creature:alice", []string{"SFIREB"}, nil)
@@ -823,7 +823,7 @@ func TestOffensiveSpellResolvesMonsterBeforePlayerLikeLegacy(t *testing.T) {
 		},
 	}
 	world := state.NewWorld(loaded)
-	_ = world.SetCreatureStat("creature:alice", "class", legacyClassDM)
+	_ = world.SetCreatureStat("creature:alice", "class", model.ClassDM)
 	_ = world.SetCreatureStat("creature:bob", "hpCurrent", 80)
 	_, _ = world.UpdateCreatureTags("creature:alice", []string{"PCHAOS"}, nil)
 	_, _ = world.UpdateCreatureTags("creature:bob", []string{"PCHAOS"}, nil)
@@ -860,7 +860,7 @@ func TestOffensiveSpellRejectsProtectedMonsterBeforeCostLikeLegacy(t *testing.T)
 		},
 	}
 	world := state.NewWorld(loaded)
-	_ = world.SetCreatureStat("creature:alice", "class", legacyClassDM)
+	_ = world.SetCreatureStat("creature:alice", "class", model.ClassDM)
 	_ = world.SetCreatureStat("creature:alice", "mpCurrent", 50)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -898,7 +898,7 @@ func TestOffensiveSpellAwardsRealmProficiencyAgainstMonstersLikeLegacy(t *testin
 		},
 	}
 	world := state.NewWorld(loaded)
-	_ = world.SetCreatureStat("creature:alice", "class", legacyClassDM)
+	_ = world.SetCreatureStat("creature:alice", "class", model.ClassDM)
 	_ = world.SetCreatureStat("creature:alice", "mpCurrent", 50)
 	_ = world.SetCreatureStat("creature:alice", "realmFire", 100)
 
@@ -961,7 +961,7 @@ func TestHighTierOffensiveRestrictionMessagesUseLegacyText(t *testing.T) {
 				timeNow = previousNow
 			})
 			world, _ := mockCastWorld(t)
-			_ = world.SetCreatureStat("creature:alice", "class", legacyClassMage)
+			_ = world.SetCreatureStat("creature:alice", "class", model.ClassMage)
 			_ = world.SetCreatureStat("creature:alice", "mpCurrent", tt.mp)
 			_, _ = world.UpdateCreatureTags("creature:alice", []string{tt.tag, "PCHAOS"}, nil)
 			_, _ = world.UpdateCreatureTags("creature:bob", []string{"PCHAOS"}, nil)
@@ -990,7 +990,7 @@ func TestHighTierOffensiveRestrictionMessagesUseLegacyText(t *testing.T) {
 func TestHighTierOffensiveSpellFailPrecedesTrainingRestrictionLikeLegacy(t *testing.T) {
 	useSpellFailRoll(t, 99)
 	world, _ := mockCastWorld(t)
-	_ = world.SetCreatureStat("creature:alice", "class", legacyClassMage)
+	_ = world.SetCreatureStat("creature:alice", "class", model.ClassMage)
 	_ = world.SetCreatureStat("creature:alice", "mpCurrent", 35)
 	_ = world.SetCreatureStat("creature:bob", "hpCurrent", 80)
 	_, _ = world.UpdateCreatureTags("creature:alice", []string{"SISIX1", "PCHAOS"}, nil)
@@ -1028,7 +1028,7 @@ func TestHighTierOffensiveSuccessIncludesLegacyCasterDetail(t *testing.T) {
 			name:      "sisix",
 			spell:     "천지진동",
 			tag:       "SISIX1",
-			class:     legacyClassMage,
+			class:     model.ClassMage,
 			mp:        35,
 			extraTags: []string{"SMAGE"},
 			want:      "천지진동주... 당신은 땅의 지맥을 건들여 적이 있는 곳의 땅이 갈라집니다.",
@@ -1037,7 +1037,7 @@ func TestHighTierOffensiveSuccessIncludesLegacyCasterDetail(t *testing.T) {
 			name:  "xixix",
 			spell: "탄지수통",
 			tag:   "XIXIX4",
-			class: legacyClassCaretaker,
+			class: model.ClassCaretaker,
 			mp:    60,
 			want:  "탄지수통주... 관음의 눈물이 손 끝에 맺히니 마도 무릎을 꿇으리라.",
 		},
@@ -1078,7 +1078,7 @@ func TestHighTierOffensiveSuccessIncludesLegacyCasterDetail(t *testing.T) {
 func TestOffensiveSpellMidTierSuccessIncludesLegacyCasterAndRoomDetails(t *testing.T) {
 	useSpellFailRoll(t, 0)
 	world, _ := mockCastWorld(t)
-	_ = world.SetCreatureStat("creature:alice", "class", legacyClassMage)
+	_ = world.SetCreatureStat("creature:alice", "class", model.ClassMage)
 	_ = world.SetCreatureStat("creature:alice", "mpCurrent", 50)
 	_ = world.SetCreatureStat("creature:bob", "hpCurrent", 500)
 	_, _ = world.UpdateCreatureTags("creature:alice", []string{"SBURNS", "PCHAOS"}, nil)
@@ -1114,7 +1114,7 @@ func TestOffensiveSpellMidTierSuccessIncludesLegacyCasterAndRoomDetails(t *testi
 
 func TestOffensiveSpellSendsTargetDamageToActiveSession(t *testing.T) {
 	world, _ := mockCastWorld(t)
-	_ = world.SetCreatureStat("creature:alice", "class", legacyClassDM)
+	_ = world.SetCreatureStat("creature:alice", "class", model.ClassDM)
 	_ = world.SetCreatureStat("creature:alice", "mpCurrent", 50)
 	_ = world.SetCreatureStat("creature:bob", "hpCurrent", 80)
 	_, _ = world.UpdateCreatureTags("creature:alice", []string{"PCHAOS"}, nil)
@@ -1169,7 +1169,7 @@ func slicesContains(slice []string, val string) bool {
 func TestEnchantTemporaryBuff(t *testing.T) {
 	world, _ := mockCastWorld(t)
 
-	// Bob is a Mage (legacyClassMage). Give Bob the SENCHA tag so he can cast 빙의.
+	// Bob is a Mage (model.ClassMage). Give Bob the SENCHA tag so he can cast 빙의.
 	_, err := world.UpdateCreatureTags("creature:bob", []string{"SENCHA"}, nil)
 	if err != nil {
 		t.Fatalf("failed to grant enchant spell tag: %v", err)
@@ -1351,25 +1351,25 @@ func TestHighTierSpellsRegistered(t *testing.T) {
 // TestSpellFailFormula verifies port of C spell_fail rates at least for known class.
 func TestSpellFailFormula(t *testing.T) {
 	// Low level fighter high int should have low fail rate per formula
-	f := model.Creature{Stats: map[string]int{"class": legacyClassFighter, "level": 10, "intelligence": 20}}
+	f := model.Creature{Stats: map[string]int{"class": model.ClassFighter, "level": 10, "intelligence": 20}}
 	// Run multiple to sample (not deterministic assert, but no panic/crash)
 	for i := 0; i < 5; i++ {
 		_ = spellFail(f)
 	}
 	// DM always false (success)
-	dm := model.Creature{Stats: map[string]int{"class": legacyClassDM, "level": 100, "intelligence": 30}}
+	dm := model.Creature{Stats: map[string]int{"class": model.ClassDM, "level": 100, "intelligence": 30}}
 	if spellFail(dm) {
 		t.Error("DM should never spellFail per C default")
 	}
 }
 
 func TestMagicProficiencySubDMUsesCPrivilegedTable(t *testing.T) {
-	subDM := model.Creature{Stats: map[string]int{"class": legacyClassSubDM, "realmEarth": 2048}}
+	subDM := model.Creature{Stats: map[string]int{"class": model.ClassSubDM, "realmEarth": 2048}}
 	if got := mprofic(subDM, 1); got != 20 {
 		t.Fatalf("sub-DM earth mprofic = %d, want 20 from C privileged table", got)
 	}
 
-	fighter := model.Creature{Stats: map[string]int{"class": legacyClassFighter, "realmFire": 2048}}
+	fighter := model.Creature{Stats: map[string]int{"class": model.ClassFighter, "realmFire": 2048}}
 	if got := mprofic(fighter, 3); got != 10 {
 		t.Fatalf("fighter fire mprofic = %d, want 10 from C default table", got)
 	}
@@ -1378,7 +1378,7 @@ func TestMagicProficiencySubDMUsesCPrivilegedTable(t *testing.T) {
 	}
 
 	missile := model.Creature{
-		Stats:      map[string]int{"class": legacyClassSubDM},
+		Stats:      map[string]int{"class": model.ClassSubDM},
 		Properties: map[string]string{"proficiency/missile": "2048"},
 	}
 	if got := mprofic(missile, 0); got != 20 {

@@ -193,7 +193,7 @@ func dmSet(ctx *Context, resolved ResolvedCommand, world DMSetWorld) (Status, er
 	}
 
 	class := creatureClass(creature)
-	if class < legacyClassDM {
+	if class < model.ClassDM {
 		return StatusPrompt, nil
 	}
 
@@ -493,7 +493,7 @@ func dmSetCrt(ctx *Context, resolved ResolvedCommand, world DMSetWorld, creature
 
 	if targetCrt, ok := dmSetFindOnlinePlayer(ctx, world, legacyLowercizeASCII(crtName, true)); ok {
 		isPdmInv := creatureHasAnyFlag(targetCrt, "PDMINV", "dmInvisible")
-		if !(actorClass < legacyClassCaretaker && isPdmInv) {
+		if !(actorClass < model.ClassCaretaker && isPdmInv) {
 			targetCreature = targetCrt
 			foundCrt = true
 		}
@@ -541,15 +541,15 @@ func dmSetCrt(ctx *Context, resolved ResolvedCommand, world DMSetWorld, creature
 			}
 		} else {
 			actorClass := creatureClass(creature)
-			if actorClass < legacyClassDM {
+			if actorClass < model.ClassDM {
 				return StatusDefault, nil
 			}
 
 			targetClass := val
 			isPlayer := targetCreature.Kind == model.CreatureKindPlayer || !targetCreature.PlayerID.IsZero()
-			if isPlayer && val == legacyClassDM {
+			if isPlayer && val == model.ClassDM {
 				if !isAllowedDMName(targetCreature.DisplayName) {
-					targetClass = legacyClassSubDM
+					targetClass = model.ClassSubDM
 				}
 			}
 			err := world.UpdateCreatureStat(targetCreature.ID, "class", targetClass)

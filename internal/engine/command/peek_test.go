@@ -11,7 +11,7 @@ import (
 )
 
 func TestPeekHandlerShowsMonsterInventory(t *testing.T) {
-	world := state.NewWorld(peekWorld(t, legacyClassThief))
+	world := state.NewWorld(peekWorld(t, model.ClassThief))
 	dispatcher := peekDispatcher(t, world, fixedPeekRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -29,7 +29,7 @@ func TestPeekHandlerShowsMonsterInventory(t *testing.T) {
 }
 
 func TestPeekHandlerShowsPlayerInventoryAfterMonsterSearch(t *testing.T) {
-	world := state.NewWorld(peekWorld(t, legacyClassThief))
+	world := state.NewWorld(peekWorld(t, model.ClassThief))
 	dispatcher := peekDispatcher(t, world, fixedPeekRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -51,13 +51,13 @@ func TestPeekHandlerRejectsClassBlindMissingAndProtectedTargets(t *testing.T) {
 		mutate func(*worldload.World)
 		want   string
 	}{
-		{name: "missing arg", class: legacyClassThief, want: "누구의 소지품을 보려구요?"},
-		{name: "wrong class", class: legacyClassFighter, target: "상인", want: "당신 직업으로는 다른사람의 소지품을 볼 수 없습니다."},
-		{name: "blind", class: legacyClassThief, tags: []string{"blind"}, target: "상인", want: "당신은 눈이 멀어 있습니다!"},
-		{name: "missing target", class: legacyClassThief, target: "없는", want: "그런 사람 없어요!"},
+		{name: "missing arg", class: model.ClassThief, want: "누구의 소지품을 보려구요?"},
+		{name: "wrong class", class: model.ClassFighter, target: "상인", want: "당신 직업으로는 다른사람의 소지품을 볼 수 없습니다."},
+		{name: "blind", class: model.ClassThief, tags: []string{"blind"}, target: "상인", want: "당신은 눈이 멀어 있습니다!"},
+		{name: "missing target", class: model.ClassThief, target: "없는", want: "그런 사람 없어요!"},
 		{
 			name:   "protected target",
-			class:  legacyClassThief,
+			class:  model.ClassThief,
 			target: "상인",
 			mutate: func(loaded *worldload.World) {
 				merchant := loaded.Creatures["creature:merchant"]
@@ -92,7 +92,7 @@ func TestPeekHandlerRejectsClassBlindMissingAndProtectedTargets(t *testing.T) {
 }
 
 func TestPeekHandlerFailureDoesNotShowInventory(t *testing.T) {
-	world := state.NewWorld(peekWorld(t, legacyClassThief))
+	world := state.NewWorld(peekWorld(t, model.ClassThief))
 	handler := NewPeekHandler(world, fixedPeekRoll(100))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -106,7 +106,7 @@ func TestPeekHandlerFailureDoesNotShowInventory(t *testing.T) {
 }
 
 func TestPeekHandlerAppliesLegacyCooldownAfterTargetLookup(t *testing.T) {
-	world := state.NewWorld(peekWorld(t, legacyClassThief))
+	world := state.NewWorld(peekWorld(t, model.ClassThief))
 	handler := NewPeekHandler(world, fixedPeekRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -124,7 +124,7 @@ func TestPeekHandlerAppliesLegacyCooldownAfterTargetLookup(t *testing.T) {
 }
 
 func TestPeekHandlerNotifiesVictimAndRoomWhenCaughtLikeLegacy(t *testing.T) {
-	loaded := peekWorld(t, legacyClassThief)
+	loaded := peekWorld(t, model.ClassThief)
 	mustAddLookPlayer(t, loaded, model.Player{ID: "player:charlie", DisplayName: "Charlie", CreatureID: "creature:charlie", RoomID: "room:peek"})
 	mustAddLookCreature(t, loaded, model.Creature{
 		ID:          "creature:charlie",

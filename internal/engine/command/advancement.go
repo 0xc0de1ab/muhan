@@ -38,7 +38,7 @@ func NewBuyStatesHandler(world BuyStatesWorld, roll SearchRollFunc) Handler {
 		}
 
 		class := creatureClass(actor)
-		if class != legacyClassCaretaker && class != legacyClassBulsa {
+		if class != model.ClassCaretaker && class != model.ClassBulsa {
 			ctx.WriteString("초인, 불사만이 가능합니다.")
 			return StatusDefault, nil
 		}
@@ -157,7 +157,7 @@ func buyStatesSpend(world BuyStatesWorld, actor model.Creature, cost int) error 
 
 func buyStatesRefreshDamageDice(world BuyStatesWorld, actor model.Creature, class int) error {
 	switch class {
-	case legacyClassCaretaker:
+	case model.ClassCaretaker:
 		if err := world.SetCreatureStat(actor.ID, "nDice", 4); err != nil {
 			return err
 		}
@@ -167,7 +167,7 @@ func buyStatesRefreshDamageDice(world BuyStatesWorld, actor model.Creature, clas
 		if !attackCreatureHasFlag(actor, "PUPDMG", "upDamage") {
 			return world.SetCreatureStat(actor.ID, "pDice", 4)
 		}
-	case legacyClassBulsa:
+	case model.ClassBulsa:
 		if err := world.SetCreatureStat(actor.ID, "nDice", 5); err != nil {
 			return err
 		}
@@ -184,7 +184,7 @@ func buyStatesRefreshDamageDice(world BuyStatesWorld, actor model.Creature, clas
 }
 
 func buyStatesCost(class int) int {
-	if class == legacyClassBulsa {
+	if class == model.ClassBulsa {
 		return buyStatesBulsaCost
 	}
 	return buyStatesCaretakerCost
@@ -193,12 +193,12 @@ func buyStatesCost(class int) int {
 func buyStatesHPMPConfig(class int, target string) (statKey string, currentKey string, capValue int, maxRoll int) {
 	switch target {
 	case "체력":
-		if class == legacyClassBulsa {
+		if class == model.ClassBulsa {
 			return "hpMax", "hpCurrent", 5000, 5
 		}
 		return "hpMax", "hpCurrent", 3000, 4
 	case "도력":
-		if class == legacyClassBulsa {
+		if class == model.ClassBulsa {
 			return "mpMax", "mpCurrent", 4000, 5
 		}
 		return "mpMax", "mpCurrent", 2000, 3
@@ -225,14 +225,14 @@ func buyStatesAttributeKey(target string) string {
 }
 
 func buyStatesAttributeLimit(class int) int {
-	if class == legacyClassBulsa {
+	if class == model.ClassBulsa {
 		return 59
 	}
 	return 44
 }
 
 func buyStatesAttributeHPBonus(class int, target string, roll SearchRollFunc) int {
-	if class == legacyClassBulsa {
+	if class == model.ClassBulsa {
 		return 4
 	}
 	if target == "민첩" {
@@ -245,7 +245,7 @@ func buyStatesAttributeHPBonus(class int, target string, roll SearchRollFunc) in
 }
 
 func buyStatesAttributeMPBonus(class int, roll SearchRollFunc) int {
-	if class == legacyClassBulsa {
+	if class == model.ClassBulsa {
 		return 3
 	}
 	return roll(2, 3)
@@ -278,37 +278,37 @@ type legacyClassStatBonusEntry struct {
 }
 
 var legacyClassStatBonuses = map[int]legacyClassStatBonusEntry{
-	legacyClassAssassin:   {55, 40, 5, 2, 1, 6, 0},
-	legacyClassBarbarian:  {57, 40, 7, 1, 2, 3, 1},
-	legacyClassCleric:     {54, 50, 4, 3, 1, 4, 0},
-	legacyClassFighter:    {56, 50, 6, 1, 1, 5, 0},
-	legacyClassMage:       {54, 50, 4, 3, 1, 3, 0},
-	legacyClassPaladin:    {55, 50, 5, 2, 1, 4, 0},
-	legacyClassRanger:     {56, 40, 6, 2, 2, 2, 0},
-	legacyClassThief:      {55, 50, 5, 2, 2, 2, 1},
-	legacyClassInvincible: {400, 250, 4, 4, 2, 4, 0},
-	legacyClassCaretaker:  {50, 50, 5, 5, 5, 5, 5},
-	legacyClassBulsa:      {50, 50, 5, 5, 5, 5, 5},
-	legacyClassSubDM:      {50, 50, 5, 5, 5, 5, 5},
-	legacyClassDM:         {50, 50, 7, 4, 5, 5, 5},
+	model.ClassAssassin:   {55, 40, 5, 2, 1, 6, 0},
+	model.ClassBarbarian:  {57, 40, 7, 1, 2, 3, 1},
+	model.ClassCleric:     {54, 50, 4, 3, 1, 4, 0},
+	model.ClassFighter:    {56, 50, 6, 1, 1, 5, 0},
+	model.ClassMage:       {54, 50, 4, 3, 1, 3, 0},
+	model.ClassPaladin:    {55, 50, 5, 2, 1, 4, 0},
+	model.ClassRanger:     {56, 40, 6, 2, 2, 2, 0},
+	model.ClassThief:      {55, 50, 5, 2, 2, 2, 1},
+	model.ClassInvincible: {400, 250, 4, 4, 2, 4, 0},
+	model.ClassCaretaker:  {50, 50, 5, 5, 5, 5, 5},
+	model.ClassBulsa:      {50, 50, 5, 5, 5, 5, 5},
+	model.ClassSubDM:      {50, 50, 5, 5, 5, 5, 5},
+	model.ClassDM:         {50, 50, 7, 4, 5, 5, 5},
 	0:                     {1, 1, 1, 1, 1, 1, 1},
 }
 
 var legacyLevelCycleTable = map[int][10]int{
 	0:                     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	legacyClassAssassin:   {legacyStatCON, legacyStatPTY, legacyStatSTR, legacyStatINT, legacyStatDEX, legacyStatINT, legacyStatDEX, legacyStatPTY, legacyStatSTR, legacyStatDEX},
-	legacyClassBarbarian:  {legacyStatINT, legacyStatDEX, legacyStatPTY, legacyStatCON, legacyStatSTR, legacyStatCON, legacyStatDEX, legacyStatSTR, legacyStatPTY, legacyStatSTR},
-	legacyClassCleric:     {legacyStatSTR, legacyStatDEX, legacyStatCON, legacyStatPTY, legacyStatINT, legacyStatPTY, legacyStatINT, legacyStatDEX, legacyStatCON, legacyStatINT},
-	legacyClassFighter:    {legacyStatPTY, legacyStatINT, legacyStatDEX, legacyStatCON, legacyStatSTR, legacyStatCON, legacyStatINT, legacyStatSTR, legacyStatDEX, legacyStatSTR},
-	legacyClassMage:       {legacyStatSTR, legacyStatDEX, legacyStatPTY, legacyStatCON, legacyStatINT, legacyStatCON, legacyStatINT, legacyStatDEX, legacyStatPTY, legacyStatINT},
-	legacyClassPaladin:    {legacyStatDEX, legacyStatINT, legacyStatCON, legacyStatSTR, legacyStatPTY, legacyStatSTR, legacyStatINT, legacyStatPTY, legacyStatCON, legacyStatPTY},
-	legacyClassRanger:     {legacyStatPTY, legacyStatSTR, legacyStatINT, legacyStatCON, legacyStatDEX, legacyStatCON, legacyStatDEX, legacyStatSTR, legacyStatINT, legacyStatDEX},
-	legacyClassThief:      {legacyStatINT, legacyStatCON, legacyStatPTY, legacyStatSTR, legacyStatDEX, legacyStatSTR, legacyStatCON, legacyStatDEX, legacyStatPTY, legacyStatDEX},
-	legacyClassInvincible: {legacyStatSTR, legacyStatDEX, legacyStatINT, legacyStatCON, legacyStatPTY, legacyStatSTR, legacyStatDEX, legacyStatINT, legacyStatCON, legacyStatPTY},
-	legacyClassCaretaker:  {legacyStatSTR, legacyStatDEX, legacyStatINT, legacyStatCON, legacyStatPTY, legacyStatSTR, legacyStatDEX, legacyStatINT, legacyStatCON, legacyStatPTY},
-	legacyClassBulsa:      {legacyStatSTR, legacyStatDEX, legacyStatINT, legacyStatCON, legacyStatPTY, legacyStatSTR, legacyStatDEX, legacyStatINT, legacyStatCON, legacyStatPTY},
-	legacyClassSubDM:      {legacyStatSTR, legacyStatDEX, legacyStatINT, legacyStatCON, legacyStatPTY, legacyStatSTR, legacyStatDEX, legacyStatINT, legacyStatCON, legacyStatPTY},
-	legacyClassDM:         {legacyStatSTR, legacyStatDEX, legacyStatINT, legacyStatCON, legacyStatPTY, legacyStatSTR, legacyStatDEX, legacyStatINT, legacyStatCON, legacyStatPTY},
+	model.ClassAssassin:   {legacyStatCON, legacyStatPTY, legacyStatSTR, legacyStatINT, legacyStatDEX, legacyStatINT, legacyStatDEX, legacyStatPTY, legacyStatSTR, legacyStatDEX},
+	model.ClassBarbarian:  {legacyStatINT, legacyStatDEX, legacyStatPTY, legacyStatCON, legacyStatSTR, legacyStatCON, legacyStatDEX, legacyStatSTR, legacyStatPTY, legacyStatSTR},
+	model.ClassCleric:     {legacyStatSTR, legacyStatDEX, legacyStatCON, legacyStatPTY, legacyStatINT, legacyStatPTY, legacyStatINT, legacyStatDEX, legacyStatCON, legacyStatINT},
+	model.ClassFighter:    {legacyStatPTY, legacyStatINT, legacyStatDEX, legacyStatCON, legacyStatSTR, legacyStatCON, legacyStatINT, legacyStatSTR, legacyStatDEX, legacyStatSTR},
+	model.ClassMage:       {legacyStatSTR, legacyStatDEX, legacyStatPTY, legacyStatCON, legacyStatINT, legacyStatCON, legacyStatINT, legacyStatDEX, legacyStatPTY, legacyStatINT},
+	model.ClassPaladin:    {legacyStatDEX, legacyStatINT, legacyStatCON, legacyStatSTR, legacyStatPTY, legacyStatSTR, legacyStatINT, legacyStatPTY, legacyStatCON, legacyStatPTY},
+	model.ClassRanger:     {legacyStatPTY, legacyStatSTR, legacyStatINT, legacyStatCON, legacyStatDEX, legacyStatCON, legacyStatDEX, legacyStatSTR, legacyStatINT, legacyStatDEX},
+	model.ClassThief:      {legacyStatINT, legacyStatCON, legacyStatPTY, legacyStatSTR, legacyStatDEX, legacyStatSTR, legacyStatCON, legacyStatDEX, legacyStatPTY, legacyStatDEX},
+	model.ClassInvincible: {legacyStatSTR, legacyStatDEX, legacyStatINT, legacyStatCON, legacyStatPTY, legacyStatSTR, legacyStatDEX, legacyStatINT, legacyStatCON, legacyStatPTY},
+	model.ClassCaretaker:  {legacyStatSTR, legacyStatDEX, legacyStatINT, legacyStatCON, legacyStatPTY, legacyStatSTR, legacyStatDEX, legacyStatINT, legacyStatCON, legacyStatPTY},
+	model.ClassBulsa:      {legacyStatSTR, legacyStatDEX, legacyStatINT, legacyStatCON, legacyStatPTY, legacyStatSTR, legacyStatDEX, legacyStatINT, legacyStatCON, legacyStatPTY},
+	model.ClassSubDM:      {legacyStatSTR, legacyStatDEX, legacyStatINT, legacyStatCON, legacyStatPTY, legacyStatSTR, legacyStatDEX, legacyStatINT, legacyStatCON, legacyStatPTY},
+	model.ClassDM:         {legacyStatSTR, legacyStatDEX, legacyStatINT, legacyStatCON, legacyStatPTY, legacyStatSTR, legacyStatDEX, legacyStatINT, legacyStatCON, legacyStatPTY},
 }
 
 func legacyClassStatBonusesFor(class int) legacyClassStatBonusEntry {

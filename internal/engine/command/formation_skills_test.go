@@ -263,7 +263,7 @@ func TestEightHandlerRejectsInvalidInputs(t *testing.T) {
 			name: "wrong class",
 			mutate: func(loaded *worldload.World) {
 				alice := loaded.Creatures["creature:alice"]
-				alice.Stats["class"] = legacyClassFighter
+				alice.Stats["class"] = model.ClassFighter
 				loaded.Creatures[alice.ID] = alice
 			},
 			want: "무적이상만 쓸수 있는 기술입니다.",
@@ -475,7 +475,7 @@ func TestNahanHandlerRejectsInvalidInputs(t *testing.T) {
 			args: []string{"고블린"},
 			mutate: func(loaded *worldload.World) {
 				alice := loaded.Creatures["creature:alice"]
-				alice.Stats["class"] = legacyClassCleric
+				alice.Stats["class"] = model.ClassCleric
 				loaded.Creatures[alice.ID] = alice
 			},
 			want: "무적이상만 쓸수 있는 기술입니다.",
@@ -726,7 +726,7 @@ func formationSkillsWorld(t *testing.T) *worldload.World {
 		RoomID:      "room:dojo",
 		Equipment:   map[string]model.ObjectInstanceID{"wield": "object:sword"},
 		Stats: map[string]int{
-			"class":        legacyClassInvincible,
+			"class":        model.ClassInvincible,
 			"level":        50,
 			"thaco":        0,
 			"dexterity":    24,
@@ -747,7 +747,7 @@ func formationSkillsWorld(t *testing.T) *worldload.World {
 		PlayerID:    "player:bob",
 		RoomID:      "room:dojo",
 		Stats: map[string]int{
-			"class":     legacyClassFighter,
+			"class":     model.ClassFighter,
 			"level":     10,
 			"hpCurrent": 50,
 			"hpMax":     50,

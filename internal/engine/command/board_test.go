@@ -668,7 +668,7 @@ func TestBoardLookHandlerDMCanListAndReadDeletedPostsLikeLegacy(t *testing.T) {
 	root := boardTestRoot(t)
 	loaded := boardTestWorld(t, true)
 	creature := loaded.Creatures["creature:alice"]
-	creature.Stats = map[string]int{"class": legacyClassDM}
+	creature.Stats = map[string]int{"class": model.ClassDM}
 	loaded.Creatures[creature.ID] = creature
 	world := state.NewWorld(loaded)
 	world.SetDBRoot(root)
@@ -706,7 +706,7 @@ func TestBoardDeleteRequiresLegacyBoardSpecial(t *testing.T) {
 	delete(proto.Properties, "special")
 	loaded.ObjectPrototypes[proto.ID] = proto
 	creature := loaded.Creatures["creature:alice"]
-	creature.Stats = map[string]int{"class": legacyClassDM}
+	creature.Stats = map[string]int{"class": model.ClassDM}
 	loaded.Creatures[creature.ID] = creature
 	world := state.NewWorld(loaded)
 	world.SetDBRoot(root)
@@ -754,7 +754,7 @@ func TestBoardDeleteUsesLegacyParsedSlots(t *testing.T) {
 	root := boardTestRoot(t)
 	loaded := boardTestWorld(t, true)
 	creature := loaded.Creatures["creature:alice"]
-	creature.Stats = map[string]int{"class": legacyClassDM}
+	creature.Stats = map[string]int{"class": model.ClassDM}
 	loaded.Creatures[creature.ID] = creature
 	world := state.NewWorld(loaded)
 	world.SetDBRoot(root)

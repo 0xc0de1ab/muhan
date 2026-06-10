@@ -13,7 +13,7 @@ import (
 
 func TestBashHandlerBashesMonsterAndRevealsInvisibleActorOnlyLikeLegacy(t *testing.T) {
 	withAttackRolls(t, 1, 20, 5)
-	loaded := bashWorld(t, legacyClassFighter)
+	loaded := bashWorld(t, model.ClassFighter)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	alice.Stats["PHIDDN"] = 1
@@ -72,7 +72,7 @@ func TestBashHandlerBashesMonsterAndRevealsInvisibleActorOnlyLikeLegacy(t *testi
 
 func TestBashHandlerSupportsCommandFirstFallback(t *testing.T) {
 	withAttackRolls(t, 1, 20, 5)
-	world := state.NewWorld(bashWorld(t, legacyClassFighter))
+	world := state.NewWorld(bashWorld(t, model.ClassFighter))
 	dispatcher := bashDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -91,7 +91,7 @@ func TestBashHandlerSupportsCommandFirstFallback(t *testing.T) {
 
 func TestBashHandlerReportsFailureWithoutDamage(t *testing.T) {
 	withAttackRolls(t, 100)
-	world := state.NewWorld(bashWorld(t, legacyClassFighter))
+	world := state.NewWorld(bashWorld(t, model.ClassFighter))
 	handler := NewBashHandler(world)
 
 	var broadcasts []roomBroadcastRecord
@@ -117,7 +117,7 @@ func TestBashHandlerReportsFailureWithoutDamage(t *testing.T) {
 
 func TestBashHandlerIgnoresSkillProficiencyLikeLegacy(t *testing.T) {
 	withAttackRolls(t, 50, 20, 5)
-	loaded := bashWorld(t, legacyClassFighter)
+	loaded := bashWorld(t, model.ClassFighter)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats["level"] = 1
 	alice.Stats["strength"] = 10
@@ -156,7 +156,7 @@ func TestBashHandlerIgnoresSkillProficiencyLikeLegacy(t *testing.T) {
 
 func TestBashHandlerMonsterHitAddsLegacyWeaponProficiency(t *testing.T) {
 	withAttackRolls(t, 1, 20, 5)
-	loaded := bashWorld(t, legacyClassFighter)
+	loaded := bashWorld(t, model.ClassFighter)
 	goblin := loaded.Creatures["creature:goblin-1"]
 	goblin.Stats["experience"] = 120
 	loaded.Creatures[goblin.ID] = goblin
@@ -184,9 +184,9 @@ func TestBashHandlerMonsterHitAddsLegacyWeaponProficiency(t *testing.T) {
 
 func TestBashHandlerHighClassTargetUsesRawDamageForLegacyProficiency(t *testing.T) {
 	withAttackRolls(t, 1, 20, 5)
-	loaded := bashWorld(t, legacyClassFighter)
+	loaded := bashWorld(t, model.ClassFighter)
 	goblin := loaded.Creatures["creature:goblin-1"]
-	goblin.Stats["class"] = legacyClassCaretaker + 1
+	goblin.Stats["class"] = model.ClassCaretaker + 1
 	goblin.Stats["experience"] = 120
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
@@ -209,7 +209,7 @@ func TestBashHandlerHighClassTargetUsesRawDamageForLegacyProficiency(t *testing.
 }
 
 func TestBashHandlerRespectsCooldownBeforeReveal(t *testing.T) {
-	loaded := bashWorld(t, legacyClassFighter)
+	loaded := bashWorld(t, model.ClassFighter)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	alice.Stats["PHIDDN"] = 1
@@ -248,14 +248,14 @@ func TestBashHandlerRejectsInvalidInputs(t *testing.T) {
 		mutate func(*worldload.World)
 		want   string
 	}{
-		{name: "missing target", class: legacyClassFighter, want: "누굴 공격합니까?"},
-		{name: "blind", class: legacyClassFighter, tags: []string{"blind"}, args: []string{"고블린"}, want: "누굴 공격합니까?"},
-		{name: "wrong class", class: legacyClassThief, args: []string{"고블린"}, want: "검사만 쓸수 있는 기술입니다."},
-		{name: "invincible without training", class: legacyClassInvincible, args: []string{"고블린"}, want: "검사를 무적수련하지 않았습니다.."},
-		{name: "unknown target", class: legacyClassFighter, args: []string{"없는"}, want: "그런 것은 여기 없습니다."},
+		{name: "missing target", class: model.ClassFighter, want: "누굴 공격합니까?"},
+		{name: "blind", class: model.ClassFighter, tags: []string{"blind"}, args: []string{"고블린"}, want: "누굴 공격합니까?"},
+		{name: "wrong class", class: model.ClassThief, args: []string{"고블린"}, want: "검사만 쓸수 있는 기술입니다."},
+		{name: "invincible without training", class: model.ClassInvincible, args: []string{"고블린"}, want: "검사를 무적수련하지 않았습니다.."},
+		{name: "unknown target", class: model.ClassFighter, args: []string{"없는"}, want: "그런 것은 여기 없습니다."},
 		{
 			name:  "missing weapon",
-			class: legacyClassFighter,
+			class: model.ClassFighter,
 			args:  []string{"고블린"},
 			mutate: func(loaded *worldload.World) {
 				alice := loaded.Creatures["creature:alice"]
@@ -266,7 +266,7 @@ func TestBashHandlerRejectsInvalidInputs(t *testing.T) {
 		},
 		{
 			name:  "blunt weapon",
-			class: legacyClassFighter,
+			class: model.ClassFighter,
 			args:  []string{"고블린"},
 			mutate: func(loaded *worldload.World) {
 				sword := loaded.ObjectPrototypes["prototype:sword"]
@@ -277,7 +277,7 @@ func TestBashHandlerRejectsInvalidInputs(t *testing.T) {
 		},
 		{
 			name:  "protected monster",
-			class: legacyClassFighter,
+			class: model.ClassFighter,
 			args:  []string{"고블린"},
 			mutate: func(loaded *worldload.World) {
 				goblin := loaded.Creatures["creature:goblin-1"]
@@ -288,7 +288,7 @@ func TestBashHandlerRejectsInvalidInputs(t *testing.T) {
 		},
 		{
 			name:  "short player target",
-			class: legacyClassFighter,
+			class: model.ClassFighter,
 			args:  []string{"Bo"},
 			want:  "그런 것은 여기 없습니다.",
 		},
@@ -320,7 +320,7 @@ func TestBashHandlerRejectsInvalidInputs(t *testing.T) {
 
 func TestBashHandlerSkipsPlayerPKGateLikeLegacyElseIf(t *testing.T) {
 	withAttackRolls(t, 1, 20, 5)
-	world := state.NewWorld(bashWorld(t, legacyClassFighter))
+	world := state.NewWorld(bashWorld(t, model.ClassFighter))
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewBashHandler(world)(ctx, ResolvedCommand{Args: []string{"Bob"}})
@@ -340,7 +340,7 @@ func TestBashHandlerSkipsPlayerPKGateLikeLegacyElseIf(t *testing.T) {
 
 func TestBashHandlerUsesLegacyByteLengthForPlayerTarget(t *testing.T) {
 	withAttackRolls(t, 1, 20, 5)
-	loaded := bashWorld(t, legacyClassFighter)
+	loaded := bashWorld(t, model.ClassFighter)
 	bobPlayer := loaded.Players["player:bob"]
 	bobPlayer.DisplayName = "보브"
 	loaded.Players[bobPlayer.ID] = bobPlayer
@@ -361,7 +361,7 @@ func TestBashHandlerUsesLegacyByteLengthForPlayerTarget(t *testing.T) {
 
 func TestBashHandlerEnchantOnlyMonsterRequiresEnchantedWeaponForCaretakerLikeLegacy(t *testing.T) {
 	withAttackRolls(t, 1, 20, 5)
-	loaded := bashWorld(t, legacyClassCaretaker)
+	loaded := bashWorld(t, model.ClassCaretaker)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"SFIGHTER"}
 	loaded.Creatures[alice.ID] = alice
@@ -389,7 +389,7 @@ func TestBashHandlerEnchantOnlyMonsterRequiresEnchantedWeaponForCaretakerLikeLeg
 
 func TestBashHandlerInvincibleWithFighterTrainingCanBash(t *testing.T) {
 	withAttackRolls(t, 1, 20, 5)
-	loaded := bashWorld(t, legacyClassInvincible)
+	loaded := bashWorld(t, model.ClassInvincible)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"SFIGHTER"}
 	loaded.Creatures[alice.ID] = alice
@@ -407,7 +407,7 @@ func TestBashHandlerInvincibleWithFighterTrainingCanBash(t *testing.T) {
 
 func TestBashHandlerPreservesLegacyZeroDamageForVeryLowHPTarget(t *testing.T) {
 	withAttackRolls(t, 1, 20, 5)
-	loaded := bashWorld(t, legacyClassFighter)
+	loaded := bashWorld(t, model.ClassFighter)
 	goblin := loaded.Creatures["creature:goblin-1"]
 	goblin.Stats["hpCurrent"] = 2
 	goblin.Stats["hpMax"] = 2
@@ -430,9 +430,9 @@ func TestBashHandlerPreservesLegacyZeroDamageForVeryLowHPTarget(t *testing.T) {
 
 func TestBashHandlerFinalizesMonsterDeathWhenDamageKillsTarget(t *testing.T) {
 	withAttackRolls(t, 1, 20, 5)
-	loaded := bashWorld(t, legacyClassFighter)
+	loaded := bashWorld(t, model.ClassFighter)
 	goblin := loaded.Creatures["creature:goblin-1"]
-	goblin.Stats["class"] = legacyClassCaretaker + 1
+	goblin.Stats["class"] = model.ClassCaretaker + 1
 	goblin.Stats["hpCurrent"] = 1
 	goblin.Stats["hpMax"] = 1
 	loaded.Creatures[goblin.ID] = goblin
@@ -514,7 +514,7 @@ func bashWorld(t *testing.T, class int) *worldload.World {
 		DisplayName: "Bob",
 		PlayerID:    "player:bob",
 		RoomID:      "room:arena",
-		Stats:       map[string]int{"class": legacyClassFighter, "level": 1, "hpCurrent": 30, "hpMax": 30},
+		Stats:       map[string]int{"class": model.ClassFighter, "level": 1, "hpCurrent": 30, "hpMax": 30},
 	})
 	mustAddLookCreature(t, loaded, model.Creature{
 		ID:          "creature:goblin-1",

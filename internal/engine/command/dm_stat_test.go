@@ -132,9 +132,9 @@ func TestDMStatRejectsUnauthorized(t *testing.T) {
 		name  string
 		class int
 	}{
-		{name: "regular class", class: legacyClassFighter},
-		{name: "caretaker below SUB_DM", class: legacyClassCaretaker},
-		{name: "bulsa below SUB_DM", class: legacyClassBulsa},
+		{name: "regular class", class: model.ClassFighter},
+		{name: "caretaker below SUB_DM", class: model.ClassCaretaker},
+		{name: "bulsa below SUB_DM", class: model.ClassBulsa},
 	}
 
 	for _, tt := range tests {
@@ -210,7 +210,7 @@ func TestDMStatRoomNoArgs(t *testing.T) {
 		creatures: map[model.CreatureID]model.Creature{
 			"creature:alice": {
 				ID:     "creature:alice",
-				Stats:  map[string]int{"class": legacyClassSubDM},
+				Stats:  map[string]int{"class": model.ClassSubDM},
 				RoomID: "room:100",
 			},
 		},
@@ -301,7 +301,7 @@ func TestDMStatRoomByIDCommandFirst(t *testing.T) {
 		creatures: map[model.CreatureID]model.Creature{
 			"creature:alice": {
 				ID:     "creature:alice",
-				Stats:  map[string]int{"class": legacyClassSubDM},
+				Stats:  map[string]int{"class": model.ClassSubDM},
 				RoomID: "room:100",
 			},
 		},
@@ -338,7 +338,7 @@ func TestDMStatRoomByIDAtRMAXReturnsSilently(t *testing.T) {
 		creatures: map[model.CreatureID]model.Creature{
 			"creature:alice": {
 				ID:     "creature:alice",
-				Stats:  map[string]int{"class": legacyClassSubDM},
+				Stats:  map[string]int{"class": model.ClassSubDM},
 				RoomID: "room:100",
 			},
 		},
@@ -429,7 +429,7 @@ func TestDMStatObjectFlagsExpandLegacyAliases(t *testing.T) {
 		creatures: map[model.CreatureID]model.Creature{
 			"creature:alice": {
 				ID:     "creature:alice",
-				Stats:  map[string]int{"class": legacyClassSubDM},
+				Stats:  map[string]int{"class": model.ClassSubDM},
 				RoomID: "room:100",
 				Inventory: model.ObjectRefList{
 					ObjectIDs: []model.ObjectInstanceID{"obj:alias"},
@@ -558,7 +558,7 @@ func TestDMStatUsesParsedTargetSlotAndOrdinalLikeCWhenArgsMissing(t *testing.T) 
 		creatures: map[model.CreatureID]model.Creature{
 			"creature:alice": {
 				ID:     "creature:alice",
-				Stats:  map[string]int{"class": legacyClassSubDM},
+				Stats:  map[string]int{"class": model.ClassSubDM},
 				RoomID: "room:100",
 			},
 			"creature:goblin1": {
@@ -616,7 +616,7 @@ func TestDMStatCreatureLookupPrefersMonsterBeforeRoomPlayerLikeLegacy(t *testing
 		creatures: map[model.CreatureID]model.Creature{
 			"creature:alice": {
 				ID:     "creature:alice",
-				Stats:  map[string]int{"class": legacyClassSubDM},
+				Stats:  map[string]int{"class": model.ClassSubDM},
 				RoomID: "room:100",
 			},
 			"creature:bob": {
@@ -666,7 +666,7 @@ func TestDMStatCreatureLookupUsesFindCrtVisibilityLikeLegacy(t *testing.T) {
 			creatures: map[model.CreatureID]model.Creature{
 				"creature:alice": {
 					ID:       "creature:alice",
-					Stats:    map[string]int{"class": legacyClassSubDM},
+					Stats:    map[string]int{"class": model.ClassSubDM},
 					RoomID:   "room:100",
 					Metadata: model.Metadata{Tags: actorTags},
 				},
@@ -735,7 +735,7 @@ func TestDMStatOnlinePlayerLookupUsesActiveSessions(t *testing.T) {
 		creatures: map[model.CreatureID]model.Creature{
 			"creature:alice": {
 				ID:     "creature:alice",
-				Stats:  map[string]int{"class": legacyClassSubDM},
+				Stats:  map[string]int{"class": model.ClassSubDM},
 				RoomID: "room:100",
 			},
 			"creature:bob": {
@@ -743,7 +743,7 @@ func TestDMStatOnlinePlayerLookupUsesActiveSessions(t *testing.T) {
 				DisplayName: "Bob",
 				PlayerID:    "player:bob",
 				RoomID:      "room:200",
-				Stats:       map[string]int{"class": legacyClassFighter},
+				Stats:       map[string]int{"class": model.ClassFighter},
 			},
 		},
 		rooms: map[model.RoomID]model.Room{
@@ -785,7 +785,7 @@ func TestDMStatSavedPlayerWithoutActiveSessionIsNotFound(t *testing.T) {
 		creatures: map[model.CreatureID]model.Creature{
 			"creature:alice": {
 				ID:     "creature:alice",
-				Stats:  map[string]int{"class": legacyClassSubDM},
+				Stats:  map[string]int{"class": model.ClassSubDM},
 				RoomID: "room:100",
 			},
 			"creature:bob": {
@@ -793,7 +793,7 @@ func TestDMStatSavedPlayerWithoutActiveSessionIsNotFound(t *testing.T) {
 				DisplayName: "Bob",
 				PlayerID:    "player:bob",
 				RoomID:      "room:200",
-				Stats:       map[string]int{"class": legacyClassFighter},
+				Stats:       map[string]int{"class": model.ClassFighter},
 			},
 		},
 		rooms: map[model.RoomID]model.Room{
@@ -835,7 +835,7 @@ func TestDMStatSecondaryActorSavedPlayerWithoutActiveSessionFallsBackToSelf(t *t
 		creatures: map[model.CreatureID]model.Creature{
 			"creature:alice": {
 				ID:     "creature:alice",
-				Stats:  map[string]int{"class": legacyClassSubDM},
+				Stats:  map[string]int{"class": model.ClassSubDM},
 				RoomID: "room:100",
 			},
 			"creature:bob": {
@@ -893,7 +893,7 @@ func TestDMStatSecondaryActorLookupPrefersMonsterBeforeRoomPlayerLikeLegacy(t *t
 		creatures: map[model.CreatureID]model.Creature{
 			"creature:alice": {
 				ID:     "creature:alice",
-				Stats:  map[string]int{"class": legacyClassSubDM},
+				Stats:  map[string]int{"class": model.ClassSubDM},
 				RoomID: "room:100",
 			},
 			"creature:bob-player": {
@@ -958,7 +958,7 @@ func TestDMStatObjectUsesSecondaryActorRoomLikeLegacy(t *testing.T) {
 		creatures: map[model.CreatureID]model.Creature{
 			"creature:alice": {
 				ID:     "creature:alice",
-				Stats:  map[string]int{"class": legacyClassSubDM},
+				Stats:  map[string]int{"class": model.ClassSubDM},
 				RoomID: "room:100",
 			},
 			"creature:bob": {
@@ -1038,7 +1038,7 @@ func TestDMStatCreatureUsesSecondaryActorRoomLikeLegacy(t *testing.T) {
 		creatures: map[model.CreatureID]model.Creature{
 			"creature:alice": {
 				ID:     "creature:alice",
-				Stats:  map[string]int{"class": legacyClassSubDM},
+				Stats:  map[string]int{"class": model.ClassSubDM},
 				RoomID: "room:100",
 			},
 			"creature:bob": {
@@ -1102,7 +1102,7 @@ func TestDMStatObjectFindObjVisibilityUsesPDINVILikeLegacy(t *testing.T) {
 			creatures: map[model.CreatureID]model.Creature{
 				"creature:alice": {
 					ID:       "creature:alice",
-					Stats:    map[string]int{"class": legacyClassSubDM},
+					Stats:    map[string]int{"class": model.ClassSubDM},
 					RoomID:   "room:100",
 					Metadata: model.Metadata{Tags: creatureTags},
 					Inventory: model.ObjectRefList{

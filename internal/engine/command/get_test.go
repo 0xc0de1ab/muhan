@@ -677,7 +677,7 @@ func TestGetHandlerRoomGuardAllowsCaretaker(t *testing.T) {
 	world := newGetFakeWorld()
 	addGetRoomGuard(world)
 	creature := world.creatures["creature:alice"]
-	creature.Stats["class"] = legacyClassCaretaker
+	creature.Stats["class"] = model.ClassCaretaker
 	world.creatures[creature.ID] = creature
 	handler := NewGetHandler(world)
 

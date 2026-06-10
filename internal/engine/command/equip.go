@@ -441,7 +441,7 @@ func equipRestrictionMessage(world InventoryWorld, creature model.Creature, obje
 	switch action {
 	case equipActionWear:
 		if legacyType == legacyObjectArmor {
-			if equipObjectHasFlag(world, object, "noMage", "onomag", "ONOMAG") && equipClassIs(creature, legacyClassMage, legacyClassCleric) {
+			if equipObjectHasFlag(world, object, "noMage", "onomag", "ONOMAG") && equipClassIs(creature, model.ClassMage, model.ClassCleric) {
 				return "도술사, 불제자들은 사용할수 없습니다.", false
 			}
 			if equipObjectHasFlag(world, object, "maleOnly", "noFemale", "onofem", "ONOFEM") && !equipCreatureMale(creature) {
@@ -499,7 +499,7 @@ func equipReadyMageClericRestricted(world InventoryWorld, creature model.Creatur
 		equipObjectHasFlag(world, object, "event", "eventItem", "oevent", "OEVENT") {
 		return false
 	}
-	return equipObjectDamageScore(world, object) > 14 && equipClassIs(creature, legacyClassMage, legacyClassCleric)
+	return equipObjectDamageScore(world, object) > 14 && equipClassIs(creature, model.ClassMage, model.ClassCleric)
 }
 
 func equipReadyGenderRestricted(world InventoryWorld, creature model.Creature, object model.ObjectInstance) bool {
@@ -525,7 +525,7 @@ func equipObjectClassRestricted(world InventoryWorld, creature model.Creature, o
 		return false
 	}
 	class := creatureClass(creature)
-	if class >= legacyClassInvincible {
+	if class >= model.ClassInvincible {
 		return false
 	}
 	names := equipClassFlagNames(class)
@@ -534,21 +534,21 @@ func equipObjectClassRestricted(world InventoryWorld, creature model.Creature, o
 
 func equipClassFlagNames(class int) []string {
 	switch class {
-	case legacyClassAssassin:
+	case model.ClassAssassin:
 		return []string{"classAssassin", "assassinUsable", "OASSNO", "oclsel1", "OCLSEL1"}
-	case legacyClassBarbarian:
+	case model.ClassBarbarian:
 		return []string{"classBarbarian", "barbarianUsable", "OBARBO", "oclsel2", "OCLSEL2"}
-	case legacyClassCleric:
+	case model.ClassCleric:
 		return []string{"classCleric", "clericUsable", "OCLERO", "oclsel3", "OCLSEL3"}
-	case legacyClassFighter:
+	case model.ClassFighter:
 		return []string{"classFighter", "fighterUsable", "OFIGHO", "oclsel4", "OCLSEL4"}
-	case legacyClassMage:
+	case model.ClassMage:
 		return []string{"classMage", "mageUsable", "OMAGEO", "oclsel5", "OCLSEL5"}
-	case legacyClassPaladin:
+	case model.ClassPaladin:
 		return []string{"classPaladin", "paladinUsable", "OPALAO", "oclsel6", "OCLSEL6"}
-	case legacyClassRanger:
+	case model.ClassRanger:
 		return []string{"classRanger", "rangerUsable", "ORNGRO", "oclsel7", "OCLSEL7"}
-	case legacyClassThief:
+	case model.ClassThief:
 		return []string{"classThief", "thiefUsable", "OTHIEO", "oclsel8", "OCLSEL8"}
 	default:
 		return nil

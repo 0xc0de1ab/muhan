@@ -430,7 +430,7 @@ func TestFamilyWarCombatFatalAttackLeavesWarPairUnscored(t *testing.T) {
 		PlayerID:    "player:alice",
 		RoomID:      "room:war",
 		Equipment:   map[string]model.ObjectInstanceID{"wield": "object:sword"},
-		Stats:       map[string]int{"class": legacyClassFighter, "familyFlag": 1, "familyID": 2, "hpCurrent": 20, "hpMax": 20, "thaco": 0},
+		Stats:       map[string]int{"class": model.ClassFighter, "familyFlag": 1, "familyID": 2, "hpCurrent": 20, "hpMax": 20, "thaco": 0},
 	}); err != nil {
 		t.Fatal(err)
 	}

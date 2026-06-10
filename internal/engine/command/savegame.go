@@ -106,7 +106,7 @@ func saveGameLegacyMessage(world saveGameMessageWorld, playerID model.PlayerID) 
 	}
 	class := creatureClass(creature)
 	level := attackCreatureLevel(creature)
-	if class < legacyClassInvincible && level < 6 {
+	if class < model.ClassInvincible && level < 6 {
 		return saveGameLowLevelMessage
 	}
 	if class > 0 && level > 6 {

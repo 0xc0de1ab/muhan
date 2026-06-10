@@ -180,7 +180,7 @@ func TestDMCast_MissingArguments(t *testing.T) {
 			"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}},
+			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}},
 		},
 	}
 
@@ -217,7 +217,7 @@ func TestDMCast_InvalidFlag(t *testing.T) {
 			"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}},
+			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}},
 		},
 	}
 
@@ -277,7 +277,7 @@ func TestDMCast_SpellLookup(t *testing.T) {
 			"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}},
+			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}},
 		},
 	}
 
@@ -335,7 +335,7 @@ func TestDMCast_Recall(t *testing.T) {
 				"player:bob":   {ID: "player:bob", CreatureID: "creature:bob", RoomID: "room:100"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", DisplayName: "Alice", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:alice": {ID: "creature:alice", DisplayName: "Alice", Stats: map[string]int{"class": model.ClassSubDM}},
 				"creature:bob":   {ID: "creature:bob", DisplayName: "Bob", Stats: map[string]int{"class": 1}},
 			},
 			roomPlayers: map[model.RoomID][]model.Player{
@@ -428,7 +428,7 @@ func TestDMCast_Recall(t *testing.T) {
 				"player:alice": {ID: "player:alice", CreatureID: "creature:alice", RoomID: "room:100"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", DisplayName: "Alice", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:alice": {ID: "creature:alice", DisplayName: "Alice", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 		}
 
@@ -601,7 +601,7 @@ func TestDMCastCreatureBackedActorUsesLegacyCreaturePointer(t *testing.T) {
 				PlayerID:    "player:alice",
 				RoomID:      "room:100",
 				DisplayName: "Alice",
-				Stats:       map[string]int{"class": legacyClassSubDM},
+				Stats:       map[string]int{"class": model.ClassSubDM},
 			},
 			"creature:bob": {
 				ID:          "creature:bob",
@@ -947,7 +947,7 @@ func TestDMCast_UnsupportedSpell(t *testing.T) {
 			"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}},
+			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}},
 		},
 	}
 

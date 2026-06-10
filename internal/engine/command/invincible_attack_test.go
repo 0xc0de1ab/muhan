@@ -71,7 +71,7 @@ func TestInvincibleKickHandlerRejectsInvalidInputsOutput(t *testing.T) {
 			args: []string{"고블린"},
 			mutate: func(loaded *worldload.World) {
 				alice := loaded.Creatures["creature:alice"]
-				alice.Stats["class"] = legacyClassFighter
+				alice.Stats["class"] = model.ClassFighter
 				loaded.Creatures[alice.ID] = alice
 			},
 			want: "무적 이상만 사용할 수 있는 기술입니다.",
@@ -442,7 +442,7 @@ func TestOneKillHandlerRejectsInvalidInputs(t *testing.T) {
 			args: []string{"고블린"},
 			mutate: func(loaded *worldload.World) {
 				alice := loaded.Creatures["creature:alice"]
-				alice.Stats["class"] = legacyClassAssassin
+				alice.Stats["class"] = model.ClassAssassin
 				loaded.Creatures[alice.ID] = alice
 			},
 			want: "무적 이상만 사용할 수 있는 기술입니다.",
@@ -585,7 +585,7 @@ func invincibleAttackWorld(t *testing.T) *worldload.World {
 		RoomID:      "room:arena",
 		Equipment:   map[string]model.ObjectInstanceID{"wield": "object:sword"},
 		Stats: map[string]int{
-			"class":        legacyClassInvincible,
+			"class":        model.ClassInvincible,
 			"level":        20,
 			"strength":     20,
 			"dexterity":    20,
@@ -603,7 +603,7 @@ func invincibleAttackWorld(t *testing.T) *worldload.World {
 		DisplayName: "Bob",
 		PlayerID:    "player:bob",
 		RoomID:      "room:arena",
-		Stats:       map[string]int{"class": legacyClassFighter, "level": 1, "hpCurrent": 30, "hpMax": 30},
+		Stats:       map[string]int{"class": model.ClassFighter, "level": 1, "hpCurrent": 30, "hpMax": 30},
 	})
 	mustAddLookCreature(t, loaded, model.Creature{
 		ID:          "creature:goblin",

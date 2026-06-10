@@ -41,12 +41,12 @@ func NewSneakHandler(world SneakWorld, roll SearchRollFunc) Handler {
 		}
 
 		class := creatureClass(creature)
-		if class != legacyClassAssassin && class != legacyClassThief && class < legacyClassInvincible {
+		if class != model.ClassAssassin && class != model.ClassThief && class < model.ClassInvincible {
 			ctx.WriteString("도둑과 자객만 사용할 수 있는 기술입니다.\n")
 			return StatusDefault, nil
 		}
 
-		if class >= legacyClassInvincible && !backstabHasThiefOrAssassinTraining(creature) {
+		if class >= model.ClassInvincible && !backstabHasThiefOrAssassinTraining(creature) {
 			ctx.WriteString("\n도둑이나 자객을 무적수련하지 않았습니다..\n")
 			return StatusDefault, nil
 		}
@@ -103,7 +103,7 @@ func NewSneakHandler(world SneakWorld, roll SearchRollFunc) Handler {
 				if creatureHasAnyFlag(monster, "blocksExits", "MBLOCK", "mblock") &&
 					sneakMonsterTargetsActor(world, monster.ID, playerID, creature) &&
 					!attackCreatureHasFlag(creature, "invisible", "pinvis", "PINVIS") &&
-					class < legacyClassSubDM {
+					class < model.ClassSubDM {
 					monsterName := attackCreatureName(monster)
 					ctx.WriteString(monsterName + "가 당신의 길을 가로막습니다.\n")
 					return StatusDefault, nil

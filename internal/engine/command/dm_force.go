@@ -38,7 +38,7 @@ func dmForce(ctx *Context, resolved ResolvedCommand, world DMForceWorld) (Status
 
 	// 1. Validate player class permissions: SUB_DM (12+)
 	class := creatureClass(creature)
-	if class < legacyClassSubDM {
+	if class < model.ClassSubDM {
 		return StatusPrompt, nil
 	}
 
@@ -58,7 +58,7 @@ func dmForce(ctx *Context, resolved ResolvedCommand, world DMForceWorld) (Status
 
 	// 4. Check DM rank protection: C protects exactly class DM, not every higher numeric class.
 	targetClass := creatureClass(targetCreature)
-	if targetClass == legacyClassDM && class < legacyClassDM {
+	if targetClass == model.ClassDM && class < model.ClassDM {
 		return StatusPrompt, nil
 	}
 

@@ -129,7 +129,7 @@ func TestDMObjName(t *testing.T) {
 				ID:        "creature:alice",
 				RoomID:    "room:00001",
 				Inventory: model.ObjectRefList{ObjectIDs: []model.ObjectInstanceID{"obj:sword", "obj:sword2"}},
-				Stats:     map[string]int{"class": legacyClassSubDM}, // SUB_DM
+				Stats:     map[string]int{"class": model.ClassSubDM}, // SUB_DM
 			},
 		},
 		rooms: map[model.RoomID]model.Room{
@@ -179,7 +179,7 @@ func TestDMObjName(t *testing.T) {
 		if got := ctx.OutputString(); got != "" {
 			t.Errorf("output = %q, want no permission output", got)
 		}
-		world.creatures["creature:alice"].Stats["class"] = legacyClassSubDM // restore
+		world.creatures["creature:alice"].Stats["class"] = model.ClassSubDM // restore
 	})
 
 	// Case 2: Insufficient arguments
@@ -506,7 +506,7 @@ func TestDMObjNameAppliesFindObjInvisibleVisibility(t *testing.T) {
 					ID:        "creature:alice",
 					RoomID:    "room:00001",
 					Inventory: model.ObjectRefList{ObjectIDs: []model.ObjectInstanceID{"obj:hidden-sword"}},
-					Stats:     map[string]int{"class": legacyClassSubDM},
+					Stats:     map[string]int{"class": model.ClassSubDM},
 					Metadata:  model.Metadata{Tags: actorTags},
 				},
 			},

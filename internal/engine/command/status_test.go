@@ -49,7 +49,7 @@ func TestStatusHandlersRenderPlayerBasics(t *testing.T) {
 		"thaco":               15,
 		"experience":          12345,
 		"gold":                678,
-		"class":               legacyClassThief,
+		"class":               model.ClassThief,
 		"race":                legacyRaceHuman,
 		"PMALES":              1,
 		"legacyHoursInterval": 0,
@@ -69,7 +69,7 @@ func TestStatusHandlersRenderPlayerBasics(t *testing.T) {
 		RoomID:      "room:remote",
 		Level:       24,
 		Stats: map[string]int{
-			"class":               legacyClassFighter,
+			"class":               model.ClassFighter,
 			"PMALES":              1,
 			"legacyHoursInterval": 3 * 86400,
 		},
@@ -88,7 +88,7 @@ func TestStatusHandlersRenderPlayerBasics(t *testing.T) {
 		RoomID:      "room:secret",
 		Level:       12,
 		Stats: map[string]int{
-			"class":  legacyClassFighter,
+			"class":  model.ClassFighter,
 			"PINVIS": 1,
 		},
 	})
@@ -106,7 +106,7 @@ func TestStatusHandlersRenderPlayerBasics(t *testing.T) {
 		RoomID:      "room:admin",
 		Level:       101,
 		Stats: map[string]int{
-			"class":  legacyClassCaretaker,
+			"class":  model.ClassCaretaker,
 			"PMALES": 1,
 		},
 	})
@@ -225,7 +225,7 @@ func TestInfoHandlerRegistersPendingAndRendersSpellPage(t *testing.T) {
 	creature := loaded.Creatures["creature:alice"]
 	creature.Level = 10
 	creature.Stats = map[string]int{
-		"class":               legacyClassInvincible,
+		"class":               model.ClassInvincible,
 		"race":                legacyRaceHuman,
 		"hpCurrent":           30,
 		"hpMax":               40,
@@ -336,10 +336,10 @@ func TestStatusWeaponProficiencyUsesCTables(t *testing.T) {
 		raw   int
 		want  int
 	}{
-		{name: "fighter threshold boundary", class: legacyClassFighter, raw: 1024, want: 20},
-		{name: "sub-dm privileged table", class: legacyClassSubDM, raw: 1024, want: 20},
-		{name: "thief slower table", class: legacyClassThief, raw: 1024, want: 4},
-		{name: "mage threshold boundary", class: legacyClassMage, raw: 5376, want: 10},
+		{name: "fighter threshold boundary", class: model.ClassFighter, raw: 1024, want: 20},
+		{name: "sub-dm privileged table", class: model.ClassSubDM, raw: 1024, want: 20},
+		{name: "thief slower table", class: model.ClassThief, raw: 1024, want: 4},
+		{name: "mage threshold boundary", class: model.ClassMage, raw: 5376, want: 10},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -354,7 +354,7 @@ func TestStatusWeaponProficiencyUsesCTables(t *testing.T) {
 	}
 
 	creature := model.Creature{
-		Stats:      map[string]int{"class": legacyClassFighter},
+		Stats:      map[string]int{"class": model.ClassFighter},
 		Properties: map[string]string{"proficiency/sharp": "1024"},
 	}
 	if got := statusWeaponProficiency(creature, 0); got != 20 {
@@ -391,8 +391,8 @@ func TestCreatureStatNormalizesStatAndPropertyKeys(t *testing.T) {
 	if got := creatureStat(creature, "mpCurrent"); got != 5 {
 		t.Fatalf("normalized property = %d, want 5", got)
 	}
-	if got := creatureClass(model.Creature{Stats: map[string]int{"CLASS": legacyClassDM}}); got != legacyClassDM {
-		t.Fatalf("creatureClass(normalized stat) = %d, want %d", got, legacyClassDM)
+	if got := creatureClass(model.Creature{Stats: map[string]int{"CLASS": model.ClassDM}}); got != model.ClassDM {
+		t.Fatalf("creatureClass(normalized stat) = %d, want %d", got, model.ClassDM)
 	}
 	if got := accountCreatureLevel(model.Creature{Properties: map[string]string{"LE-VEL": "6"}}); got != 6 {
 		t.Fatalf("accountCreatureLevel(normalized property) = %d, want 6", got)

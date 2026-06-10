@@ -12,7 +12,7 @@ import (
 )
 
 func TestPrepareHandlerSuccessSetsPreparedTagsAndCooldown(t *testing.T) {
-	runtime := state.NewWorld(prepareWorld(t, legacyClassFighter))
+	runtime := state.NewWorld(prepareWorld(t, model.ClassFighter))
 	handler := NewPrepareHandler(runtime)
 
 	var broadcasts []roomBroadcastRecord
@@ -87,7 +87,7 @@ func TestPrepareHandlerRejectsDuplicateAndInvalidStates(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loaded := prepareWorld(t, legacyClassFighter)
+			loaded := prepareWorld(t, model.ClassFighter)
 			if tt.mutate != nil {
 				tt.mutate(loaded)
 			}
@@ -147,7 +147,7 @@ func TestPrepareHandlerBlindActorConsumesCooldownWithoutPreparedStatus(t *testin
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loaded := prepareWorld(t, legacyClassFighter)
+			loaded := prepareWorld(t, model.ClassFighter)
 			tt.mutate(loaded)
 			runtime := state.NewWorld(loaded)
 			var broadcasts []roomBroadcastRecord
@@ -182,7 +182,7 @@ func TestPrepareHandlerBlindActorConsumesCooldownWithoutPreparedStatus(t *testin
 func TestPrepareDispatcherAliases(t *testing.T) {
 	for _, line := range []string{"경계", "prepare"} {
 		t.Run(line, func(t *testing.T) {
-			runtime := state.NewWorld(prepareWorld(t, legacyClassFighter))
+			runtime := state.NewWorld(prepareWorld(t, model.ClassFighter))
 			dispatcher := Dispatcher{
 				Registry: mustRegistry(t, []commandspec.CommandSpec{
 					{Name: "경계", Number: 66, Handler: "prepare"},

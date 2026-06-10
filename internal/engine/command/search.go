@@ -52,7 +52,7 @@ func NewSearchHandler(world SearchWorld, roll SearchRollFunc) Handler {
 			return StatusDefault, fmt.Errorf("search: creature %q not found", viewer.CreatureID)
 		}
 		interval := int64(7)
-		if creatureStat(creature, "class") == legacyClassRanger {
+		if creatureStat(creature, "class") == model.ClassRanger {
 			interval = 3
 		}
 		if remaining, used, err := world.UseCreatureCooldown(creature.ID, "search", time.Now().Unix(), interval); err != nil {
@@ -156,13 +156,13 @@ func searchChance(creature model.Creature) int {
 		chance = 15 + 5*legacyStatBonus(creatureStat(creature, "piety")) + ((level+3)/4)*2
 	}
 	chance = minInt(chance, 90)
-	if class == legacyClassRanger {
+	if class == model.ClassRanger {
 		chance = 100
 	}
 	if creatureHasAnyFlag(creature, "blind", "pblind") {
 		chance = minInt(chance, 20)
 	}
-	if class >= legacyClassCaretaker {
+	if class >= model.ClassCaretaker {
 		chance = 100
 	}
 	return chance

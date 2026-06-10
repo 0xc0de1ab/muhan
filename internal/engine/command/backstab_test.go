@@ -13,7 +13,7 @@ import (
 
 func TestBackstabHandlerBackstabsMonsterAndRevealsActor(t *testing.T) {
 	withAttackRolls(t, 20, 30)
-	loaded := backstabWorld(t, legacyClassThief)
+	loaded := backstabWorld(t, model.ClassThief)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	alice.Stats["PHIDDN"] = 1
@@ -58,7 +58,7 @@ func TestBackstabHandlerBackstabsMonsterAndRevealsActor(t *testing.T) {
 }
 
 func TestBackstabHandlerFailsWhenActorIsNotHidden(t *testing.T) {
-	world := state.NewWorld(backstabWorld(t, legacyClassThief))
+	world := state.NewWorld(backstabWorld(t, model.ClassThief))
 	handler := NewBackstabHandler(world)
 
 	var broadcasts []roomBroadcastRecord
@@ -80,7 +80,7 @@ func TestBackstabHandlerFailsWhenActorIsNotHidden(t *testing.T) {
 }
 
 func TestBackstabHandlerRejectsEnemyMonsterBeforeRevealLikeLegacy(t *testing.T) {
-	loaded := backstabWorld(t, legacyClassThief)
+	loaded := backstabWorld(t, model.ClassThief)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"hidden", "invisible"}
 	loaded.Creatures[alice.ID] = alice
@@ -107,7 +107,7 @@ func TestBackstabHandlerRejectsEnemyMonsterBeforeRevealLikeLegacy(t *testing.T) 
 }
 
 func TestBackstabHandlerRejectsWhenTargetCharmListContainsCharmedActorLikeLegacy(t *testing.T) {
-	loaded := backstabWorld(t, legacyClassThief)
+	loaded := backstabWorld(t, model.ClassThief)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"PCHAOS", "PCHARM", "hidden", "PHIDDN", "invisible", "PINVIS"}
 	alice.Stats["PHIDDN"] = 1
@@ -142,7 +142,7 @@ func TestBackstabHandlerRejectsWhenTargetCharmListContainsCharmedActorLikeLegacy
 }
 
 func TestBackstabHandlerRejectsActorsOwnCharmedTargetLikeLegacy(t *testing.T) {
-	loaded := backstabWorld(t, legacyClassThief)
+	loaded := backstabWorld(t, model.ClassThief)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"PCHARM", "hidden", "PHIDDN", "invisible", "PINVIS", "charm:고블린"}
 	alice.Stats["PHIDDN"] = 1
@@ -186,14 +186,14 @@ func TestBackstabHandlerRejectsInvalidInputs(t *testing.T) {
 		mutate func(*worldload.World)
 		want   string
 	}{
-		{name: "missing target", class: legacyClassThief, want: "누구를 기습하시려구요?"},
-		{name: "blind", class: legacyClassThief, tags: []string{"blind"}, args: []string{"고블린"}, want: "누구를 기습하시려구요?"},
-		{name: "wrong class", class: legacyClassFighter, args: []string{"고블린"}, want: "도둑이나 자객만 사용할 수 있는 기술입니다."},
-		{name: "invincible without training", class: legacyClassInvincible, args: []string{"고블린"}, want: "도둑이나 자객을 무적수련하지 않았습니다.."},
-		{name: "unknown target", class: legacyClassThief, args: []string{"없는"}, want: "그런건 여기 없어요."},
+		{name: "missing target", class: model.ClassThief, want: "누구를 기습하시려구요?"},
+		{name: "blind", class: model.ClassThief, tags: []string{"blind"}, args: []string{"고블린"}, want: "누구를 기습하시려구요?"},
+		{name: "wrong class", class: model.ClassFighter, args: []string{"고블린"}, want: "도둑이나 자객만 사용할 수 있는 기술입니다."},
+		{name: "invincible without training", class: model.ClassInvincible, args: []string{"고블린"}, want: "도둑이나 자객을 무적수련하지 않았습니다.."},
+		{name: "unknown target", class: model.ClassThief, args: []string{"없는"}, want: "그런건 여기 없어요."},
 		{
 			name:  "missing weapon",
-			class: legacyClassThief,
+			class: model.ClassThief,
 			args:  []string{"고블린"},
 			mutate: func(loaded *worldload.World) {
 				alice := loaded.Creatures["creature:alice"]
@@ -204,7 +204,7 @@ func TestBackstabHandlerRejectsInvalidInputs(t *testing.T) {
 		},
 		{
 			name:  "blunt weapon",
-			class: legacyClassThief,
+			class: model.ClassThief,
 			args:  []string{"고블린"},
 			mutate: func(loaded *worldload.World) {
 				dagger := loaded.Objects["object:dagger"]
@@ -215,21 +215,21 @@ func TestBackstabHandlerRejectsInvalidInputs(t *testing.T) {
 		},
 		{
 			name:  "protected monster",
-			class: legacyClassThief,
+			class: model.ClassThief,
 			args:  []string{"수호석"},
 			tags:  []string{"hidden"},
 			want:  "당신은 그녀를 해칠수 없습니다.",
 		},
 		{
 			name:  "magic only monster",
-			class: legacyClassThief,
+			class: model.ClassThief,
 			args:  []string{"망령"},
 			tags:  []string{"hidden"},
 			want:  "아무 소용이 없습니다.",
 		},
 		{
 			name:  "player kill gate",
-			class: legacyClassThief,
+			class: model.ClassThief,
 			args:  []string{"Bob"},
 			tags:  []string{"hidden"},
 			want:  "당신은 선해서 다른 사용자를 공격할 수 없습니다.",
@@ -262,7 +262,7 @@ func TestBackstabHandlerRejectsInvalidInputs(t *testing.T) {
 
 func TestBackstabHandlerInvincibleWithTrainingUsesAssassinDamage(t *testing.T) {
 	withAttackRolls(t, 20)
-	loaded := backstabWorld(t, legacyClassInvincible)
+	loaded := backstabWorld(t, model.ClassInvincible)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"hidden", "SASSASSIN"}
 	loaded.Creatures[alice.ID] = alice
@@ -280,7 +280,7 @@ func TestBackstabHandlerInvincibleWithTrainingUsesAssassinDamage(t *testing.T) {
 
 func TestBackstabHandlerCapsDamageForCaretakerClassTarget(t *testing.T) {
 	withAttackRolls(t, 20)
-	loaded := backstabWorld(t, legacyClassAssassin)
+	loaded := backstabWorld(t, model.ClassAssassin)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"hidden"}
 	loaded.Creatures[alice.ID] = alice
@@ -358,7 +358,7 @@ func backstabWorld(t *testing.T, class int) *worldload.World {
 		DisplayName: "Bob",
 		PlayerID:    "player:bob",
 		RoomID:      "room:arena",
-		Stats:       map[string]int{"class": legacyClassFighter, "level": 1, "hpCurrent": 30, "hpMax": 30},
+		Stats:       map[string]int{"class": model.ClassFighter, "level": 1, "hpCurrent": 30, "hpMax": 30},
 	})
 	mustAddLookCreature(t, loaded, model.Creature{
 		ID:          "creature:goblin-1",
@@ -388,7 +388,7 @@ func backstabWorld(t *testing.T, class int) *worldload.World {
 		Kind:        model.CreatureKindMonster,
 		DisplayName: "관리자",
 		RoomID:      "room:arena",
-		Stats:       map[string]int{"class": legacyClassCaretaker + 1, "level": 1, "armor": 0, "hpCurrent": 10, "hpMax": 10},
+		Stats:       map[string]int{"class": model.ClassCaretaker + 1, "level": 1, "armor": 0, "hpCurrent": 10, "hpMax": 10},
 	})
 	mustAddLookPrototype(t, loaded, model.ObjectPrototype{
 		ID:          "prototype:dagger",

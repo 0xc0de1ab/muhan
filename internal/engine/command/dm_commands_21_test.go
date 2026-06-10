@@ -141,7 +141,7 @@ func TestUnifiedDMCommands21(t *testing.T) {
 			},
 			creatures: map[model.CreatureID]model.Creature{
 				"creature:dm":    {ID: "creature:dm", DisplayName: "DMPlayer", RoomID: "room:100", Level: 15, Stats: map[string]int{"class": 13}},
-				"creature:subdm": {ID: "creature:subdm", DisplayName: "SubDMPlayer", RoomID: "room:100", Level: 12, Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:subdm": {ID: "creature:subdm", DisplayName: "SubDMPlayer", RoomID: "room:100", Level: 12, Stats: map[string]int{"class": model.ClassSubDM}},
 				"creature:alice": {ID: "creature:alice", DisplayName: "Alice", RoomID: "room:100", Level: 5, Stats: map[string]int{"class": 1}},
 				"creature:m01:5": {ID: "creature:m01:5", DisplayName: "Goblin", RoomID: "room:100"},
 			},

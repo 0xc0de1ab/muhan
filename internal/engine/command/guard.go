@@ -140,8 +140,8 @@ func newGuardHandler(world GuardWorld, roll SearchRollFunc, finalizer AttackDeat
 
 func guardClassRejection(actor model.Creature) string {
 	class := creatureClass(actor)
-	if class < legacyClassInvincible {
-		if class == legacyClassRanger && attackCreatureLevel(actor) >= 50 {
+	if class < model.ClassInvincible {
+		if class == model.ClassRanger && attackCreatureLevel(actor) >= 50 {
 			return ""
 		}
 		return "포졸 레벨 50 이상만 사용할 수 있는 기술입니다.\n"

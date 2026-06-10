@@ -11,6 +11,7 @@ import (
 	"time"
 
 	enginecmd "muhan/internal/engine/command"
+	"muhan/internal/metrics"
 	"muhan/internal/persist/legacykr"
 	"muhan/internal/session"
 	"muhan/internal/world/model"
@@ -200,6 +201,7 @@ func (l *Loop) RegisterSession(id session.ID, commands chan<- session.Command, a
 	}
 	l.sessions[id] = binding{commands: commands, actorID: actorID}
 	l.lastInputTime[id] = time.Now().Unix()
+	metrics.ActiveSessions.Inc()
 	return nil
 }
 
@@ -228,6 +230,7 @@ func (l *Loop) UnregisterSession(id session.ID) {
 	delete(l.pending, id)
 	delete(l.lastInputTime, id)
 	delete(l.lastCommand, id)
+	metrics.ActiveSessions.Dec()
 }
 
 func (l *Loop) Run(ctx context.Context, events <-chan session.Event) error {

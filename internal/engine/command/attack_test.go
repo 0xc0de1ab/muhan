@@ -109,7 +109,7 @@ func TestAttackHandlerBlindActorUsesLegacyMissingTargetMessage(t *testing.T) {
 func TestAttackHandlerPaladinAlreadyFightingUsesEnemyListLikeLegacy(t *testing.T) {
 	loaded := attackTestWorld(t)
 	alice := loaded.Creatures["creature:alice"]
-	alice.Stats["class"] = legacyClassPaladin
+	alice.Stats["class"] = model.ClassPaladin
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
 	if _, err := world.AddEnemy("creature:goblin-1", "creature:alice"); err != nil {
@@ -280,7 +280,7 @@ func TestAttackHandlerAppliesPaladinAlignmentDamageMessages(t *testing.T) {
 			withAttackRolls(t, tt.rolls...)
 			loaded := attackTestWorld(t)
 			alice := loaded.Creatures["creature:alice"]
-			alice.Stats["class"] = legacyClassPaladin
+			alice.Stats["class"] = model.ClassPaladin
 			alice.Stats["alignment"] = tt.alignment
 			loaded.Creatures[alice.ID] = alice
 			world := state.NewWorld(loaded)
@@ -331,7 +331,7 @@ func TestAttackHandlerUpDamageCanAttackTwice(t *testing.T) {
 	loaded := attackTestWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 128
-	alice.Stats["class"] = legacyClassInvincible
+	alice.Stats["class"] = model.ClassInvincible
 	alice.Metadata.Tags = append(alice.Metadata.Tags, "PUPDMG")
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
@@ -709,7 +709,7 @@ func TestAttackHandlerSpentWieldCanStopSecondUpDamageAttack(t *testing.T) {
 	loaded := attackTestWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 128
-	alice.Stats["class"] = legacyClassInvincible
+	alice.Stats["class"] = model.ClassInvincible
 	alice.Metadata.Tags = append(alice.Metadata.Tags, "PUPDMG")
 	loaded.Creatures[alice.ID] = alice
 	sword := loaded.Objects["object:sword"]
@@ -908,8 +908,8 @@ func TestAttackDamageAddsUnarmedLevelBonusForBarbarianAndAboveInvincible(t *test
 		name  string
 		class int
 	}{
-		{name: "barbarian", class: legacyClassBarbarian},
-		{name: "above invincible", class: legacyClassInvincible + 1},
+		{name: "barbarian", class: model.ClassBarbarian},
+		{name: "above invincible", class: model.ClassInvincible + 1},
 	}
 
 	for _, tt := range tests {
@@ -942,8 +942,8 @@ func TestAttackDamageOmitsWeaponProficiencyForMageAndCleric(t *testing.T) {
 		name  string
 		class int
 	}{
-		{name: "mage", class: legacyClassMage},
-		{name: "cleric", class: legacyClassCleric},
+		{name: "mage", class: model.ClassMage},
+		{name: "cleric", class: model.ClassCleric},
 	}
 
 	for _, tt := range tests {
@@ -1104,7 +1104,7 @@ func attackTestWorld(t *testing.T) *worldload.World {
 		PlayerID:    "player:alice",
 		RoomID:      "room:arena",
 		Equipment:   map[string]model.ObjectInstanceID{"wield": "object:sword"},
-		Stats:       map[string]int{"class": legacyClassFighter, "hpCurrent": 30, "hpMax": 30, "experience": 100, "alignment": 10},
+		Stats:       map[string]int{"class": model.ClassFighter, "hpCurrent": 30, "hpMax": 30, "experience": 100, "alignment": 10},
 	})
 	mustAddLookCreature(t, loaded, model.Creature{
 		ID:          "creature:bob",

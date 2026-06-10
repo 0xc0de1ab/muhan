@@ -41,7 +41,7 @@ func dmCrtName(ctx *Context, resolved ResolvedCommand, world DMCrtNameWorld) (St
 	}
 
 	class := creatureClass(creature)
-	if class < legacyClassDM {
+	if class < model.ClassDM {
 		return StatusPrompt, nil
 	}
 

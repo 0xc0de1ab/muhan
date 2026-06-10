@@ -1461,7 +1461,7 @@ func talkCreatureMaxWeight(creature model.Creature) int {
 		level = creatureStat(creature, "level")
 	}
 	maxWeight := 20 + strength*10
-	if creatureStat(creature, "class") == legacyClassBarbarian {
+	if creatureStat(creature, "class") == model.ClassBarbarian {
 		maxWeight += ((level + 3) / 4) * 10
 	}
 	return maxWeight

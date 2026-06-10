@@ -70,7 +70,7 @@ func TestDMList(t *testing.T) {
 				"player:dm": {ID: "player:dm", CreatureID: "creature:dm"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 			parsedNum:  1,
 			wantStatus: StatusDefault,
@@ -99,7 +99,7 @@ func TestDMList(t *testing.T) {
 				"player:dm": {ID: "player:dm", CreatureID: "creature:dm"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 			parsedNum:    3,
 			args:         []string{"monster", "lvl5"},
@@ -115,7 +115,7 @@ func TestDMList(t *testing.T) {
 				"player:dm": {ID: "player:dm", CreatureID: "creature:dm"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 			parsedNum:    6,
 			args:         []string{"monster", "lvl5", "zone1", "rare", "ignored"},
@@ -131,7 +131,7 @@ func TestDMList(t *testing.T) {
 				"player:dm": {ID: "player:dm", CreatureID: "creature:dm"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 			parsedNum:    2,
 			args:         []string{"invalid"},
@@ -189,7 +189,7 @@ func TestDMListUsesParsedSlotsWithoutSyntheticArgs(t *testing.T) {
 			"player:dm": {ID: "player:dm", CreatureID: "creature:dm"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": legacyClassSubDM}},
+			"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": model.ClassSubDM}},
 		},
 		listOutput: "parsed list\n",
 	}

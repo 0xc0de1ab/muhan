@@ -46,7 +46,7 @@ func dmUsers(ctx *Context, resolved ResolvedCommand, world DMUsersWorld) (Status
 
 	// 1. Enforce SUB_DM (12+) permission.
 	class := creatureClass(creature)
-	if class < legacyClassSubDM {
+	if class < model.ClassSubDM {
 		return StatusPrompt, nil
 	}
 
@@ -110,7 +110,7 @@ func dmUsers(ctx *Context, resolved ResolvedCommand, world DMUsersWorld) (Status
 		// Filter invisible DMs from lower caster ranks.
 		targetClass := creatureClass(c)
 		casterClass := class
-		if targetClass == legacyClassDM && casterClass < legacyClassSubDM && creatureHasAnyFlag(c, "PDMINV", "dmInvisible") {
+		if targetClass == model.ClassDM && casterClass < model.ClassSubDM && creatureHasAnyFlag(c, "PDMINV", "dmInvisible") {
 			continue
 		}
 

@@ -112,7 +112,7 @@ func TestDMPurge(t *testing.T) {
 				"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassBulsa}},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassBulsa}},
 			},
 		}
 		handler := NewDMPurgeHandler(world)
@@ -135,7 +135,7 @@ func TestDMPurge(t *testing.T) {
 				"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}, RoomID: "room:invalid"},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}, RoomID: "room:invalid"},
 			},
 		}
 		handler := NewDMPurgeHandler(world)
@@ -161,7 +161,7 @@ func TestDMPurge(t *testing.T) {
 					ID:       "creature:caster",
 					Kind:     model.CreatureKindPlayer,
 					PlayerID: "player:caster",
-					Stats:    map[string]int{"class": legacyClassSubDM},
+					Stats:    map[string]int{"class": model.ClassSubDM},
 					RoomID:   "room:100",
 				},
 				"creature:other": {

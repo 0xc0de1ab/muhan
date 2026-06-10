@@ -101,7 +101,7 @@ func TestDMForce(t *testing.T) {
 				"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassBulsa}},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassBulsa}},
 			},
 			wantStatus: StatusPrompt,
 			wantOutput: "",
@@ -114,7 +114,7 @@ func TestDMForce(t *testing.T) {
 				"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 			wantStatus: StatusPrompt,
 		},
@@ -127,7 +127,7 @@ func TestDMForce(t *testing.T) {
 				"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 			wantStatus: StatusDefault,
 			wantOutput: "Charlie가 없습니다.\n",
@@ -161,8 +161,8 @@ func TestDMForce(t *testing.T) {
 				"player:bob":   {ID: "player:bob", DisplayName: "Bob", CreatureID: "creature:bob"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}},
-				"creature:bob":   {ID: "creature:bob", Stats: map[string]int{"class": legacyClassDM + 1}},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}},
+				"creature:bob":   {ID: "creature:bob", Stats: map[string]int{"class": model.ClassDM + 1}},
 			},
 			activeSessions: []testActiveSession{
 				{ID: "sess1", ActorID: "player:alice"},
@@ -182,7 +182,7 @@ func TestDMForce(t *testing.T) {
 				"player:bob":   {ID: "player:bob", DisplayName: "Bob", CreatureID: "creature:bob"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}},
 				"creature:bob":   {ID: "creature:bob", Stats: map[string]int{"class": 1}},
 			},
 			activeSessions: []testActiveSession{
@@ -202,7 +202,7 @@ func TestDMForce(t *testing.T) {
 				"player:bob":   {ID: "player:bob", DisplayName: "Bob", CreatureID: "creature:bob"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}},
 				"creature:bob":   {ID: "creature:bob", Stats: map[string]int{"class": 1}},
 			},
 			activeSessions: []testActiveSession{
@@ -224,7 +224,7 @@ func TestDMForce(t *testing.T) {
 				"player:bob":   {ID: "player:bob", DisplayName: "Bob", CreatureID: "creature:bob"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}},
 				"creature:bob":   {ID: "creature:bob", Stats: map[string]int{"class": 1}},
 			},
 			activeSessions: []testActiveSession{
@@ -332,8 +332,8 @@ func TestDMForceExtractsVerbFinalForcedCommand(t *testing.T) {
 			"player:bob":   {ID: "player:bob", CreatureID: "creature:bob", DisplayName: "Bob"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}},
-			"creature:bob":   {ID: "creature:bob", Stats: map[string]int{"class": legacyClassFighter}},
+			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}},
+			"creature:bob":   {ID: "creature:bob", Stats: map[string]int{"class": model.ClassFighter}},
 		},
 	}
 	ctx := &Context{
@@ -378,8 +378,8 @@ func TestDMForceUsesParsedTargetSlotLikeCWhenArgsMissing(t *testing.T) {
 			"player:bob":   {ID: "player:bob", CreatureID: "creature:bob", DisplayName: "Bob"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}},
-			"creature:bob":   {ID: "creature:bob", Stats: map[string]int{"class": legacyClassFighter}},
+			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}},
+			"creature:bob":   {ID: "creature:bob", Stats: map[string]int{"class": model.ClassFighter}},
 		},
 	}
 	ctx := &Context{

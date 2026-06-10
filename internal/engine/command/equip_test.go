@@ -430,7 +430,7 @@ func TestEquipHandlersRejectLegacyWearReadyHoldRestrictions(t *testing.T) {
 			properties: map[string]string{
 				"type": "5", "wearFlag": "1", "noMage": "1",
 			},
-			stats: map[string]int{"class": legacyClassMage},
+			stats: map[string]int{"class": model.ClassMage},
 			want:  "도술사, 불제자들은 사용할수 없습니다.",
 		},
 		{
@@ -472,7 +472,7 @@ func TestEquipHandlersRejectLegacyWearReadyHoldRestrictions(t *testing.T) {
 			properties: map[string]string{
 				"type": "5", "wearFlag": "1", "classSelective": "1", "classMage": "1",
 			},
-			stats: map[string]int{"class": legacyClassFighter},
+			stats: map[string]int{"class": model.ClassFighter},
 			want:  "직업갑은 당신의 직업에 맞지 않습니다.",
 		},
 		{
@@ -504,7 +504,7 @@ func TestEquipHandlersRejectLegacyWearReadyHoldRestrictions(t *testing.T) {
 			properties: map[string]string{
 				"type": "1", "wearFlag": "20", "nDice": "3", "sDice": "5", "pDice": "0",
 			},
-			stats: map[string]int{"class": legacyClassMage},
+			stats: map[string]int{"class": model.ClassMage},
 			want:  "도술사, 불제자는 사용할수 없습니다.",
 		},
 		{
@@ -525,7 +525,7 @@ func TestEquipHandlersRejectLegacyWearReadyHoldRestrictions(t *testing.T) {
 			properties: map[string]string{
 				"type": "13", "wearFlag": "17", "classSelective": "1", "classMage": "1",
 			},
-			stats: map[string]int{"class": legacyClassFighter},
+			stats: map[string]int{"class": model.ClassFighter},
 			want:  "직업부적은 당신의 직업에 맞지 않습니다.",
 		},
 	}

@@ -13,7 +13,7 @@ import (
 
 func TestKickHandlerKicksMonsterAndRevealsActor(t *testing.T) {
 	withAttackRolls(t, 1, 20)
-	loaded := kickWorld(t, legacyClassBarbarian)
+	loaded := kickWorld(t, model.ClassBarbarian)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	alice.Stats["PHIDDN"] = 1
@@ -58,7 +58,7 @@ func TestKickHandlerKicksMonsterAndRevealsActor(t *testing.T) {
 
 func TestKickHandlerReportsFailureWithoutDamage(t *testing.T) {
 	withAttackRolls(t, 100)
-	world := state.NewWorld(kickWorld(t, legacyClassBarbarian))
+	world := state.NewWorld(kickWorld(t, model.ClassBarbarian))
 	handler := NewKickHandler(world)
 
 	var broadcasts []roomBroadcastRecord
@@ -83,7 +83,7 @@ func TestKickHandlerReportsFailureWithoutDamage(t *testing.T) {
 }
 
 func TestKickHandlerRespectsCooldownBeforeReveal(t *testing.T) {
-	loaded := kickWorld(t, legacyClassBarbarian)
+	loaded := kickWorld(t, model.ClassBarbarian)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	alice.Stats["PHIDDN"] = 1
@@ -122,14 +122,14 @@ func TestKickHandlerRejectsInvalidInputs(t *testing.T) {
 		mutate func(*worldload.World)
 		want   string
 	}{
-		{name: "missing target", class: legacyClassBarbarian, want: "누굴 공격합니까?"},
-		{name: "blind", class: legacyClassBarbarian, tags: []string{"blind"}, args: []string{"고블린"}, want: "누굴 공격합니까?"},
-		{name: "wrong class", class: legacyClassFighter, args: []string{"고블린"}, want: "권법가만 쓸수 있는 기술입니다."},
-		{name: "invincible without training", class: legacyClassInvincible, args: []string{"고블린"}, want: "권법가를 무적수련하지 않았습니다.."},
-		{name: "unknown target", class: legacyClassBarbarian, args: []string{"없는"}, want: "그런 것은 여기 없습니다."},
+		{name: "missing target", class: model.ClassBarbarian, want: "누굴 공격합니까?"},
+		{name: "blind", class: model.ClassBarbarian, tags: []string{"blind"}, args: []string{"고블린"}, want: "누굴 공격합니까?"},
+		{name: "wrong class", class: model.ClassFighter, args: []string{"고블린"}, want: "권법가만 쓸수 있는 기술입니다."},
+		{name: "invincible without training", class: model.ClassInvincible, args: []string{"고블린"}, want: "권법가를 무적수련하지 않았습니다.."},
+		{name: "unknown target", class: model.ClassBarbarian, args: []string{"없는"}, want: "그런 것은 여기 없습니다."},
 		{
 			name:  "protected monster",
-			class: legacyClassBarbarian,
+			class: model.ClassBarbarian,
 			args:  []string{"고블린"},
 			mutate: func(loaded *worldload.World) {
 				goblin := loaded.Creatures["creature:goblin-1"]
@@ -140,7 +140,7 @@ func TestKickHandlerRejectsInvalidInputs(t *testing.T) {
 		},
 		{
 			name:  "player kill gate",
-			class: legacyClassBarbarian,
+			class: model.ClassBarbarian,
 			args:  []string{"Bob"},
 			want:  "당신은 선해서 다른 사용자를 공격할 수 없습니다.",
 		},
@@ -171,7 +171,7 @@ func TestKickHandlerRejectsInvalidInputs(t *testing.T) {
 }
 
 func TestKickHandlerRejectsCharmedPlayerLikeLegacy(t *testing.T) {
-	loaded := kickWorld(t, legacyClassBarbarian)
+	loaded := kickWorld(t, model.ClassBarbarian)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"PCHAOS", "hidden", "PHIDDN", "invisible", "PINVIS"}
 	alice.Stats["PHIDDN"] = 1
@@ -209,7 +209,7 @@ func TestKickHandlerRejectsCharmedPlayerLikeLegacy(t *testing.T) {
 
 func TestKickHandlerInvincibleWithBarbarianTrainingCanKick(t *testing.T) {
 	withAttackRolls(t, 1, 20)
-	loaded := kickWorld(t, legacyClassInvincible)
+	loaded := kickWorld(t, model.ClassInvincible)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"SBARBARIAN"}
 	loaded.Creatures[alice.ID] = alice
@@ -227,7 +227,7 @@ func TestKickHandlerInvincibleWithBarbarianTrainingCanKick(t *testing.T) {
 
 func TestKickHandlerFinalizesMonsterDeathWhenDamageKillsTarget(t *testing.T) {
 	withAttackRolls(t, 1, 20)
-	loaded := kickWorld(t, legacyClassBarbarian)
+	loaded := kickWorld(t, model.ClassBarbarian)
 	goblin := loaded.Creatures["creature:goblin-1"]
 	goblin.Stats["hpCurrent"] = 1
 	goblin.Stats["hpMax"] = 1
@@ -309,7 +309,7 @@ func kickWorld(t *testing.T, class int) *worldload.World {
 		DisplayName: "Bob",
 		PlayerID:    "player:bob",
 		RoomID:      "room:arena",
-		Stats:       map[string]int{"class": legacyClassFighter, "level": 1, "hpCurrent": 30, "hpMax": 30},
+		Stats:       map[string]int{"class": model.ClassFighter, "level": 1, "hpCurrent": 30, "hpMax": 30},
 	})
 	mustAddLookCreature(t, loaded, model.Creature{
 		ID:          "creature:goblin-1",
@@ -323,7 +323,7 @@ func kickWorld(t *testing.T, class int) *worldload.World {
 
 func TestKickHandlerDoesNotMutateLegacyProficiency(t *testing.T) {
 	withAttackRolls(t, 1, 20)
-	loaded := kickWorld(t, legacyClassBarbarian)
+	loaded := kickWorld(t, model.ClassBarbarian)
 	alice := loaded.Creatures["creature:alice"]
 	if alice.Properties == nil {
 		alice.Properties = map[string]string{}

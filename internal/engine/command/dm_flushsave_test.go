@@ -205,7 +205,7 @@ func TestDMFlushsaveUsesParsedArityWithoutSyntheticArgs(t *testing.T) {
 		creatures: map[model.CreatureID]model.Creature{
 			"creature:alice": {
 				ID:    "creature:alice",
-				Stats: map[string]int{"class": legacyClassDM},
+				Stats: map[string]int{"class": model.ClassDM},
 			},
 		},
 	}

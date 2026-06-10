@@ -42,7 +42,7 @@ func dmPrepend(ctx *Context, resolved ResolvedCommand, world DMPrependWorld) (St
 	}
 
 	class := creatureClass(creature)
-	if class < legacyClassDM {
+	if class < model.ClassDM {
 		return StatusPrompt, nil
 	}
 

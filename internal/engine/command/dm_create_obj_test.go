@@ -93,32 +93,32 @@ func TestDMCreateObj_Permissions(t *testing.T) {
 	}{
 		{
 			name:       "regular class below SUB_DM",
-			class:      legacyClassInvincible,
+			class:      model.ClassInvincible,
 			wantStatus: StatusPrompt,
 			wantOutput: "",
 		},
 		{
 			name:       "caretaker below SUB_DM",
-			class:      legacyClassCaretaker,
+			class:      model.ClassCaretaker,
 			wantStatus: StatusPrompt,
 			wantOutput: "",
 		},
 		{
 			name:       "bulsa below SUB_DM",
-			class:      legacyClassBulsa,
+			class:      model.ClassBulsa,
 			wantStatus: StatusPrompt,
 			wantOutput: "",
 		},
 		{
 			name:        "class equal to SUB_DM",
-			class:       legacyClassSubDM,
+			class:       model.ClassSubDM,
 			wantStatus:  StatusDefault,
 			wantOutput:  "검를 소지품에 추가했습니다.\n",
 			wantCreated: 1,
 		},
 		{
 			name:        "class above SUB_DM",
-			class:       legacyClassDM,
+			class:       model.ClassDM,
 			wantStatus:  StatusDefault,
 			wantOutput:  "검를 소지품에 추가했습니다.\n",
 			wantCreated: 1,
@@ -205,7 +205,7 @@ func TestDMCreateObj_PrototypeNotFound(t *testing.T) {
 func TestDMCreateObj_CreatureBackedActorUsesLegacyCreaturePointer(t *testing.T) {
 	world := &mockDMCreateObjWorld{
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": legacyClassSubDM}},
+			"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": model.ClassSubDM}},
 		},
 		prototypes: map[model.PrototypeID]model.ObjectPrototype{
 			"object:o01:23": {ID: "object:o01:23", DisplayName: "검"},

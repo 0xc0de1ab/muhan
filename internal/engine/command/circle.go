@@ -98,7 +98,7 @@ func NewCircleHandler(world CircleWorld) Handler {
 		}
 
 		delay := attackRoll(6, 12)
-		if creatureClass(actor) == legacyClassBarbarian {
+		if creatureClass(actor) == model.ClassBarbarian {
 			delay = attackRoll(6, 9)
 		}
 		if err := circleApplyBefuddle(world, victim, delay, now); err != nil {
@@ -116,10 +116,10 @@ func NewCircleHandler(world CircleWorld) Handler {
 
 func circleClassRejection(actor model.Creature) string {
 	class := creatureClass(actor)
-	if class != legacyClassFighter && class != legacyClassBarbarian && class < legacyClassInvincible {
+	if class != model.ClassFighter && class != model.ClassBarbarian && class < model.ClassInvincible {
 		return "권법가와 검사만 쓸수 있는 기술입니다.\n"
 	}
-	if class >= legacyClassInvincible && !circleHasFighterOrBarbarianTraining(actor) {
+	if class >= model.ClassInvincible && !circleHasFighterOrBarbarianTraining(actor) {
 		return "\n권법가와 검사를 무적수련하지 않았습니다..\n"
 	}
 	return ""

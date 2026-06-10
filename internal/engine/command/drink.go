@@ -343,7 +343,7 @@ func drinkIncreaseBaseStats(world DrinkWorld, creature model.Creature) error {
 	}
 
 	limit := 54 + drinkCreatureLevel(creature)/4
-	if creatureClass(creature) > legacyClassThief {
+	if creatureClass(creature) > model.ClassThief {
 		limit += 25
 	}
 	if creatureHasAnyFlag(creature, "haste", "phaste", "PHASTE") {

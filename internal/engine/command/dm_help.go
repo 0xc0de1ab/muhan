@@ -43,7 +43,7 @@ func dmHelp(ctx *Context, resolved ResolvedCommand, root string, world DMHelpWor
 	}
 
 	class := creatureClass(creature)
-	if class < legacyClassDM {
+	if class < model.ClassDM {
 		return StatusDefault, nil
 	}
 

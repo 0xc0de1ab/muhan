@@ -113,9 +113,9 @@ func TestDMTeleport_Authorization(t *testing.T) {
 		name  string
 		class int
 	}{
-		{name: "regular class", class: legacyClassFighter},
-		{name: "caretaker below SUB_DM", class: legacyClassCaretaker},
-		{name: "bulsa below SUB_DM", class: legacyClassBulsa},
+		{name: "regular class", class: model.ClassFighter},
+		{name: "caretaker below SUB_DM", class: model.ClassCaretaker},
+		{name: "bulsa below SUB_DM", class: model.ClassBulsa},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			world := setupTestWorld()

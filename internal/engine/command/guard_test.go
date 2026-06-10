@@ -12,7 +12,7 @@ import (
 )
 
 func TestGuardHandlerDamagesRemoteMonstersStartsCooldown(t *testing.T) {
-	world := state.NewWorld(guardWorld(t, legacyClassRanger, 50))
+	world := state.NewWorld(guardWorld(t, model.ClassRanger, 50))
 	handler := NewGuardHandlerWithRoll(world, fixedRoll(1))
 
 	var broadcasts []roomBroadcastRecord
@@ -58,7 +58,7 @@ func TestGuardHandlerDamagesRemoteMonstersStartsCooldown(t *testing.T) {
 }
 
 func TestGuardHandlerFailurePrimesRemoteMonstersAndStartsCooldown(t *testing.T) {
-	world := state.NewWorld(guardWorld(t, legacyClassRanger, 50))
+	world := state.NewWorld(guardWorld(t, model.ClassRanger, 50))
 	handler := NewGuardHandlerWithRoll(world, fixedRoll(22))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -88,7 +88,7 @@ func TestGuardHandlerFailurePrimesRemoteMonstersAndStartsCooldown(t *testing.T) 
 }
 
 func TestGuardHandlerCooldownPrecedesExitLookup(t *testing.T) {
-	world := state.NewWorld(guardWorld(t, legacyClassRanger, 50))
+	world := state.NewWorld(guardWorld(t, model.ClassRanger, 50))
 	if err := world.SetCreatureCooldown("creature:alice", guardCooldownKey, time.Now().Unix(), guardCooldownSeconds(model.Creature{Stats: map[string]int{"dexterity": 30}})); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
 	}
@@ -113,13 +113,13 @@ func TestGuardHandlerInvalidRemoteStatesDoNotStartCooldown(t *testing.T) {
 		mutate func(*worldload.World)
 		want   string
 	}{
-		{name: "missing args", class: legacyClassRanger, level: 50, want: "사용법 : 엄호"},
-		{name: "wrong class", class: legacyClassFighter, level: 60, args: []string{"동", "Bob"}, want: "포졸 레벨 50 이상만 사용할 수 있는 기술입니다."},
-		{name: "ranger below level", class: legacyClassRanger, level: 49, args: []string{"동", "Bob"}, want: "포졸 레벨 50 이상만 사용할 수 있는 기술입니다."},
-		{name: "invincible without ranger training", class: legacyClassInvincible, level: 60, args: []string{"동", "Bob"}, want: "포졸을 무적수련하지 않았습니다."},
+		{name: "missing args", class: model.ClassRanger, level: 50, want: "사용법 : 엄호"},
+		{name: "wrong class", class: model.ClassFighter, level: 60, args: []string{"동", "Bob"}, want: "포졸 레벨 50 이상만 사용할 수 있는 기술입니다."},
+		{name: "ranger below level", class: model.ClassRanger, level: 49, args: []string{"동", "Bob"}, want: "포졸 레벨 50 이상만 사용할 수 있는 기술입니다."},
+		{name: "invincible without ranger training", class: model.ClassInvincible, level: 60, args: []string{"동", "Bob"}, want: "포졸을 무적수련하지 않았습니다."},
 		{
 			name:  "blind",
-			class: legacyClassRanger,
+			class: model.ClassRanger,
 			level: 50,
 			args:  []string{"동", "Bob"},
 			mutate: func(loaded *worldload.World) {
@@ -129,10 +129,10 @@ func TestGuardHandlerInvalidRemoteStatesDoNotStartCooldown(t *testing.T) {
 			},
 			want: "눈이 멀어 엄호할 수 없습니다.",
 		},
-		{name: "unknown exit", class: legacyClassRanger, level: 50, args: []string{"없는길", "Bob"}, want: "쪽으로는 엄호할 수 없습니다."},
+		{name: "unknown exit", class: model.ClassRanger, level: 50, args: []string{"없는길", "Bob"}, want: "쪽으로는 엄호할 수 없습니다."},
 		{
 			name:  "closed exit",
-			class: legacyClassRanger,
+			class: model.ClassRanger,
 			level: 50,
 			args:  []string{"동", "Bob"},
 			mutate: func(loaded *worldload.World) {
@@ -144,7 +144,7 @@ func TestGuardHandlerInvalidRemoteStatesDoNotStartCooldown(t *testing.T) {
 		},
 		{
 			name:  "same room exit",
-			class: legacyClassRanger,
+			class: model.ClassRanger,
 			level: 50,
 			args:  []string{"동", "Bob"},
 			mutate: func(loaded *worldload.World) {
@@ -156,7 +156,7 @@ func TestGuardHandlerInvalidRemoteStatesDoNotStartCooldown(t *testing.T) {
 		},
 		{
 			name:  "private destination",
-			class: legacyClassRanger,
+			class: model.ClassRanger,
 			level: 50,
 			args:  []string{"동", "Bob"},
 			mutate: func(loaded *worldload.World) {
@@ -166,10 +166,10 @@ func TestGuardHandlerInvalidRemoteStatesDoNotStartCooldown(t *testing.T) {
 			},
 			want: "그 방은 볼 수가 없습니다.",
 		},
-		{name: "missing remote player", class: legacyClassRanger, level: 50, args: []string{"동", "Nobody"}, want: "존재하지 않습니다."},
+		{name: "missing remote player", class: model.ClassRanger, level: 50, args: []string{"동", "Nobody"}, want: "존재하지 않습니다."},
 		{
 			name:  "no missile weapon",
-			class: legacyClassRanger,
+			class: model.ClassRanger,
 			level: 50,
 			args:  []string{"동", "Bob"},
 			mutate: func(loaded *worldload.World) {
@@ -181,7 +181,7 @@ func TestGuardHandlerInvalidRemoteStatesDoNotStartCooldown(t *testing.T) {
 		},
 		{
 			name:  "no remote monsters",
-			class: legacyClassRanger,
+			class: model.ClassRanger,
 			level: 50,
 			args:  []string{"동", "Bob"},
 			mutate: func(loaded *worldload.World) {
@@ -222,7 +222,7 @@ func TestGuardHandlerInvalidRemoteStatesDoNotStartCooldown(t *testing.T) {
 }
 
 func TestGuardHandlerAllowsTrainedInvincible(t *testing.T) {
-	loaded := guardWorld(t, legacyClassInvincible, 60)
+	loaded := guardWorld(t, model.ClassInvincible, 60)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"SRANGER"}
 	loaded.Creatures[alice.ID] = alice
@@ -241,7 +241,7 @@ func TestGuardHandlerAllowsTrainedInvincible(t *testing.T) {
 func TestGuardHandlerCanBeRegisteredByDispatcherAliases(t *testing.T) {
 	for _, line := range []string{"동 Bob 엄호", "엄호 동 Bob", "guard 동 Bob"} {
 		t.Run(line, func(t *testing.T) {
-			world := state.NewWorld(guardWorld(t, legacyClassRanger, 50))
+			world := state.NewWorld(guardWorld(t, model.ClassRanger, 50))
 			dispatcher := guardDispatcher(t, world)
 
 			ctx := &Context{ActorID: "player:alice"}

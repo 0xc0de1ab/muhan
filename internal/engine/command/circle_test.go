@@ -12,7 +12,7 @@ import (
 
 func TestCircleHandlerBefuddlesMonsterAndRevealsActor(t *testing.T) {
 	withAttackRolls(t, 1, 6)
-	loaded := kickWorld(t, legacyClassFighter)
+	loaded := kickWorld(t, model.ClassFighter)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	alice.Stats["PHIDDN"] = 1
@@ -68,7 +68,7 @@ func TestCircleHandlerBefuddlesMonsterAndRevealsActor(t *testing.T) {
 
 func TestCircleHandlerReportsFailureWithoutBefuddle(t *testing.T) {
 	withAttackRolls(t, 100)
-	world := state.NewWorld(kickWorld(t, legacyClassFighter))
+	world := state.NewWorld(kickWorld(t, model.ClassFighter))
 	handler := NewCircleHandler(world)
 
 	var broadcasts []roomBroadcastRecord
@@ -94,7 +94,7 @@ func TestCircleHandlerReportsFailureWithoutBefuddle(t *testing.T) {
 }
 
 func TestCircleHandlerRespectsAttackCooldownBeforeReveal(t *testing.T) {
-	loaded := kickWorld(t, legacyClassFighter)
+	loaded := kickWorld(t, model.ClassFighter)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	alice.Stats["PHIDDN"] = 1
@@ -133,14 +133,14 @@ func TestCircleHandlerRejectsInvalidInputs(t *testing.T) {
 		mutate func(model.Room, *state.World)
 		want   string
 	}{
-		{name: "missing target", class: legacyClassFighter, want: "누구를 교란시키려구요?"},
-		{name: "wrong class", class: legacyClassThief, args: []string{"고블린"}, want: "권법가와 검사만 쓸수 있는 기술입니다."},
-		{name: "invincible without training", class: legacyClassInvincible, args: []string{"고블린"}, want: "권법가와 검사를 무적수련하지 않았습니다.."},
-		{name: "unknown target", class: legacyClassFighter, args: []string{"없는"}, want: "그런것은 여기 없습니다."},
-		{name: "short player target", class: legacyClassFighter, args: []string{"Bo"}, want: "그런것은 여기 없습니다."},
+		{name: "missing target", class: model.ClassFighter, want: "누구를 교란시키려구요?"},
+		{name: "wrong class", class: model.ClassThief, args: []string{"고블린"}, want: "권법가와 검사만 쓸수 있는 기술입니다."},
+		{name: "invincible without training", class: model.ClassInvincible, args: []string{"고블린"}, want: "권법가와 검사를 무적수련하지 않았습니다.."},
+		{name: "unknown target", class: model.ClassFighter, args: []string{"없는"}, want: "그런것은 여기 없습니다."},
+		{name: "short player target", class: model.ClassFighter, args: []string{"Bo"}, want: "그런것은 여기 없습니다."},
 		{
 			name:  "protected monster",
-			class: legacyClassFighter,
+			class: model.ClassFighter,
 			args:  []string{"고블린"},
 			mutate: func(_ model.Room, world *state.World) {
 				goblin, _ := world.Creature("creature:goblin-1")
@@ -150,7 +150,7 @@ func TestCircleHandlerRejectsInvalidInputs(t *testing.T) {
 		},
 		{
 			name:  "player kill gate",
-			class: legacyClassFighter,
+			class: model.ClassFighter,
 			args:  []string{"Bob"},
 			want:  "당신은 선해서 다른 사용자를 공격할 수 없습니다.",
 		},
@@ -182,7 +182,7 @@ func TestCircleHandlerRejectsInvalidInputs(t *testing.T) {
 
 func TestCircleHandlerSetsPlayerBefuddleCooldownWithoutTagsLikeLegacy(t *testing.T) {
 	withAttackRolls(t, 1, 6)
-	loaded := kickWorld(t, legacyClassFighter)
+	loaded := kickWorld(t, model.ClassFighter)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"PCHAOS"}
 	loaded.Creatures[alice.ID] = alice
@@ -213,7 +213,7 @@ func TestCircleHandlerSetsPlayerBefuddleCooldownWithoutTagsLikeLegacy(t *testing
 }
 
 func TestCircleHandlerRejectsCharmedPlayerLikeLegacy(t *testing.T) {
-	loaded := kickWorld(t, legacyClassFighter)
+	loaded := kickWorld(t, model.ClassFighter)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"PCHAOS", "hidden", "PHIDDN", "invisible", "PINVIS"}
 	alice.Stats["PHIDDN"] = 1
@@ -251,7 +251,7 @@ func TestCircleHandlerRejectsCharmedPlayerLikeLegacy(t *testing.T) {
 
 func TestCircleHandlerUsesLegacyByteLengthForPlayerTarget(t *testing.T) {
 	withAttackRolls(t, 1, 6)
-	loaded := kickWorld(t, legacyClassFighter)
+	loaded := kickWorld(t, model.ClassFighter)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"PCHAOS"}
 	loaded.Creatures[alice.ID] = alice
@@ -283,7 +283,7 @@ func TestCircleHandlerUsesLegacyByteLengthForPlayerTarget(t *testing.T) {
 
 func TestCircleHandlerInvincibleWithTrainingCanCircle(t *testing.T) {
 	withAttackRolls(t, 1, 6)
-	loaded := kickWorld(t, legacyClassInvincible)
+	loaded := kickWorld(t, model.ClassInvincible)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"SFIGHTER"}
 	loaded.Creatures[alice.ID] = alice

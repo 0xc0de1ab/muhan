@@ -600,7 +600,7 @@ func UpdateActiveMonsters(world UpdateActiveWorld, t int64) {
 					}
 
 					switch class {
-					case legacyClassAssassin:
+					case model.ClassAssassin:
 						chance := (((c.Level+3)/4)-((targetPC.Level+3)/4))*5 + legacyBonus[c.Stats["dexterity"]]*6
 						if chance > 80 {
 							chance = 80
@@ -608,7 +608,7 @@ func UpdateActiveMonsters(world UpdateActiveWorld, t int64) {
 						if mrand(1, 100) <= chance && mrand(1, 100) <= 15 {
 							crtPoison(world, c, targetPlayer, t)
 						}
-					case legacyClassBarbarian:
+					case model.ClassBarbarian:
 						chance := 50 + (((c.Level+3)/4)-((targetPC.Level+3)/4))*5 + legacyBonus[c.Stats["strength"]]*3 + (legacyBonus[c.Stats["dexterity"]]-legacyBonus[targetPC.Stats["dexterity"]])*2
 						if chance > 85 {
 							chance = 85
@@ -616,9 +616,9 @@ func UpdateActiveMonsters(world UpdateActiveWorld, t int64) {
 						if mrand(1, 100) <= chance && mrand(1, 100) <= 20 {
 							crtKick(world, c, targetPlayer, t)
 						}
-					case legacyClassCleric, legacyClassPaladin:
+					case model.ClassCleric, model.ClassPaladin:
 						chance := 50 + (((c.Level+3)/4)-((targetPC.Level+3)/4))*5 + legacyBonus[c.Stats["piety"]]*3
-						if class == legacyClassPaladin {
+						if class == model.ClassPaladin {
 							chance += 15
 						} else {
 							chance += 25
@@ -629,7 +629,7 @@ func UpdateActiveMonsters(world UpdateActiveWorld, t int64) {
 						if mrand(1, 100) <= chance && mrand(1, 100) <= 10 {
 							crtTurn(world, c, targetPlayer, t)
 						}
-					case legacyClassFighter:
+					case model.ClassFighter:
 						chance := 50 + (((c.Level+3)/4)-((targetPC.Level+3)/4))*3 + legacyBonus[c.Stats["strength"]]*3 + (legacyBonus[c.Stats["dexterity"]]-legacyBonus[targetPC.Stats["dexterity"]])*2
 						if chance > 85 {
 							chance = 85
@@ -637,7 +637,7 @@ func UpdateActiveMonsters(world UpdateActiveWorld, t int64) {
 						if mrand(1, 100) <= chance && mrand(1, 100) <= 15 {
 							crtBash(world, c, targetPlayer, t)
 						}
-					case legacyClassMage:
+					case model.ClassMage:
 						chance := (((c.Level+3)/4)-((targetPC.Level+3)/4))*5 + legacyBonus[c.Stats["intelligence"]]*5
 						if chance > 80 {
 							chance = 80
@@ -645,7 +645,7 @@ func UpdateActiveMonsters(world UpdateActiveWorld, t int64) {
 						if mrand(1, 100) <= chance && mrand(1, 100) <= 15 {
 							crtAbsorb(world, c, targetPlayer, t)
 						}
-					case legacyClassRanger:
+					case model.ClassRanger:
 						chance := (((c.Level+3)/4)-((targetPC.Level+3)/4))*5 + legacyBonus[c.Stats["dexterity"]]*6
 						if chance > 80 {
 							chance = 80
@@ -984,7 +984,7 @@ func playerRetaliate(world UpdateActiveWorld, player model.Player, monster model
 		pd := pc.Stats["pDice"]
 		damage = rollDice(nd, sd, pd) + strengthDamageBonus(pc)
 		class := creatureStat(pc, "class")
-		if class == legacyClassBarbarian || class > legacyClassInvincible {
+		if class == model.ClassBarbarian || class > model.ClassInvincible {
 			damage += (pc.Level + 3) / 4
 		}
 	}
@@ -1342,7 +1342,7 @@ func monsterCastKnowAlignmentSpell(world UpdateActiveWorld, c model.Creature, ta
 }
 
 func monsterCastRestoreSpell(world UpdateActiveWorld, c model.Creature, targetPlayer model.Player, t int64) int {
-	if creatureClass(c) < legacyClassInvincible {
+	if creatureClass(c) < model.ClassInvincible {
 		return 0
 	}
 	targetPC, ok := world.Creature(targetPlayer.CreatureID)
@@ -1377,10 +1377,10 @@ func monsterCastRestoreSpell(world UpdateActiveWorld, c model.Creature, targetPl
 
 func monsterCastRecallSpell(world UpdateActiveWorld, c model.Creature, targetPlayer model.Player, t int64) int {
 	class := creatureClass(c)
-	if creatureStat(c, "mpCurrent") < 30 || (class != legacyClassCleric && class < legacyClassInvincible) {
+	if creatureStat(c, "mpCurrent") < 30 || (class != model.ClassCleric && class < model.ClassInvincible) {
 		return 0
 	}
-	if class >= legacyClassInvincible && !creatureHasAnyFlag(c, "SCLERIC") {
+	if class >= model.ClassInvincible && !creatureHasAnyFlag(c, "SCLERIC") {
 		return 0
 	}
 	if _, ok := world.Creature(targetPlayer.CreatureID); !ok {
@@ -1449,10 +1449,10 @@ func monsterCastTeleportSpell(world UpdateActiveWorld, c model.Creature, targetP
 
 func monsterCastEnchantSpell(world UpdateActiveWorld, c model.Creature, targetPlayer model.Player, t int64) int {
 	class := creatureClass(c)
-	if class != legacyClassMage && class < legacyClassInvincible {
+	if class != model.ClassMage && class < model.ClassInvincible {
 		return 0
 	}
-	if class >= legacyClassInvincible && !creatureHasAnyFlag(c, "SMAGE") {
+	if class >= model.ClassInvincible && !creatureHasAnyFlag(c, "SMAGE") {
 		return 0
 	}
 	if creatureStat(c, "mpCurrent") < 25 {
@@ -1480,7 +1480,7 @@ func monsterCastEnchantSpell(world UpdateActiveWorld, c model.Creature, targetPl
 func monsterCastSummonSpell(world UpdateActiveWorld, c model.Creature, targetPlayer model.Player, t int64) int {
 	class := creatureClass(c)
 	requiredMP := 50
-	if class == legacyClassInvincible || class == legacyClassCaretaker {
+	if class == model.ClassInvincible || class == model.ClassCaretaker {
 		requiredMP = 100
 	}
 	if creatureStat(c, "mpCurrent") < requiredMP {
@@ -1529,10 +1529,10 @@ func monsterCastSummonSpell(world UpdateActiveWorld, c model.Creature, targetPla
 
 func monsterCastTrackSpell(world UpdateActiveWorld, c model.Creature, targetPlayer model.Player, t int64) int {
 	class := creatureClass(c)
-	if class != legacyClassRanger && class < legacyClassInvincible {
+	if class != model.ClassRanger && class < model.ClassInvincible {
 		return 0
 	}
-	if class >= legacyClassInvincible && !creatureHasAnyFlag(c, "SRANGER") {
+	if class >= model.ClassInvincible && !creatureHasAnyFlag(c, "SRANGER") {
 		return 0
 	}
 	if creatureStat(c, "mpCurrent") < 13 {
@@ -1542,7 +1542,7 @@ func monsterCastTrackSpell(world UpdateActiveWorld, c model.Creature, targetPlay
 	if !ok || targetPC.ID == c.ID || creatureHasAnyFlag(targetPC, "PDMINV", "dmInvisible") {
 		return 0
 	}
-	if creatureClass(targetPC) > legacyClassCaretaker {
+	if creatureClass(targetPC) > model.ClassCaretaker {
 		return 0
 	}
 	targetRoom, ok := world.Room(targetPC.RoomID)
@@ -1712,7 +1712,7 @@ func monsterApplyEnchantObject(world UpdateActiveWorld, c model.Creature, object
 
 	adj := 2
 	class := creatureClass(c)
-	if class == legacyClassMage || class >= legacyClassInvincible {
+	if class == model.ClassMage || class >= model.ClassInvincible {
 		adj = (((creatureLegacyLevel(c)+3)/4)-5)/5 + 1
 		if adj > 3 {
 			adj = 3
@@ -1721,7 +1721,7 @@ func monsterApplyEnchantObject(world UpdateActiveWorld, c model.Creature, object
 	if creatureHasAnyFlag(c, "YELLOWI", "yellowI") {
 		adj = 4
 	}
-	if class >= legacyClassBulsa {
+	if class >= model.ClassBulsa {
 		adj = 5
 	}
 
@@ -1970,7 +1970,7 @@ func monsterLegacyBuffDuration(world UpdateActiveWorld, c model.Creature) int64 
 		interval = 300
 	}
 	class := creatureClass(c)
-	if class == legacyClassCleric || class == legacyClassPaladin {
+	if class == model.ClassCleric || class == model.ClassPaladin {
 		interval += 60 * ((creatureLegacyLevel(c) + 3) / 4)
 	}
 	if room, ok := world.Room(c.RoomID); ok && roomHasAnyFlag(room, "RPMEXT", "rpmext") {
@@ -2011,7 +2011,7 @@ func monsterLegacyFlyDuration(world UpdateActiveWorld, c model.Creature) int64 {
 
 func monsterLegacyInvisibilityDuration(world UpdateActiveWorld, c model.Creature) int64 {
 	interval := 1200 + legacyStatBonus(creatureStat(c, "intelligence"))*600
-	if creatureClass(c) == legacyClassMage {
+	if creatureClass(c) == model.ClassMage {
 		interval += 60 * ((creatureLegacyLevel(c) + 3) / 4)
 	}
 	if room, ok := world.Room(c.RoomID); ok && roomHasAnyFlag(room, "RPMEXT", "rpmext") {
@@ -2025,7 +2025,7 @@ func monsterLegacyMageSightDuration(world UpdateActiveWorld, c model.Creature) i
 	if interval < 300 {
 		interval = 300
 	}
-	if creatureClass(c) == legacyClassMage {
+	if creatureClass(c) == model.ClassMage {
 		interval += 60 * ((creatureLegacyLevel(c) + 3) / 4)
 	}
 	if room, ok := world.Room(c.RoomID); ok && roomHasAnyFlag(room, "RPMEXT", "rpmext") {
@@ -2138,10 +2138,10 @@ func monsterCastRemoveCurseSpell(world UpdateActiveWorld, c model.Creature, targ
 
 func monsterCastRoomVigorSpell(world UpdateActiveWorld, c model.Creature, t int64) int {
 	class := creatureClass(c)
-	if class != legacyClassCleric && class < legacyClassInvincible {
+	if class != model.ClassCleric && class < model.ClassInvincible {
 		return 0
 	}
-	if class >= legacyClassInvincible && !creatureHasAnyFlag(c, "SCLERIC") {
+	if class >= model.ClassInvincible && !creatureHasAnyFlag(c, "SCLERIC") {
 		return 0
 	}
 	if creatureStat(c, "mpCurrent") < 12 {
@@ -2195,7 +2195,7 @@ func monsterCastRoomVigorSpell(world UpdateActiveWorld, c model.Creature, t int6
 }
 
 func monsterCastRemoveFearSpell(world UpdateActiveWorld, c model.Creature, targetPlayer model.Player, t int64) int {
-	if creatureClass(c) < legacyClassBulsa || creatureStat(c, "mpCurrent") < 100 {
+	if creatureClass(c) < model.ClassBulsa || creatureStat(c, "mpCurrent") < 100 {
 		return 0
 	}
 	if legacyMonsterSpellFails(c) {
@@ -2294,10 +2294,10 @@ func monsterCastCurseSpell(world UpdateActiveWorld, c model.Creature, targetPlay
 
 func monsterCastRemoveDiseaseSpell(world UpdateActiveWorld, c model.Creature, targetPlayer model.Player, t int64) int {
 	class := creatureClass(c)
-	if creatureStat(c, "mpCurrent") < 12 || (class != legacyClassCleric && class < legacyClassInvincible) {
+	if creatureStat(c, "mpCurrent") < 12 || (class != model.ClassCleric && class < model.ClassInvincible) {
 		return 0
 	}
-	if class >= legacyClassInvincible && !creatureHasAnyFlag(c, "SCLERIC") {
+	if class >= model.ClassInvincible && !creatureHasAnyFlag(c, "SCLERIC") {
 		return 0
 	}
 
@@ -2326,10 +2326,10 @@ func monsterCastRemoveDiseaseSpell(world UpdateActiveWorld, c model.Creature, ta
 
 func monsterCastRemoveBlindnessSpell(world UpdateActiveWorld, c model.Creature, targetPlayer model.Player, t int64) int {
 	class := creatureClass(c)
-	if creatureStat(c, "mpCurrent") < 12 || (class != legacyClassCleric && class != legacyClassPaladin && class < legacyClassInvincible) {
+	if creatureStat(c, "mpCurrent") < 12 || (class != model.ClassCleric && class != model.ClassPaladin && class < model.ClassInvincible) {
 		return 0
 	}
-	if class >= legacyClassInvincible && !creatureHasAnyFlag(c, "SCLERIC", "SPALADIN") {
+	if class >= model.ClassInvincible && !creatureHasAnyFlag(c, "SCLERIC", "SPALADIN") {
 		return 0
 	}
 
@@ -2480,7 +2480,7 @@ func monsterSetEffectExpiration(world UpdateActiveWorld, creatureID model.Creatu
 }
 
 func monsterCastBlindSpell(world UpdateActiveWorld, c model.Creature, targetPlayer model.Player, t int64) int {
-	if creatureStat(c, "mpCurrent") < 15 || creatureClass(c) < legacyClassSubDM {
+	if creatureStat(c, "mpCurrent") < 15 || creatureClass(c) < model.ClassSubDM {
 		return 0
 	}
 	if _, ok := world.Creature(targetPlayer.CreatureID); !ok {
@@ -2506,7 +2506,7 @@ func monsterCastBlindSpell(world UpdateActiveWorld, c model.Creature, targetPlay
 }
 
 func monsterCastSilenceSpell(world UpdateActiveWorld, c model.Creature, targetPlayer model.Player, t int64) int {
-	if creatureStat(c, "mpCurrent") < 12 || creatureClass(c) < legacyClassSubDM {
+	if creatureStat(c, "mpCurrent") < 12 || creatureClass(c) < model.ClassSubDM {
 		return 0
 	}
 	targetPC, ok := world.Creature(targetPlayer.CreatureID)
@@ -2612,7 +2612,7 @@ func monsterCastBefuddleSpell(world UpdateActiveWorld, c model.Creature, targetP
 }
 
 func monsterCastDrainExpSpell(world UpdateActiveWorld, c model.Creature, targetPlayer model.Player, t int64) int {
-	if creatureClass(c) < legacyClassDM {
+	if creatureClass(c) < model.ClassDM {
 		return 0
 	}
 	targetPC, ok := world.Creature(targetPlayer.CreatureID)
@@ -2729,21 +2729,21 @@ func legacyMonsterSpellFails(c model.Creature) bool {
 
 	chance := 0
 	switch class {
-	case legacyClassAssassin:
+	case model.ClassAssassin:
 		chance = (((level+3)/4)+bns)*5 + 30
-	case legacyClassBarbarian:
+	case model.ClassBarbarian:
 		chance = (((level + 3) / 4) + bns) * 5
-	case legacyClassCleric:
+	case model.ClassCleric:
 		chance = (((level+3)/4)+bns)*5 + 65
-	case legacyClassFighter:
+	case model.ClassFighter:
 		chance = (((level+3)/4)+bns)*5 + 10
-	case legacyClassMage:
+	case model.ClassMage:
 		chance = (((level+3)/4)+bns)*5 + 75
-	case legacyClassPaladin:
+	case model.ClassPaladin:
 		chance = (((level+3)/4)+bns)*5 + 50
-	case legacyClassRanger:
+	case model.ClassRanger:
 		chance = (((level+3)/4)+bns)*4 + 56
-	case legacyClassThief:
+	case model.ClassThief:
 		chance = (((level+3)/4)+bns)*6 + 22
 	default:
 		return false
@@ -2778,11 +2778,11 @@ func legacyMonsterHealingResult(world UpdateActiveWorld, c model.Creature, tag s
 		class := creatureClass(c)
 		levelTier := (c.Level + 3) / 4
 		clericBonus := 0
-		if class == legacyClassCleric {
+		if class == model.ClassCleric {
 			clericBonus = levelTier + mrand(1, 1+levelTier/2)
 		}
 		paladinBonus := 0
-		if class == legacyClassPaladin {
+		if class == model.ClassPaladin {
 			paladinBonus = levelTier/2 + mrand(1, 1+levelTier/4)
 		}
 		maxBonus := legacyStatBonus(creatureStat(c, "intelligence"))
@@ -2808,15 +2808,15 @@ func legacyMonsterHealingResult(world UpdateActiveWorld, c model.Creature, tag s
 		class := creatureClass(c)
 		levelTier := (c.Level + 3) / 4
 		invincibleBonus := 0
-		if class >= legacyClassInvincible {
+		if class >= model.ClassInvincible {
 			invincibleBonus = mrand(1, (c.Level+24)/25)
 		}
 		clericBonus := 0
-		if class == legacyClassCleric {
+		if class == model.ClassCleric {
 			clericBonus = levelTier*2 + mrand(1, 1+levelTier/2)
 		}
 		paladinBonus := 0
-		if class == legacyClassPaladin {
+		if class == model.ClassPaladin {
 			paladinBonus = levelTier + mrand(1, 1+levelTier/3)
 		}
 		heal := rollDice(legacyStatBonus(creatureStat(c, "intelligence"))+legacyStatBonus(creatureStat(c, "piety"))+20, invincibleBonus+clericBonus+paladinBonus+1, rollDice(2, 6, 5))
@@ -2849,10 +2849,10 @@ func legacyMonsterHealingResult(world UpdateActiveWorld, c model.Creature, tag s
 
 func legacyMonsterCanUseClericHeal(c model.Creature) bool {
 	class := creatureClass(c)
-	if class != legacyClassCleric && class != legacyClassPaladin && class < legacyClassInvincible {
+	if class != model.ClassCleric && class != model.ClassPaladin && class < model.ClassInvincible {
 		return false
 	}
-	if class >= legacyClassInvincible && !creatureHasAnyFlag(c, "SCLERIC", "SPALADIN") {
+	if class >= model.ClassInvincible && !creatureHasAnyFlag(c, "SCLERIC", "SPALADIN") {
 		return false
 	}
 	return true
@@ -2994,7 +2994,7 @@ func crtKick(world UpdateActiveWorld, c model.Creature, targetPlayer model.Playe
 	targetName := activePlayerDisplayName(world, targetPlayer)
 
 	if n > 30 {
-		if creatureClass(targetPC) > legacyClassCaretaker {
+		if creatureClass(targetPC) > model.ClassCaretaker {
 			n = 1
 		}
 		_, applied, dead, _ := world.ApplyCreatureDamage(targetPC.ID, n)

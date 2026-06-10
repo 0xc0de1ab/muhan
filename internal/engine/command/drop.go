@@ -422,7 +422,7 @@ func dropContainerDevours(world InventoryWorld, container model.ObjectInstance) 
 }
 
 func dropSingleRoomProtectedMessage(world InventoryWorld, creature model.Creature, object model.ObjectInstance) string {
-	if creatureClass(creature) >= legacyClassDM {
+	if creatureClass(creature) >= model.ClassDM {
 		return ""
 	}
 	if dropObjectHasQuestNumber(world, object) {
@@ -461,7 +461,7 @@ func dropBulkObjectMovable(world DropWorld, creature model.Creature, object mode
 	if !detectInvisible && dropObjectIsInvisible(world, object) {
 		return false
 	}
-	if dropObjectHasQuestNumber(world, object) && creatureClass(creature) < legacyClassDM {
+	if dropObjectHasQuestNumber(world, object) && creatureClass(creature) < model.ClassDM {
 		return false
 	}
 	if dropObjectIsEvent(world, object) {

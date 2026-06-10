@@ -830,7 +830,7 @@ func TestApplyMagicSummonLegacyFailureOutputs(t *testing.T) {
 		actor := loaded.Creatures["creature:alice"]
 		actor.RoomID = "room:source"
 		actor.Metadata.Tags = []string{"SSUMMO"}
-		actor.Stats = map[string]int{"class": legacyClassBulsa, "mpCurrent": 50}
+		actor.Stats = map[string]int{"class": model.ClassBulsa, "mpCurrent": 50}
 		loaded.Creatures[actor.ID] = actor
 		mustAddLookPlayer(t, loaded, model.Player{ID: "player:bob", DisplayName: "밥", RoomID: "room:other", CreatureID: "creature:bob"})
 		mustAddLookCreature(t, loaded, model.Creature{
@@ -944,7 +944,7 @@ func TestApplyMagicSummonLegacyFailureOutputs(t *testing.T) {
 			DisplayName: "밥",
 			RoomID:      "room:other",
 			PlayerID:    "player:bob",
-			Stats:       map[string]int{"class": legacyClassDM, "dailyExpndMax": 8},
+			Stats:       map[string]int{"class": model.ClassDM, "dailyExpndMax": 8},
 		})
 		world := state.NewWorld(loaded)
 		previousRoll := attackRoll

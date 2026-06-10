@@ -13,7 +13,7 @@ import (
 )
 
 func TestStealHandlerMovesMonsterInventoryObject(t *testing.T) {
-	world := state.NewWorld(stealWorld(t, legacyClassThief))
+	world := state.NewWorld(stealWorld(t, model.ClassThief))
 	dispatcher := stealDispatcher(t, world, fixedStealRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -35,7 +35,7 @@ func TestStealHandlerMovesMonsterInventoryObject(t *testing.T) {
 }
 
 func TestStealHandlerCreditsMoneyObject(t *testing.T) {
-	world := state.NewWorld(stealWorld(t, legacyClassThief))
+	world := state.NewWorld(stealWorld(t, model.ClassThief))
 	handler := NewStealHandler(world, fixedStealRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -83,7 +83,7 @@ func TestStealHandlerSuccessQueuesLegacySaves(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loaded := stealWorld(t, legacyClassThief)
+			loaded := stealWorld(t, model.ClassThief)
 			if tt.mutate != nil {
 				tt.mutate(loaded)
 			}
@@ -105,7 +105,7 @@ func TestStealHandlerSuccessQueuesLegacySaves(t *testing.T) {
 }
 
 func TestStealHandlerDMWithThiefSpellCanStealQuestObjectLikeLegacy(t *testing.T) {
-	loaded := stealWorld(t, legacyClassDM)
+	loaded := stealWorld(t, model.ClassDM)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"STHIEF"}
 	loaded.Creatures[alice.ID] = alice
@@ -130,7 +130,7 @@ func TestStealHandlerDMWithThiefSpellCanStealQuestObjectLikeLegacy(t *testing.T)
 }
 
 func TestStealHandlerDMWithThiefSpellStillCannotStealTopLevelEventObjectLikeLegacy(t *testing.T) {
-	loaded := stealWorld(t, legacyClassDM)
+	loaded := stealWorld(t, model.ClassDM)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"STHIEF"}
 	loaded.Creatures[alice.ID] = alice
@@ -163,16 +163,16 @@ func TestStealHandlerRejectsInvalidInputs(t *testing.T) {
 		mutate func(*worldload.World)
 		want   string
 	}{
-		{name: "missing object", class: legacyClassThief, want: "무엇을 훔치려구요?"},
-		{name: "missing target", class: legacyClassThief, args: []string{"사과"}, want: "누구한테서 훔치려구요?"},
-		{name: "wrong class", class: legacyClassFighter, args: []string{"사과", "상인"}, want: "도둑만 훔칠수 있습니다."},
-		{name: "invincible without thief spell", class: legacyClassInvincible, args: []string{"사과", "상인"}, want: "\n도둑을 무적수련하지 않았습니다.\n"},
-		{name: "blind", class: legacyClassThief, tags: []string{"blind"}, args: []string{"사과", "상인"}, want: "당신은 눈이 멀어 훔칠 수 없습니다."},
-		{name: "missing target", class: legacyClassThief, args: []string{"사과", "없는"}, want: "그런건 여기 없습니다."},
-		{name: "missing object", class: legacyClassThief, args: []string{"없는", "상인"}, want: "그녀는 그런 물건을 갖고 있지 않습니다."},
+		{name: "missing object", class: model.ClassThief, want: "무엇을 훔치려구요?"},
+		{name: "missing target", class: model.ClassThief, args: []string{"사과"}, want: "누구한테서 훔치려구요?"},
+		{name: "wrong class", class: model.ClassFighter, args: []string{"사과", "상인"}, want: "도둑만 훔칠수 있습니다."},
+		{name: "invincible without thief spell", class: model.ClassInvincible, args: []string{"사과", "상인"}, want: "\n도둑을 무적수련하지 않았습니다.\n"},
+		{name: "blind", class: model.ClassThief, tags: []string{"blind"}, args: []string{"사과", "상인"}, want: "당신은 눈이 멀어 훔칠 수 없습니다."},
+		{name: "missing target", class: model.ClassThief, args: []string{"사과", "없는"}, want: "그런건 여기 없습니다."},
+		{name: "missing object", class: model.ClassThief, args: []string{"없는", "상인"}, want: "그녀는 그런 물건을 갖고 있지 않습니다."},
 		{
 			name:  "protected monster",
-			class: legacyClassThief,
+			class: model.ClassThief,
 			args:  []string{"사과", "상인"},
 			mutate: func(loaded *worldload.World) {
 				merchant := loaded.Creatures["creature:merchant"]
@@ -208,7 +208,7 @@ func TestStealHandlerRejectsInvalidInputs(t *testing.T) {
 }
 
 func TestStealHandlerInvincibleWithThiefSpellCanSteal(t *testing.T) {
-	loaded := stealWorld(t, legacyClassInvincible)
+	loaded := stealWorld(t, model.ClassInvincible)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"STHIEF"}
 	loaded.Creatures[alice.ID] = alice
@@ -226,7 +226,7 @@ func TestStealHandlerInvincibleWithThiefSpellCanSteal(t *testing.T) {
 }
 
 func TestStealHandlerRejectsOneByteTargetPrefixLikeLegacyFindCrt(t *testing.T) {
-	loaded := stealWorld(t, legacyClassThief)
+	loaded := stealWorld(t, model.ClassThief)
 	merchant := loaded.Creatures["creature:merchant"]
 	merchant.DisplayName = "Merchant"
 	loaded.Creatures[merchant.ID] = merchant
@@ -248,7 +248,7 @@ func TestStealHandlerRejectsOneByteTargetPrefixLikeLegacyFindCrt(t *testing.T) {
 }
 
 func TestStealHandlerRejectsObjectIDTargetLikeLegacyFindObj(t *testing.T) {
-	world := state.NewWorld(stealWorld(t, legacyClassThief))
+	world := state.NewWorld(stealWorld(t, model.ClassThief))
 	handler := NewStealHandler(world, fixedStealRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -266,7 +266,7 @@ func TestStealHandlerRejectsObjectIDTargetLikeLegacyFindObj(t *testing.T) {
 }
 
 func TestStealHandlerRejectsEnemyMonsterTargetLikeLegacy(t *testing.T) {
-	world := state.NewWorld(stealWorld(t, legacyClassThief))
+	world := state.NewWorld(stealWorld(t, model.ClassThief))
 	if _, err := world.AddEnemy("creature:merchant", "creature:alice"); err != nil {
 		t.Fatalf("AddEnemy() error = %v", err)
 	}
@@ -287,7 +287,7 @@ func TestStealHandlerRejectsEnemyMonsterTargetLikeLegacy(t *testing.T) {
 }
 
 func TestStealHandlerFailureDoesNotMoveObjectAndStartsCooldown(t *testing.T) {
-	world := state.NewWorld(stealWorld(t, legacyClassThief))
+	world := state.NewWorld(stealWorld(t, model.ClassThief))
 	handler := NewStealHandler(world, fixedStealRoll(100))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -314,7 +314,7 @@ func TestStealHandlerFailureDoesNotMoveObjectAndStartsCooldown(t *testing.T) {
 }
 
 func TestStealHandlerDoesNotRevealInvisibleActorDuringCooldown(t *testing.T) {
-	world := state.NewWorld(stealWorld(t, legacyClassThief))
+	world := state.NewWorld(stealWorld(t, model.ClassThief))
 	handler := NewStealHandler(world, fixedStealRoll(100))
 
 	if _, err := handler(&Context{ActorID: "player:alice"}, ResolvedCommand{Args: []string{"사과", "상인"}}); err != nil {
@@ -349,7 +349,7 @@ func TestStealHandlerDoesNotRevealInvisibleActorDuringCooldown(t *testing.T) {
 }
 
 func TestStealHandlerRevealsInvisibleActorAfterCooldownPasses(t *testing.T) {
-	loaded := stealWorld(t, legacyClassThief)
+	loaded := stealWorld(t, model.ClassThief)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"invisible", "PINVIS"}
 	alice.Stats["PINVIS"] = 1
@@ -383,7 +383,7 @@ func TestStealHandlerRevealsInvisibleActorAfterCooldownPasses(t *testing.T) {
 }
 
 func TestStealHandlerClearsHiddenBeforeTargetLookupLikeLegacy(t *testing.T) {
-	loaded := stealWorld(t, legacyClassThief)
+	loaded := stealWorld(t, model.ClassThief)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"hidden", "PHIDDN"}
 	alice.Stats["PHIDDN"] = 1
@@ -413,7 +413,7 @@ func TestStealHandlerClearsHiddenBeforeTargetLookupLikeLegacy(t *testing.T) {
 }
 
 func TestStealHandlerFailureNotifiesPlayerVictimDirectly(t *testing.T) {
-	loaded := stealWorld(t, legacyClassThief)
+	loaded := stealWorld(t, model.ClassThief)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"chaos"}
 	loaded.Creatures[alice.ID] = alice
@@ -462,7 +462,7 @@ func TestStealHandlerFailureNotifiesPlayerVictimDirectly(t *testing.T) {
 }
 
 func TestStealHandlerSuccessfulPlayerVictimStartsPlayerKillPenalty(t *testing.T) {
-	loaded := stealWorld(t, legacyClassThief)
+	loaded := stealWorld(t, model.ClassThief)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"chaos"}
 	loaded.Creatures[alice.ID] = alice
@@ -533,7 +533,7 @@ func stealWorld(t *testing.T, class int) *worldload.World {
 		DisplayName: "Bob",
 		PlayerID:    "player:bob",
 		RoomID:      "room:steal",
-		Stats:       map[string]int{"class": legacyClassFighter, "level": 1},
+		Stats:       map[string]int{"class": model.ClassFighter, "level": 1},
 		Inventory:   model.ObjectRefList{ObjectIDs: []model.ObjectInstanceID{"object:necklace"}},
 	})
 	for _, proto := range []model.ObjectPrototype{

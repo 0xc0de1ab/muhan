@@ -201,7 +201,7 @@ func TestReturnSquareHandlerHighLevelMortalLosesMP(t *testing.T) {
 	if err := world.SetCreatureStat("creature:alice", "level", 21); err != nil {
 		t.Fatalf("SetCreatureStat(level) error = %v", err)
 	}
-	if err := world.SetCreatureStat("creature:alice", "class", legacyClassFighter); err != nil {
+	if err := world.SetCreatureStat("creature:alice", "class", model.ClassFighter); err != nil {
 		t.Fatalf("SetCreatureStat(class) error = %v", err)
 	}
 	if err := world.SetCreatureStat("creature:alice", "mpCurrent", 40); err != nil {

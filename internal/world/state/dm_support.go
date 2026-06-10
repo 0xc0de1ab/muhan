@@ -54,8 +54,8 @@ func (w *World) ResaveRoomWithOptions(roomID model.RoomID, permOnly bool) error 
 	if w == nil {
 		return fmt.Errorf("resave room: world state is nil")
 	}
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	room, ok := w.rooms[roomID]
 	if !ok {
@@ -163,8 +163,8 @@ func (w *World) ReloadRoom(roomID model.RoomID) error {
 	if w == nil {
 		return fmt.Errorf("reload room: world state is nil")
 	}
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 
 	oldRoom, loaded := w.rooms[roomID]
 	if !loaded {
@@ -231,8 +231,8 @@ func (w *World) LoadRoom(roomID model.RoomID) error {
 	if w == nil {
 		return fmt.Errorf("load room: world state is nil")
 	}
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 
 	if _, ok := w.rooms[roomID]; ok {
 		return nil
@@ -315,8 +315,8 @@ func (w *World) CreateObjectFromPrototype(protoID model.PrototypeID, creatureID 
 		return "", fmt.Errorf("create object %q: creature id is required", protoID)
 	}
 
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 
 	proto, ok := w.prototypes[protoID]
 	if !ok {
@@ -362,8 +362,8 @@ func (w *World) CreateObjectInstanceFromPrototype(protoID model.PrototypeID, cre
 		return model.ObjectInstance{}, fmt.Errorf("create object: creature id is required")
 	}
 
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 
 	proto, ok := w.prototypes[protoID]
 	if !ok {
@@ -424,8 +424,8 @@ func (w *World) DestroyCreature(creatureID model.CreatureID) error {
 	if w == nil {
 		return fmt.Errorf("destroy creature: world is nil")
 	}
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 
 	creature, ok := w.creatures[creatureID]
 	if !ok {
@@ -455,8 +455,8 @@ func (w *World) DestroyObject(objectID model.ObjectInstanceID) error {
 	if w == nil {
 		return fmt.Errorf("destroy object: world is nil")
 	}
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 
 	w.deleteObjectTreeLocked(objectID, map[model.ObjectInstanceID]struct{}{})
 	return nil
@@ -466,12 +466,12 @@ func (w *World) ResaveAllRooms(permOnly bool) error {
 	if w == nil {
 		return fmt.Errorf("resave all rooms: world state is nil")
 	}
-	w.mu.RLock()
+	w.rLockDomains(true, true, true, true, true, true, true)
 	var roomIDs []model.RoomID
 	for id := range w.rooms {
 		roomIDs = append(roomIDs, id)
 	}
-	w.mu.RUnlock()
+	w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	for _, roomID := range roomIDs {
 		if err := w.ResaveRoomWithOptions(roomID, permOnly); err != nil {
@@ -485,9 +485,9 @@ func (w *World) FlushCrtObj() error {
 	if w == nil {
 		return fmt.Errorf("flush crt obj: world state is nil")
 	}
-	w.mu.RLock()
+	w.rLockDomains(true, true, true, true, true, true, true)
 	dbRoot := strings.TrimSpace(w.dbRoot)
-	w.mu.RUnlock()
+	w.rUnlockDomains(true, true, true, true, true, true, true)
 	if dbRoot == "" {
 		return fmt.Errorf("flush crt obj: dbRoot is not set")
 	}
@@ -510,8 +510,8 @@ func (w *World) FlushCrtObj() error {
 		creaturePrototypes[creature.ID] = creature
 	}
 
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 	for id, proto := range w.prototypes {
 		if proto.Metadata.LegacyKind == "objectPrototype" {
 			delete(w.prototypes, id)
@@ -612,8 +612,8 @@ func (w *World) SetShutdown(seconds int, now bool) error {
 	if w == nil {
 		return fmt.Errorf("set shutdown: world state is nil")
 	}
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 	w.shutdownLTime = time.Now().Unix()
 	if now {
 		w.shutdownInterval = 1
@@ -627,8 +627,8 @@ func (w *World) FindPlayerByName(name string) (model.Player, bool) {
 	if w == nil {
 		return model.Player{}, false
 	}
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	for _, player := range w.players {
 		if strings.EqualFold(player.DisplayName, name) ||
@@ -661,8 +661,8 @@ func (w *World) CreaturePrototype(id model.CreatureID) (model.Creature, bool) {
 	if w == nil {
 		return model.Creature{}, false
 	}
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	proto, ok := w.creatures[id]
 	if !ok {
@@ -679,8 +679,8 @@ func (w *World) SpawnCreature(protoID model.CreatureID, roomID model.RoomID, car
 		return "", fmt.Errorf("spawn creature: prototype id is required")
 	}
 
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 
 	return w.spawnCreatureLocked(protoID, roomID, carryItems, nil)
 }
@@ -866,8 +866,8 @@ func (w *World) FindCreatureByName(roomID model.RoomID, name string, count int) 
 	if w == nil {
 		return model.Creature{}, false
 	}
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	room, ok := w.rooms[roomID]
 	if !ok {
@@ -927,8 +927,8 @@ func (w *World) FindCreatureByNameGlobal(name string) (model.Creature, bool) {
 	if w == nil {
 		return model.Creature{}, false
 	}
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	nameLower := strings.ToLower(strings.TrimSpace(name))
 	if nameLower == "" {
@@ -956,8 +956,8 @@ func (w *World) FindObjectByName(creatureID model.CreatureID, roomID model.RoomI
 	if w == nil {
 		return model.ObjectInstance{}, false
 	}
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	nameLower := strings.ToLower(strings.TrimSpace(name))
 	if nameLower == "" {
@@ -1073,9 +1073,9 @@ func (w *World) LoadLockouts() error {
 	if w == nil {
 		return fmt.Errorf("load lockouts: world state is nil")
 	}
-	w.mu.RLock()
+	w.rLockDomains(true, true, true, true, true, true, true)
 	dbRoot := strings.TrimSpace(w.dbRoot)
-	w.mu.RUnlock()
+	w.rUnlockDomains(true, true, true, true, true, true, true)
 	if dbRoot == "" {
 		return fmt.Errorf("load lockouts: dbRoot is not set")
 	}
@@ -1084,9 +1084,9 @@ func (w *World) LoadLockouts() error {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			w.mu.Lock()
+			w.lockDomains(true, true, true, true, true, true, true)
 			w.lockouts = nil
-			w.mu.Unlock()
+			w.unlockDomains(true, true, true, true, true, true, true)
 			return nil
 		}
 		return fmt.Errorf("load lockouts: read %s: %w", path, err)
@@ -1105,9 +1105,9 @@ func (w *World) LoadLockouts() error {
 		entries = append(entries, entry)
 	}
 
-	w.mu.Lock()
+	w.lockDomains(true, true, true, true, true, true, true)
 	w.lockouts = entries
-	w.mu.Unlock()
+	w.unlockDomains(true, true, true, true, true, true, true)
 	return nil
 }
 
@@ -1119,8 +1119,8 @@ func (w *World) CheckLockout(address string) (LockoutMode, string) {
 	if address == "" {
 		return LockoutAllow, ""
 	}
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 	for _, entry := range w.lockouts {
 		if !legacyAddressEqual(entry.Address, address) {
 			continue
@@ -1137,8 +1137,8 @@ func (w *World) Lockouts() []LockoutEntry {
 	if w == nil {
 		return nil
 	}
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 	out := make([]LockoutEntry, len(w.lockouts))
 	copy(out, w.lockouts)
 	return out
@@ -1168,8 +1168,8 @@ func (w *World) SetSpy(spyPlayerID, targetPlayerID model.PlayerID) error {
 	if w == nil {
 		return fmt.Errorf("set spy: world state is nil")
 	}
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 	if w.spies == nil {
 		w.spies = make(map[model.PlayerID]model.PlayerID)
 	}
@@ -1181,8 +1181,8 @@ func (w *World) ClearSpy(spyPlayerID model.PlayerID) error {
 	if w == nil {
 		return fmt.Errorf("clear spy: world state is nil")
 	}
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 	if w.spies != nil {
 		delete(w.spies, spyPlayerID)
 	}
@@ -1193,8 +1193,8 @@ func (w *World) IsSpying(spyPlayerID model.PlayerID) (model.PlayerID, bool) {
 	if w == nil {
 		return "", false
 	}
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 	if w.spies == nil {
 		return "", false
 	}
@@ -1206,8 +1206,8 @@ func (w *World) IsBeingSpiedOn(targetPlayerID model.PlayerID) (model.PlayerID, b
 	if w == nil {
 		return "", false
 	}
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 	if w.spies == nil {
 		return "", false
 	}
@@ -1277,8 +1277,8 @@ func (w *World) CreateRoom(roomID model.RoomID) error {
 		return fmt.Errorf("create room: world state is nil")
 	}
 	roomID = canonicalStateRoomID(roomID)
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 
 	if _, ok := w.rooms[roomID]; ok {
 		return fmt.Errorf("room %s already exists", roomID)
@@ -1361,8 +1361,8 @@ func (w *World) UpdateRoomProperty(roomID model.RoomID, key, val string) error {
 	if w == nil {
 		return fmt.Errorf("update room property: world is nil")
 	}
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 
 	room, ok := w.rooms[roomID]
 	if !ok {
@@ -1382,8 +1382,8 @@ func (w *World) UpdateRoomRandomCreature(roomID model.RoomID, idx, val int) erro
 	if w == nil {
 		return fmt.Errorf("update room random creature: world is nil")
 	}
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 
 	room, ok := w.rooms[roomID]
 	if !ok {
@@ -1403,8 +1403,8 @@ func (w *World) UpdateRoomFlag(roomID model.RoomID, flag int, enabled bool) erro
 	if w == nil {
 		return fmt.Errorf("update room flag: world is nil")
 	}
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 
 	room, ok := w.rooms[roomID]
 	if !ok {
@@ -1461,8 +1461,8 @@ func (w *World) UpdateCreatureStat(creatureID model.CreatureID, key string, val 
 	if w == nil {
 		return fmt.Errorf("update creature stat: world is nil")
 	}
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 
 	c, ok := w.creatures[creatureID]
 	if !ok {
@@ -1486,8 +1486,8 @@ func (w *World) UpdateCreatureProperty(creatureID model.CreatureID, key, val str
 	if w == nil {
 		return fmt.Errorf("update creature property: world is nil")
 	}
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 
 	c, ok := w.creatures[creatureID]
 	if !ok {
@@ -1506,8 +1506,8 @@ func (w *World) UpdateObjectProperty(objectID model.ObjectInstanceID, key, val s
 	if w == nil {
 		return fmt.Errorf("update object property: world is nil")
 	}
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 
 	obj, ok := w.objects[objectID]
 	if !ok {
@@ -1526,8 +1526,8 @@ func (w *World) LinkExits(fromRoomID, toRoomID model.RoomID, exitName, oppositeN
 	if w == nil {
 		return fmt.Errorf("link exits: world is nil")
 	}
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 
 	link := func(from, to model.RoomID, name string) error {
 		room, ok := w.rooms[from]
@@ -1568,8 +1568,8 @@ func (w *World) DeleteRoomExit(roomID model.RoomID, exitName string) error {
 	if w == nil {
 		return fmt.Errorf("delete room exit: world is nil")
 	}
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 
 	room, ok := w.rooms[roomID]
 	if !ok {
@@ -1653,8 +1653,8 @@ func (w *World) FindCreatureInRoom(roomID model.RoomID, name string) (model.Crea
 	if w == nil {
 		return model.Creature{}, false
 	}
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	room, ok := w.rooms[roomID]
 	if !ok {
@@ -1682,8 +1682,8 @@ func (w *World) FindObjectInRoom(roomID model.RoomID, name string) (model.Object
 	if w == nil {
 		return model.ObjectInstance{}, false
 	}
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	room, ok := w.rooms[roomID]
 	if !ok {
@@ -1711,8 +1711,8 @@ func (w *World) FindObjectInRoomByName(roomID model.RoomID, name string, count i
 	if w == nil {
 		return model.ObjectInstance{}, false
 	}
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	room, ok := w.rooms[roomID]
 	if !ok {
@@ -1747,8 +1747,8 @@ func (w *World) FindObjectOnCreature(creatureID model.CreatureID, name string) (
 	if w == nil {
 		return model.ObjectInstance{}, false
 	}
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	c, ok := w.creatures[creatureID]
 	if !ok {
@@ -1789,8 +1789,8 @@ func (w *World) FindObjectOnCreatureByName(creatureID model.CreatureID, name str
 	if w == nil {
 		return model.ObjectInstance{}, false
 	}
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	c, ok := w.creatures[creatureID]
 	if !ok {
@@ -1840,8 +1840,8 @@ func (w *World) UpdateRoomDescription(roomID model.RoomID, field, val string) er
 	if w == nil {
 		return fmt.Errorf("update room description: world is nil")
 	}
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 
 	room, ok := w.rooms[roomID]
 	if !ok {
@@ -1870,8 +1870,8 @@ func (w *World) List(args []string) (string, error) {
 	}
 
 	var b strings.Builder
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	switch opts.mode {
 	case 'm':
@@ -2515,8 +2515,8 @@ func (w *World) CacheStats() (rooms, monsters, objects int) {
 	if w == nil {
 		return 0, 0, 0
 	}
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 	return len(w.rooms), len(w.creatures), len(w.objects)
 }
 
@@ -2525,12 +2525,12 @@ func (w *World) SaveAllPlayers() error {
 		return fmt.Errorf("save all players: world state is nil")
 	}
 
-	w.mu.RLock()
+	w.rLockDomains(true, true, true, true, true, true, true)
 	var playerIDs []model.PlayerID
 	for id := range w.players {
 		playerIDs = append(playerIDs, id)
 	}
-	w.mu.RUnlock()
+	w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	var errs []string
 	for _, playerID := range playerIDs {
@@ -2559,14 +2559,14 @@ func (w *World) PlayerCounts() (active, queued int) {
 	if w == nil {
 		return 0, 0
 	}
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 	return len(w.players), 0
 }
 
 func (w *World) ShutdownTimeRemaining() int64 {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 	if w.shutdownLTime == 0 {
 		return 0
 	}
@@ -2601,8 +2601,8 @@ func (w *World) GetDailyBroadcastCount(creatureID model.CreatureID) (cur, max in
 	if w == nil {
 		return 0, 10
 	}
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 	c, ok := w.creatures[creatureID]
 	if !ok {
 		return 0, 10
@@ -2626,8 +2626,8 @@ func (w *World) SetDailyBroadcastCount(creatureID model.CreatureID, val int) err
 	if w == nil {
 		return fmt.Errorf("world is nil")
 	}
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 	c, ok := w.creatures[creatureID]
 	if !ok {
 		return fmt.Errorf("creature %s not found", creatureID)
@@ -2647,8 +2647,8 @@ func (w *World) SetRoomName(roomID model.RoomID, name string) error {
 	if w == nil {
 		return fmt.Errorf("world is nil")
 	}
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 	room, ok := w.rooms[roomID]
 	if !ok {
 		return fmt.Errorf("room %s not found", roomID)
@@ -2662,8 +2662,8 @@ func (w *World) RoomPlayers(roomID model.RoomID) []model.Player {
 	if w == nil {
 		return nil
 	}
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 	var list []model.Player
 	for _, player := range w.players {
 		if player.RoomID == roomID {
@@ -2677,8 +2677,8 @@ func (w *World) Players() []model.Player {
 	if w == nil {
 		return nil
 	}
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 	var list []model.Player
 	for _, player := range w.players {
 		list = append(list, player)
@@ -2690,8 +2690,8 @@ func (w *World) ActiveCreatures() []model.Creature {
 	if w == nil {
 		return nil
 	}
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	var list []model.Creature
 	roomIDs := make([]model.RoomID, 0, len(w.rooms))
@@ -2742,8 +2742,8 @@ func (w *World) DustPlayer(playerID model.PlayerID) error {
 	if w == nil {
 		return fmt.Errorf("world is nil")
 	}
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 
 	player, ok := w.players[playerID]
 	if !ok {
@@ -2789,8 +2789,8 @@ func (w *World) DustPlayer(playerID model.PlayerID) error {
 }
 
 func (w *World) AddEnemy(attacker, defender model.CreatureID) (bool, error) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 	if w.enemies == nil {
 		w.enemies = make(map[model.CreatureID][]string)
 	}
@@ -2815,8 +2815,8 @@ func (w *World) AddEnemy(attacker, defender model.CreatureID) (bool, error) {
 }
 
 func (w *World) CreatureEnemies(creatureID model.CreatureID) ([]string, error) {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 	if w.enemies == nil {
 		return nil, nil
 	}
@@ -2824,8 +2824,8 @@ func (w *World) CreatureEnemies(creatureID model.CreatureID) ([]string, error) {
 }
 
 func (w *World) RemoveEnemy(creatureID model.CreatureID, enemyName string) error {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 	if w.enemies == nil {
 		return nil
 	}
@@ -2840,8 +2840,8 @@ func (w *World) RemoveEnemy(creatureID model.CreatureID, enemyName string) error
 }
 
 func (w *World) ClearCreatureEnemies(creatureID model.CreatureID) error {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 	if w.enemies != nil {
 		delete(w.enemies, creatureID)
 	}
@@ -2849,8 +2849,8 @@ func (w *World) ClearCreatureEnemies(creatureID model.CreatureID) error {
 }
 
 func (w *World) RemoveCreature(creatureID model.CreatureID) error {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 	creature, ok := w.creatures[creatureID]
 	if !ok {
 		return nil
@@ -2883,8 +2883,8 @@ func (w *World) PlayerCharmedCreatures(playerID model.PlayerID) ([]string, error
 		return nil, nil
 	}
 
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	player, ok := w.players[playerID]
 	if !ok {
@@ -2937,10 +2937,10 @@ func (w *World) SaveBank(bankID model.BankID) error {
 		return fmt.Errorf("save bank: world state is nil")
 	}
 
-	w.mu.RLock()
+	w.rLockDomains(true, true, true, true, true, true, true)
 	bank, ok := w.banks[bankID]
 	if !ok {
-		w.mu.RUnlock()
+		w.rUnlockDomains(true, true, true, true, true, true, true)
 		return fmt.Errorf("save bank: bank account %q not found", bankID)
 	}
 
@@ -2967,7 +2967,7 @@ func (w *World) SaveBank(bankID model.BankID) error {
 	// Clone the bank account itself
 	bankClone := cloneBankAccount(bank)
 	dbRoot := w.dbRoot
-	w.mu.RUnlock()
+	w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	if dbRoot == "" {
 		return fmt.Errorf("save bank %q: dbRoot is not set", bankID)
@@ -3054,8 +3054,8 @@ func (w *World) MergeBankSave(bundle model.BankSaveBundle) error {
 		return nil
 	}
 
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 
 	w.banks[bundle.BankAccount.ID] = bundle.BankAccount
 	for _, obj := range bundle.Objects {

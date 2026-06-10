@@ -42,15 +42,15 @@ func NewTrainHandler(world TrainWorld) Handler {
 		}
 
 		class := creatureClass(creature)
-		if class >= legacyClassInvincible && len(resolved.Args) > 0 {
+		if class >= model.ClassInvincible && len(resolved.Args) > 0 {
 			ctx.WriteString("무적수련을 하시려면 \"무적수련\"을 치세요.\n")
 			return StatusDefault, nil
 		}
-		if class == legacyClassBulsa {
+		if class == model.ClassBulsa {
 			ctx.WriteString("당신은 수련할수 없는 직업입니다.")
 			return StatusDefault, nil
 		}
-		if class == legacyClassCaretaker && !trainActorHasAnyFlag(player, creature, "TRAINBUL", "trainBul") {
+		if class == model.ClassCaretaker && !trainActorHasAnyFlag(player, creature, "TRAINBUL", "trainBul") {
 			ctx.WriteString("아직 당신은 모든능력치를 향상하지 않았습니다.\n")
 			return StatusDefault, nil
 		}
@@ -137,13 +137,13 @@ func NewTrainHandler(world TrainWorld) Handler {
 
 func trainApplyLegacyClassTransition(ctx *Context, world TrainWorld, player model.Player, creature model.Creature, class int, level int, gold int, goldNeeded int) (bool, error) {
 	switch {
-	case class == legacyClassInvincible && level >= legacyMaxAutoLevel-1:
+	case class == model.ClassInvincible && level >= legacyMaxAutoLevel-1:
 		missing := trainMissingInvincibleTrainingNames(player, creature)
 		if len(missing) > 0 {
 			ctx.WriteString("\n당신은 " + strings.Join(missing, ", ") + " 직업을 무적수련하지 않았습니다.")
 			return true, nil
 		}
-		if err := trainSetCreatureClass(world, creature.ID, legacyClassCaretaker); err != nil {
+		if err := trainSetCreatureClass(world, creature.ID, model.ClassCaretaker); err != nil {
 			return true, err
 		}
 		if _, err := world.SetCreatureLevel(creature.ID, legacyMaxAutoLevel-1); err != nil {
@@ -168,15 +168,15 @@ func trainApplyLegacyClassTransition(ctx *Context, world TrainWorld, player mode
 				return true, err
 			}
 		}
-		if err := trainUpdateFamilyClass(world, player, creature, legacyClassCaretaker); err != nil {
+		if err := trainUpdateFamilyClass(world, player, creature, model.ClassCaretaker); err != nil {
 			return true, err
 		}
 		actorName := trainActorLegacyName(player, creature)
 		invokeBroadcast(ctx, fmt.Sprintf("\n### %s님께서 초인이 되셨습니다!!", actorName))
 		ctx.WriteString("\n축하합니다! 당신은 초인이 되었습니다!!")
 		return true, nil
-	case class == legacyClassCaretaker && level >= legacyMaxAutoLevel-1:
-		if err := trainSetCreatureClass(world, creature.ID, legacyClassBulsa); err != nil {
+	case class == model.ClassCaretaker && level >= legacyMaxAutoLevel-1:
+		if err := trainSetCreatureClass(world, creature.ID, model.ClassBulsa); err != nil {
 			return true, err
 		}
 		if _, err := world.SetCreatureLevel(creature.ID, legacyMaxAutoLevel-1); err != nil {
@@ -201,7 +201,7 @@ func trainApplyLegacyClassTransition(ctx *Context, world TrainWorld, player mode
 				return true, err
 			}
 		}
-		if err := trainUpdateFamilyClass(world, player, creature, legacyClassBulsa); err != nil {
+		if err := trainUpdateFamilyClass(world, player, creature, model.ClassBulsa); err != nil {
 			return true, err
 		}
 		actorName := trainActorLegacyName(player, creature)
@@ -278,7 +278,7 @@ func trainClearUpDamage(world TrainWorld, player model.Player, creature model.Cr
 func trainApplyLegacyLevelUps(world TrainWorld, creature model.Creature, class int, level int, experience int, gold int, goldNeeded int) (int, model.Creature, error) {
 	upNum := 0
 	for {
-		if level == 100 && class < legacyClassInvincible {
+		if level == 100 && class < model.ClassInvincible {
 			break
 		}
 		gold -= goldNeeded
@@ -345,10 +345,10 @@ func trainActorHasAnyFlag(player model.Player, creature model.Creature, names ..
 }
 
 func trainRoomMatchesClass(room model.Room, class int) bool {
-	if class > legacyClassThief {
+	if class > model.ClassThief {
 		return true
 	}
-	if class < legacyClassAssassin {
+	if class < model.ClassAssassin {
 		return false
 	}
 
@@ -376,9 +376,9 @@ func trainSafeLevelUp(class int, level int) bool {
 		return false
 	}
 	switch {
-	case class >= legacyClassAssassin && class < legacyClassInvincible:
+	case class >= model.ClassAssassin && class < model.ClassInvincible:
 		return level < 100
-	case class == legacyClassInvincible || class == legacyClassCaretaker:
+	case class == model.ClassInvincible || class == model.ClassCaretaker:
 		return level < legacyMaxAutoLevel-1
 	default:
 		return false

@@ -17,7 +17,7 @@ func TestSearchHandlerFindsHiddenRoomEntitiesAndClearsActorHidden(t *testing.T) 
 
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 12
-	alice.Stats = map[string]int{"class": legacyClassRanger, "piety": 30, "PHIDDN": 1}
+	alice.Stats = map[string]int{"class": model.ClassRanger, "piety": 30, "PHIDDN": 1}
 	alice.Metadata.Tags = []string{"hidden", "PHIDDN"}
 	loaded.Creatures[alice.ID] = alice
 	player := loaded.Players["player:alice"]
@@ -100,7 +100,7 @@ func TestSearchHandlerUsesLegacyBlindStatChanceCap(t *testing.T) {
 	loaded := lookWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 12
-	alice.Stats = map[string]int{"class": legacyClassRanger, "piety": 30, "PBLIND": 1}
+	alice.Stats = map[string]int{"class": model.ClassRanger, "piety": 30, "PBLIND": 1}
 	loaded.Creatures[alice.ID] = alice
 	coin := loaded.Objects["object:coin"]
 	coin.Metadata.Tags = []string{"hidden"}
@@ -122,7 +122,7 @@ func TestSearchHandlerUsesLegacyDetectInvisibleStat(t *testing.T) {
 	loaded := lookWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 12
-	alice.Stats = map[string]int{"class": legacyClassRanger, "piety": 30, "PDINVI": 1}
+	alice.Stats = map[string]int{"class": model.ClassRanger, "piety": 30, "PDINVI": 1}
 	loaded.Creatures[alice.ID] = alice
 	coin := loaded.Objects["object:coin"]
 	coin.Metadata.Tags = []string{"hidden", "invisible"}
@@ -147,7 +147,7 @@ func TestSearchHandlerUsesCreatureNameForHiddenPlayerLikeLegacy(t *testing.T) {
 	loaded := lookWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 12
-	alice.Stats = map[string]int{"class": legacyClassRanger, "piety": 30}
+	alice.Stats = map[string]int{"class": model.ClassRanger, "piety": 30}
 	loaded.Creatures[alice.ID] = alice
 	bob := loaded.Players["player:bob"]
 	bob.DisplayName = ""
@@ -183,7 +183,7 @@ func TestSearchHandlerRoomBroadcastsAttemptAndDiscovery(t *testing.T) {
 	loaded := lookWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 12
-	alice.Stats = map[string]int{"class": legacyClassRanger, "piety": 30}
+	alice.Stats = map[string]int{"class": model.ClassRanger, "piety": 30}
 	loaded.Creatures[alice.ID] = alice
 	coin := loaded.Objects["object:coin"]
 	coin.Metadata.Tags = []string{"hidden"}
@@ -215,7 +215,7 @@ func TestHideHandlerHidesAndUnhidesSelf(t *testing.T) {
 	loaded := lookWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 12
-	alice.Stats = map[string]int{"class": legacyClassThief, "dexterity": 40}
+	alice.Stats = map[string]int{"class": model.ClassThief, "dexterity": 40}
 	loaded.Creatures[alice.ID] = alice
 	player := loaded.Players["player:alice"]
 	player.Metadata.Tags = []string{"hidden"}
@@ -250,7 +250,7 @@ func TestHideHandlerHidesAndUnhidesSelf(t *testing.T) {
 	loaded = lookWorld(t)
 	alice = loaded.Creatures["creature:alice"]
 	alice.Level = 12
-	alice.Stats = map[string]int{"class": legacyClassThief, "dexterity": 40, "PHIDDN": 1}
+	alice.Stats = map[string]int{"class": model.ClassThief, "dexterity": 40, "PHIDDN": 1}
 	alice.Metadata.Tags = []string{"hidden", "PHIDDN"}
 	loaded.Creatures[alice.ID] = alice
 	player = loaded.Players["player:alice"]
@@ -290,7 +290,7 @@ func TestSearchAndHideHandlersApplyLegacyCooldowns(t *testing.T) {
 	loaded := lookWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 12
-	alice.Stats = map[string]int{"class": legacyClassRanger, "piety": 30, "dexterity": 40}
+	alice.Stats = map[string]int{"class": model.ClassRanger, "piety": 30, "dexterity": 40}
 	loaded.Creatures[alice.ID] = alice
 	runtime := state.NewWorld(loaded)
 
@@ -325,7 +325,7 @@ func TestHideHandlerHidesRoomObject(t *testing.T) {
 	loaded := lookWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 12
-	alice.Stats = map[string]int{"class": legacyClassThief, "dexterity": 40}
+	alice.Stats = map[string]int{"class": model.ClassThief, "dexterity": 40}
 	loaded.Creatures[alice.ID] = alice
 	runtime := state.NewWorld(loaded)
 
@@ -363,7 +363,7 @@ func TestHideHandlerUsesOnlyFirstArgumentLikeLegacy(t *testing.T) {
 	loaded := lookWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 12
-	alice.Stats = map[string]int{"class": legacyClassThief, "dexterity": 40}
+	alice.Stats = map[string]int{"class": model.ClassThief, "dexterity": 40}
 	loaded.Creatures[alice.ID] = alice
 	runtime := state.NewWorld(loaded)
 
@@ -422,7 +422,7 @@ func TestHideHandlerUsesLegacyFindObjMatchingAndVisibility(t *testing.T) {
 	loaded.Objects[coin.ID] = coin
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 12
-	alice.Stats = map[string]int{"class": legacyClassThief, "dexterity": 40}
+	alice.Stats = map[string]int{"class": model.ClassThief, "dexterity": 40}
 	alice.Metadata.Tags = []string{"PDINVI"}
 	loaded.Creatures[alice.ID] = alice
 	runtime = state.NewWorld(loaded)

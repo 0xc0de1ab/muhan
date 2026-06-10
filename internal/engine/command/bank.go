@@ -441,7 +441,7 @@ func storeAllBankObjects(ctx *Context, world BankWorld, playerID model.PlayerID,
 		if !all && !bankObjectMatches(world, object, filter) {
 			continue
 		}
-		if objectIntPropertyOrZero(world, object, "questNumber") != 0 && creatureClass(creature) < legacyClassDM {
+		if objectIntPropertyOrZero(world, object, "questNumber") != 0 && creatureClass(creature) < model.ClassDM {
 			continue
 		}
 		if objectHasAnyTag(world, object, "event", "oevent") ||
@@ -502,7 +502,7 @@ func storeAllBankObjectsWithEnsuredRoot(ctx *Context, world BankWorld, playerID 
 		if !all && !bankObjectMatches(world, object, filter) {
 			continue
 		}
-		if objectIntPropertyOrZero(world, object, "questNumber") != 0 && creatureClass(creature) < legacyClassDM {
+		if objectIntPropertyOrZero(world, object, "questNumber") != 0 && creatureClass(creature) < model.ClassDM {
 			continue
 		}
 		if objectHasAnyTag(world, object, "event", "oevent") ||
@@ -788,7 +788,7 @@ func bankCreatureMaxWeight(creature model.Creature) int {
 		level = creatureStat(creature, "level")
 	}
 	maxWeight := 20 + strength*10
-	if creatureStat(creature, "class") == legacyClassBarbarian {
+	if creatureStat(creature, "class") == model.ClassBarbarian {
 		maxWeight += ((level + 3) / 4) * 10
 	}
 	return maxWeight

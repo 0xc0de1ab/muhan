@@ -286,11 +286,11 @@ func magicEffectRecall(
 			return false, nil
 		}
 		class := creatureClass(actor)
-		if class != legacyClassCleric && class < legacyClassInvincible {
+		if class != model.ClassCleric && class < model.ClassInvincible {
 			ctx.WriteString("\n불제자만이 이 주술을 사용할 수 있습니다.\n")
 			return false, nil
 		}
-		if class >= legacyClassInvincible && !creatureHasAnyFlag(actor, "SCLERIC", "clericTraining", "clericSpell", "clericMode") {
+		if class >= model.ClassInvincible && !creatureHasAnyFlag(actor, "SCLERIC", "clericTraining", "clericSpell", "clericMode") {
 			ctx.WriteString("\n불제자를 무적수련하지 않았습니다..\n")
 			return false, nil
 		}
@@ -1023,7 +1023,7 @@ func magicEffectBefuddleSelfDuration(actor model.Creature, how int) int {
 	dur := mrand(1, 6) + mrand(1, 6)
 	if how == howCast {
 		dur += legacyStatBonus(creatureStat(actor, "intelligence")) * 2
-		if creatureClass(actor) == legacyClassMage {
+		if creatureClass(actor) == model.ClassMage {
 			dur += ((creatureStat(actor, "level") + 3) / 4) / 2
 		}
 	}
@@ -1094,7 +1094,7 @@ func magicEffectInvisibility(
 	interval := int64(1200)
 	if how == howCast {
 		interval = int64(1200 + legacyStatBonus(creatureStat(actor, "intelligence"))*600)
-		if creatureClass(actor) == legacyClassMage {
+		if creatureClass(actor) == model.ClassMage {
 			interval += int64(60 * ((creatureStat(actor, "level") + 3) / 4))
 		}
 		if room, ok := world.Room(actor.RoomID); ok && roomHasAnyFlag(room, "RPMEXT", "rpmext") {
@@ -1334,7 +1334,7 @@ func magicEffectDetectInterval(world StatusWorld, actor model.Creature, how int)
 		return 1200
 	}
 	interval := int64(maxInt(300, 1200+legacyStatBonus(creatureStat(actor, "intelligence"))*600))
-	if creatureClass(actor) == legacyClassMage {
+	if creatureClass(actor) == model.ClassMage {
 		interval += int64(60 * ((creatureStat(actor, "level") + 3) / 4))
 	}
 	if magicEffectRoomExtendsMagic(world, actor) {
@@ -1819,7 +1819,7 @@ func magicEffectSilence(
 			return false, nil
 		}
 	}
-	if creatureClass(actor) < legacyClassSubDM {
+	if creatureClass(actor) < model.ClassSubDM {
 		ctx.WriteString("그 주문을 펼치기엔 당신의 능력이 부족합니다.")
 		return false, nil
 	}
@@ -1925,7 +1925,7 @@ func magicEffectBlind(
 			return false, nil
 		}
 	}
-	if creatureClass(actor) < legacyClassSubDM {
+	if creatureClass(actor) < model.ClassSubDM {
 		ctx.WriteString("당신은 사용할 권한이 없는 주문입니다.")
 		return false, nil
 	}
@@ -2119,11 +2119,11 @@ func magicEffectRemoveDisease(
 			return false, nil
 		}
 		class := creatureClass(actor)
-		if class != legacyClassCleric && class < legacyClassInvincible {
+		if class != model.ClassCleric && class < model.ClassInvincible {
 			ctx.WriteString("\n이 주술은 불제자만이 사용할 수 있습니다.\n")
 			return false, nil
 		}
-		if class >= legacyClassInvincible && !creatureHasAnyFlag(actor, "SCLERIC", "clericTraining", "clericSpell", "clericMode") {
+		if class >= model.ClassInvincible && !creatureHasAnyFlag(actor, "SCLERIC", "clericTraining", "clericSpell", "clericMode") {
 			ctx.WriteString("\n불제자를 무적수련하지 않았습니다..\n")
 			return false, nil
 		}
@@ -2218,11 +2218,11 @@ func magicEffectRemoveBlindness(
 			return false, nil
 		}
 		class := creatureClass(actor)
-		if class != legacyClassCleric && class != legacyClassPaladin && class < legacyClassInvincible {
+		if class != model.ClassCleric && class != model.ClassPaladin && class < model.ClassInvincible {
 			ctx.WriteString("이 기술은 불제자와 무사만이 사용할 수 있습니다.")
 			return false, nil
 		}
-		if class >= legacyClassInvincible &&
+		if class >= model.ClassInvincible &&
 			!creatureHasAnyFlag(actor, "SCLERIC", "clericTraining", "clericSpell", "clericMode") &&
 			!creatureHasAnyFlag(actor, "SPALADIN", "paladinTraining", "paladinSpell", "paladinMode") {
 			ctx.WriteString("\n불제자나 무사를 무적수련하지 않았습니다..\n")

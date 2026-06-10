@@ -218,12 +218,12 @@ func magicEffectVigor(
 		}
 
 		class := creatureClass(actor)
-		if class != legacyClassCleric && class != legacyClassPaladin && class < legacyClassInvincible {
+		if class != model.ClassCleric && class != model.ClassPaladin && class < model.ClassInvincible {
 			ctx.WriteString("불제자와 무사만 쓸 수 있는 마법입니다.\n")
 			return false, nil
 		}
 
-		if class >= legacyClassInvincible &&
+		if class >= model.ClassInvincible &&
 			!creatureHasAnyFlag(actor, "SCLERIC", "clericTraining", "clericSpell", "clericMode") &&
 			!creatureHasAnyFlag(actor, "SPALADIN", "paladinTraining", "paladinSpell", "paladinMode") {
 			ctx.WriteString("\n불제자나 무사를 무적수련하지 않았습니다..\n")
@@ -237,7 +237,7 @@ func magicEffectVigor(
 	}
 
 	class := creatureClass(actor)
-	if class == legacyClassBarbarian || class == legacyClassFighter {
+	if class == model.ClassBarbarian || class == model.ClassFighter {
 		if how != howPotion {
 			if spellFail(actor) {
 				if how == howCast {
@@ -275,13 +275,13 @@ func magicEffectVigor(
 			maxBonus := maxInt(intelBonus, pietyBonus)
 
 			var clericBonus int
-			if class == legacyClassCleric {
+			if class == model.ClassCleric {
 				clericBonus = (actor.Level + 3) / 4
 				clericBonus += mrand(1, 1+clericBonus/2)
 			}
 
 			var paladinBonus int
-			if class == legacyClassPaladin {
+			if class == model.ClassPaladin {
 				paladinBonus = ((actor.Level + 3) / 4) / 2
 				paladinBonus += mrand(1, 1+((actor.Level+3)/4)/4)
 			}
@@ -356,13 +356,13 @@ func magicEffectVigor(
 		maxBonus := maxInt(intelBonus, pietyBonus)
 
 		var clericBonus int
-		if class == legacyClassCleric {
+		if class == model.ClassCleric {
 			clericBonus = (actor.Level + 3) / 4
 			clericBonus += mrand(1, 1+clericBonus/2)
 		}
 
 		var paladinBonus int
-		if class == legacyClassPaladin {
+		if class == model.ClassPaladin {
 			paladinBonus = ((actor.Level + 3) / 4) / 2
 			paladinBonus += mrand(1, 1+((actor.Level+3)/4)/4)
 		}
@@ -447,7 +447,7 @@ func magicEffectMend(
 	}
 
 	class := creatureClass(actor)
-	if class == legacyClassBarbarian || class == legacyClassFighter || class == legacyClassAssassin {
+	if class == model.ClassBarbarian || class == model.ClassFighter || class == model.ClassAssassin {
 		if how != howPotion {
 			if spellFail(actor) {
 				if how == howCast {
@@ -481,12 +481,12 @@ func magicEffectMend(
 		var heal int
 		if how == howCast {
 			var levelFactor int
-			if class >= legacyClassInvincible {
+			if class >= model.ClassInvincible {
 				levelFactor = mrand(1, (actor.Level+24)/25)
-			} else if class == legacyClassCleric {
+			} else if class == model.ClassCleric {
 				clericBonus := (actor.Level + 3) / 4
 				levelFactor = clericBonus*2 + mrand(1, 1+clericBonus/2)
-			} else if class == legacyClassPaladin {
+			} else if class == model.ClassPaladin {
 				paladinBonus := (actor.Level + 3) / 4
 				levelFactor = paladinBonus + mrand(1, 1+paladinBonus/3)
 			}
@@ -564,12 +564,12 @@ func magicEffectMend(
 	var heal int
 	if how == howCast {
 		var levelFactor int
-		if class >= legacyClassInvincible {
+		if class >= model.ClassInvincible {
 			levelFactor = mrand(1, (actor.Level+19)/20)
-		} else if class == legacyClassCleric {
+		} else if class == model.ClassCleric {
 			clericBonus := (actor.Level + 3) / 4
 			levelFactor = clericBonus*2 + mrand(1, 1+clericBonus/2)
-		} else if class == legacyClassPaladin {
+		} else if class == model.ClassPaladin {
 			paladinBonus := (actor.Level + 3) / 4
 			levelFactor = paladinBonus + mrand(1, 1+paladinBonus/3)
 		}
@@ -651,12 +651,12 @@ func magicEffectHeal(
 		}
 
 		class := creatureClass(actor)
-		if class != legacyClassCleric && class != legacyClassPaladin && class < legacyClassInvincible {
+		if class != model.ClassCleric && class != model.ClassPaladin && class < model.ClassInvincible {
 			ctx.WriteString("\n불제자와 무사만이 이 주술을 사용할 수 있습니다.\n")
 			return false, nil
 		}
 
-		if class >= legacyClassInvincible &&
+		if class >= model.ClassInvincible &&
 			!creatureHasAnyFlag(actor, "SCLERIC", "clericTraining", "clericSpell", "clericMode") &&
 			!creatureHasAnyFlag(actor, "SPALADIN", "paladinTraining", "paladinSpell", "paladinMode") {
 			ctx.WriteString("\n불제자나 무사를 무적수련하지 않았습니다..\n")
@@ -686,14 +686,14 @@ func magicEffectHeal(
 
 	if isSelf {
 		class := creatureClass(actor)
-		if class != legacyClassBulsa {
+		if class != model.ClassBulsa {
 			ok, err := decrementDailyFullHealLimit(world, actor)
 			if err != nil {
 				return false, err
 			}
-			if !ok && how == howCast && class < legacyClassSubDM {
+			if !ok && how == howCast && class < model.ClassSubDM {
 				ctx.WriteString("\n당신의 몸이 너무 피곤해 이 주술을 더 이상 펼칠 수 없습니다.\n")
-				if class == legacyClassCaretaker {
+				if class == model.ClassCaretaker {
 					ctx.WriteString("다른 사용자에게 완치 주문을 사용하면 회복이 가능합니다.\n")
 				}
 				return false, nil
@@ -743,7 +743,7 @@ func magicEffectHeal(
 		return false, nil
 	}
 
-	if creatureClass(actor) == legacyClassCaretaker {
+	if creatureClass(actor) == model.ClassCaretaker {
 		if err := decrementCaretakerFullHealCur(world, actor); err != nil {
 			return false, err
 		}
@@ -756,7 +756,7 @@ func magicEffectHeal(
 	if err != nil {
 		return false, err
 	}
-	if !dailyOK && how == howCast && creatureClass(actor) < legacyClassCaretaker && target.hasPlayer {
+	if !dailyOK && how == howCast && creatureClass(actor) < model.ClassCaretaker && target.hasPlayer {
 		ctx.WriteString("\n당신의 몸이 너무 피곤해 이 주술을 더 이상 펼칠 수 없습니다.\n")
 		return false, nil
 	}
@@ -782,7 +782,7 @@ func magicEffectHeal(
 		if err := magicEffectDeductMPLegacy(world, actor, 50); err != nil {
 			return false, err
 		}
-		if class >= legacyClassCaretaker {
+		if class >= model.ClassCaretaker {
 			if err := magicEffectDeductMPLegacy(world, actor, 50); err != nil {
 				return false, err
 			}
@@ -879,7 +879,7 @@ func decrementDailyFullHealLimit(world StatusWorld, caster model.Creature) (bool
 	}
 
 	dailyMax := maxUses
-	if creatureClass(caster) >= legacyClassCaretaker {
+	if creatureClass(caster) >= model.ClassCaretaker {
 		dailyMax = 0
 	}
 	if valStr, ok := caster.Properties["dailyFullHealMax"]; ok {
@@ -956,12 +956,12 @@ func magicEffectRoomVigor(
 	}
 
 	class := creatureClass(actor)
-	if class != legacyClassCleric && class < legacyClassInvincible {
+	if class != model.ClassCleric && class < model.ClassInvincible {
 		ctx.WriteString("이 주술은 불제자만이 사용할 수 있습니다.")
 		return false, nil
 	}
 
-	if class >= legacyClassInvincible && !creatureHasAnyFlag(actor, "SCLERIC", "clericTraining", "clericSpell", "clericMode") {
+	if class >= model.ClassInvincible && !creatureHasAnyFlag(actor, "SCLERIC", "clericTraining", "clericSpell", "clericMode") {
 		ctx.WriteString("\n불제자를 무적수련하지 않았습니다..\n")
 		return false, nil
 	}

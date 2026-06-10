@@ -12,7 +12,7 @@ import (
 )
 
 func TestReflectHandlerSuccessAddsStatusCooldownAndExpiration(t *testing.T) {
-	runtime := state.NewWorld(reflectWorld(t, legacyClassFighter, 50))
+	runtime := state.NewWorld(reflectWorld(t, model.ClassFighter, 50))
 	handler := NewReflectHandler(runtime, fixedRoll(1))
 	var broadcasts []roomBroadcastRecord
 
@@ -63,25 +63,25 @@ func TestReflectHandlerRejectsInvalidStates(t *testing.T) {
 	}{
 		{
 			name:  "wrong class",
-			class: legacyClassAssassin,
+			class: model.ClassAssassin,
 			level: 50,
 			want:  "검사 레벨 50이상만 쓸수 있는 기술입니다.",
 		},
 		{
 			name:  "fighter below level fifty",
-			class: legacyClassFighter,
+			class: model.ClassFighter,
 			level: 49,
 			want:  "검사 레벨 50이상만 쓸수 있는 기술입니다.",
 		},
 		{
 			name:  "invincible without fighter training",
-			class: legacyClassInvincible,
+			class: model.ClassInvincible,
 			level: 60,
 			want:  "검사를 무적수련하지 않았습니다..",
 		},
 		{
 			name:  "already reflecting",
-			class: legacyClassFighter,
+			class: model.ClassFighter,
 			level: 50,
 			tags:  []string{"PREFLECT"},
 			setup: func(world *state.World) {
@@ -94,7 +94,7 @@ func TestReflectHandlerRejectsInvalidStates(t *testing.T) {
 		},
 		{
 			name:  "cooldown active",
-			class: legacyClassFighter,
+			class: model.ClassFighter,
 			level: 50,
 			setup: func(world *state.World) {
 				if err := world.SetCreatureCooldown("creature:alice", reflectCooldownKey, time.Now().Unix(), reflectSuccessCooldownSeconds); err != nil {
@@ -134,7 +134,7 @@ func TestReflectHandlerRejectsInvalidStates(t *testing.T) {
 }
 
 func TestReflectHandlerFailureSetsShortCooldownWithoutStatus(t *testing.T) {
-	runtime := state.NewWorld(reflectWorld(t, legacyClassFighter, 50))
+	runtime := state.NewWorld(reflectWorld(t, model.ClassFighter, 50))
 	handler := NewReflectHandler(runtime, fixedRoll(100))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -160,7 +160,7 @@ func TestReflectHandlerFailureSetsShortCooldownWithoutStatus(t *testing.T) {
 }
 
 func TestReflectHandlerInvincibleWithFighterTrainingCanUse(t *testing.T) {
-	loaded := reflectWorld(t, legacyClassInvincible, 60)
+	loaded := reflectWorld(t, model.ClassInvincible, 60)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"SFIGHTER"}
 	loaded.Creatures[alice.ID] = alice
@@ -177,7 +177,7 @@ func TestReflectHandlerInvincibleWithFighterTrainingCanUse(t *testing.T) {
 }
 
 func TestShadowHandlerSuccessDamagesTargetAndStartsCooldown(t *testing.T) {
-	loaded := shadowWorld(t, legacyClassAssassin, 50, true)
+	loaded := shadowWorld(t, model.ClassAssassin, 50, true)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	alice.Stats["PHIDDN"] = 1
@@ -252,14 +252,14 @@ func TestShadowHandlerRejectsInvalidStates(t *testing.T) {
 	}{
 		{
 			name:       "missing target",
-			class:      legacyClassAssassin,
+			class:      model.ClassAssassin,
 			level:      50,
 			withWeapon: true,
 			want:       "누굴 공격합니까?",
 		},
 		{
 			name:       "blind",
-			class:      legacyClassAssassin,
+			class:      model.ClassAssassin,
 			level:      50,
 			tags:       []string{"PBLIND"},
 			args:       []string{"고블린"},
@@ -268,7 +268,7 @@ func TestShadowHandlerRejectsInvalidStates(t *testing.T) {
 		},
 		{
 			name:       "wrong class",
-			class:      legacyClassFighter,
+			class:      model.ClassFighter,
 			level:      50,
 			args:       []string{"고블린"},
 			withWeapon: true,
@@ -276,7 +276,7 @@ func TestShadowHandlerRejectsInvalidStates(t *testing.T) {
 		},
 		{
 			name:       "assassin below level fifty",
-			class:      legacyClassAssassin,
+			class:      model.ClassAssassin,
 			level:      49,
 			args:       []string{"고블린"},
 			withWeapon: true,
@@ -284,7 +284,7 @@ func TestShadowHandlerRejectsInvalidStates(t *testing.T) {
 		},
 		{
 			name:       "invincible without assassin training",
-			class:      legacyClassInvincible,
+			class:      model.ClassInvincible,
 			level:      60,
 			args:       []string{"고블린"},
 			withWeapon: true,
@@ -292,14 +292,14 @@ func TestShadowHandlerRejectsInvalidStates(t *testing.T) {
 		},
 		{
 			name:  "missing sharp weapon",
-			class: legacyClassAssassin,
+			class: model.ClassAssassin,
 			level: 50,
 			args:  []string{"고블린"},
 			want:  "날카로운 무기가 필요합니다.",
 		},
 		{
 			name:       "missing target creature",
-			class:      legacyClassAssassin,
+			class:      model.ClassAssassin,
 			level:      50,
 			args:       []string{"없는"},
 			withWeapon: true,
@@ -307,7 +307,7 @@ func TestShadowHandlerRejectsInvalidStates(t *testing.T) {
 		},
 		{
 			name:       "cooldown active",
-			class:      legacyClassAssassin,
+			class:      model.ClassAssassin,
 			level:      50,
 			args:       []string{"고블린"},
 			withWeapon: true,
@@ -345,7 +345,7 @@ func TestShadowHandlerRejectsInvalidStates(t *testing.T) {
 }
 
 func TestShadowHandlerCooldownPrecedesWeaponTargetAndReveal(t *testing.T) {
-	loaded := shadowWorld(t, legacyClassAssassin, 50, false)
+	loaded := shadowWorld(t, model.ClassAssassin, 50, false)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = append(alice.Metadata.Tags, "hidden", "PHIDDN", "invisible", "PINVIS")
 	alice.Stats["PHIDDN"] = 1
@@ -376,7 +376,7 @@ func TestShadowHandlerCooldownPrecedesWeaponTargetAndReveal(t *testing.T) {
 }
 
 func TestShadowHandlerFailureSetsShortCooldownWithoutMarkers(t *testing.T) {
-	runtime := state.NewWorld(shadowWorld(t, legacyClassAssassin, 50, true))
+	runtime := state.NewWorld(shadowWorld(t, model.ClassAssassin, 50, true))
 	handler := NewShadowHandler(runtime, fixedRoll(100))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -425,7 +425,7 @@ func TestShadowChanceMatchesLegacyLevelDeltaFormula(t *testing.T) {
 }
 
 func TestShadowHandlerWeaponBreakOnSuccessDoesNotStartCooldown(t *testing.T) {
-	loaded := shadowWorld(t, legacyClassAssassin, 50, true)
+	loaded := shadowWorld(t, model.ClassAssassin, 50, true)
 	blade := loaded.Objects["object:blade"]
 	blade.Properties["shotsCurrent"] = "1"
 	loaded.Objects[blade.ID] = blade
@@ -451,7 +451,7 @@ func TestShadowHandlerWeaponBreakOnSuccessDoesNotStartCooldown(t *testing.T) {
 }
 
 func TestShadowHandlerFinalizesMonsterDeath(t *testing.T) {
-	loaded := shadowWorld(t, legacyClassAssassin, 50, true)
+	loaded := shadowWorld(t, model.ClassAssassin, 50, true)
 	goblin := loaded.Creatures["creature:goblin"]
 	goblin.Stats["hpCurrent"] = 3
 	goblin.Stats["hpMax"] = 3
@@ -476,7 +476,7 @@ func TestShadowHandlerFinalizesMonsterDeath(t *testing.T) {
 }
 
 func TestShadowHandlerInvincibleWithAssassinTrainingCanUse(t *testing.T) {
-	loaded := shadowWorld(t, legacyClassInvincible, 60, true)
+	loaded := shadowWorld(t, model.ClassInvincible, 60, true)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"SASSASSIN"}
 	loaded.Creatures[alice.ID] = alice
@@ -506,13 +506,13 @@ func TestDefenseSkillHandlersCanBeRegisteredByDispatcherAliases(t *testing.T) {
 		{
 			name:  "reflect Korean",
 			line:  "반탄강기",
-			world: state.NewWorld(reflectWorld(t, legacyClassFighter, 50)),
+			world: state.NewWorld(reflectWorld(t, model.ClassFighter, 50)),
 			want:  "반탄강기",
 		},
 		{
 			name:  "shadow Korean",
 			line:  "고블린 분신술",
-			world: state.NewWorld(shadowWorld(t, legacyClassAssassin, 50, true)),
+			world: state.NewWorld(shadowWorld(t, model.ClassAssassin, 50, true)),
 			want:  "분신술",
 		},
 	} {
@@ -618,7 +618,7 @@ func shadowWorld(t *testing.T, class int, level int, withWeapon bool) *worldload
 		DisplayName: "고블린",
 		RoomID:      "room:shadow",
 		Stats: map[string]int{
-			"class":     legacyClassFighter,
+			"class":     model.ClassFighter,
 			"level":     1,
 			"armor":     0,
 			"hpCurrent": 40,

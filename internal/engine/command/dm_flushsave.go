@@ -43,7 +43,7 @@ func dmFlushsave(ctx *Context, resolved ResolvedCommand, world DMFlushsaveWorld)
 	}
 
 	class := creatureClass(creature)
-	if class < legacyClassDM {
+	if class < model.ClassDM {
 		return StatusPrompt, nil
 	}
 

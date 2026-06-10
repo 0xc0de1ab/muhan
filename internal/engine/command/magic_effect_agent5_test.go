@@ -15,7 +15,7 @@ func TestMagicEffectMagicTrackSuccess(t *testing.T) {
 	loaded := readScrollWorld(t, "room:library", "1", "21")
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 10
-	alice.Stats = map[string]int{"class": legacyClassRanger, "level": 10, "mpCurrent": 13}
+	alice.Stats = map[string]int{"class": model.ClassRanger, "level": 10, "mpCurrent": 13}
 	alice.Metadata.Tags = []string{"STRACK"}
 	loaded.Creatures[alice.ID] = alice
 
@@ -103,7 +103,7 @@ func TestMagicEffectMagicTrackSuccess(t *testing.T) {
 func TestDefaultReadScrollMagicTrackBypassesCastGates(t *testing.T) {
 	loaded := readScrollWorld(t, "room:library", "1", "21")
 	alice := loaded.Creatures["creature:alice"]
-	alice.Stats = map[string]int{"class": legacyClassFighter, "level": 10, "mpCurrent": 0}
+	alice.Stats = map[string]int{"class": model.ClassFighter, "level": 10, "mpCurrent": 0}
 	alice.Properties = map[string]string{"dailyTrackMax": "10", "dailyTrackCur": "10"}
 	loaded.Creatures[alice.ID] = alice
 
@@ -123,7 +123,7 @@ func TestDefaultReadScrollMagicTrackBypassesCastGates(t *testing.T) {
 		DisplayName: "Bob",
 		PlayerID:    "player:bob",
 		RoomID:      "room:garden",
-		Stats:       map[string]int{"class": legacyClassFighter, "level": 5},
+		Stats:       map[string]int{"class": model.ClassFighter, "level": 5},
 	})
 	runtime := state.NewWorld(loaded)
 
@@ -164,7 +164,7 @@ func TestMagicEffectMagicTrackMarriageReject(t *testing.T) {
 	loaded := readScrollWorld(t, "room:library", "1", "21")
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 10
-	alice.Stats = map[string]int{"class": legacyClassRanger, "level": 10, "mpCurrent": 13}
+	alice.Stats = map[string]int{"class": model.ClassRanger, "level": 10, "mpCurrent": 13}
 	alice.Metadata.Tags = []string{"STRACK"}
 	loaded.Creatures[alice.ID] = alice
 
@@ -252,7 +252,7 @@ func TestMagicEffectMagicTrackDailyLimit(t *testing.T) {
 	loaded := readScrollWorld(t, "room:library", "1", "21")
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 10
-	alice.Stats = map[string]int{"class": legacyClassRanger, "level": 10, "mpCurrent": 13}
+	alice.Stats = map[string]int{"class": model.ClassRanger, "level": 10, "mpCurrent": 13}
 	alice.Metadata.Tags = []string{"STRACK"}
 	alice.Properties = map[string]string{
 		"dailyTrackMax": "10",
@@ -326,7 +326,7 @@ func TestMagicEffectMagicTrackExplicitSelfTargetsUseFindWhoBranchLikeLegacy(t *t
 			loaded := readScrollWorld(t, "room:library", "1", "21")
 			alice := loaded.Creatures["creature:alice"]
 			alice.Level = 10
-			alice.Stats = map[string]int{"class": legacyClassRanger, "level": 10, "mpCurrent": 13}
+			alice.Stats = map[string]int{"class": model.ClassRanger, "level": 10, "mpCurrent": 13}
 			alice.Metadata.Tags = []string{"STRACK"}
 			loaded.Creatures[alice.ID] = alice
 			runtime := state.NewWorld(loaded)
@@ -368,7 +368,7 @@ func TestMagicEffectMagicTrackRoomLimitIgnoresPDMINVOccupants(t *testing.T) {
 	loaded := readScrollWorld(t, "room:library", "1", "21")
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 10
-	alice.Stats = map[string]int{"class": legacyClassRanger, "level": 10, "mpCurrent": 13}
+	alice.Stats = map[string]int{"class": model.ClassRanger, "level": 10, "mpCurrent": 13}
 	alice.Metadata.Tags = []string{"STRACK"}
 	loaded.Creatures[alice.ID] = alice
 
@@ -390,7 +390,7 @@ func TestMagicEffectMagicTrackRoomLimitIgnoresPDMINVOccupants(t *testing.T) {
 		DisplayName: "Bob",
 		PlayerID:    "player:bob",
 		RoomID:      "room:garden",
-		Stats:       map[string]int{"class": legacyClassFighter, "level": 5},
+		Stats:       map[string]int{"class": model.ClassFighter, "level": 5},
 	})
 	mustAddLookPlayer(t, loaded, model.Player{
 		ID:          "player:carol",
@@ -405,7 +405,7 @@ func TestMagicEffectMagicTrackRoomLimitIgnoresPDMINVOccupants(t *testing.T) {
 		PlayerID:    "player:carol",
 		RoomID:      "room:garden",
 		Metadata:    model.Metadata{Tags: []string{"PDMINV"}},
-		Stats:       map[string]int{"class": legacyClassFighter, "level": 5},
+		Stats:       map[string]int{"class": model.ClassFighter, "level": 5},
 	})
 	runtime := state.NewWorld(loaded)
 	ctx := &Context{
@@ -449,7 +449,7 @@ func TestMagicEffectMagicTrackOnlyFamilyBlocksCaretakerMismatchLikeLegacy(t *tes
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 10
 	alice.Stats = map[string]int{
-		"class":         legacyClassCaretaker,
+		"class":         model.ClassCaretaker,
 		"level":         10,
 		"mpCurrent":     13,
 		"dailyExpndMax": 8,
@@ -476,7 +476,7 @@ func TestMagicEffectMagicTrackOnlyFamilyBlocksCaretakerMismatchLikeLegacy(t *tes
 		DisplayName: "Bob",
 		PlayerID:    "player:bob",
 		RoomID:      "room:garden",
-		Stats:       map[string]int{"class": legacyClassFighter, "level": 5},
+		Stats:       map[string]int{"class": model.ClassFighter, "level": 5},
 	})
 	runtime := state.NewWorld(loaded)
 	ctx := &Context{
@@ -613,15 +613,15 @@ func TestMagicEffectLocatePlayerLegacyClassGates(t *testing.T) {
 		wantRoom    bool
 		wantSuccess bool
 	}{
-		{name: "caretaker can be viewed", targetClass: legacyClassCaretaker, wantRoom: true, wantSuccess: true},
-		{name: "sub dm fails by chance branch", targetClass: legacyClassSubDM, want: "\n당신의 마음을 Bob에게 집중했습니다.\n\n당신의 정신은 연결될수 없습니다.\n", wantSuccess: true},
-		{name: "dm is mentally blocked", targetClass: legacyClassDM, want: "그 사람의 정신력이 너무 높아 투시를 할 수 없습니다."},
+		{name: "caretaker can be viewed", targetClass: model.ClassCaretaker, wantRoom: true, wantSuccess: true},
+		{name: "sub dm fails by chance branch", targetClass: model.ClassSubDM, want: "\n당신의 마음을 Bob에게 집중했습니다.\n\n당신의 정신은 연결될수 없습니다.\n", wantSuccess: true},
+		{name: "dm is mentally blocked", targetClass: model.ClassDM, want: "그 사람의 정신력이 너무 높아 투시를 할 수 없습니다."},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			loaded := readScrollWorld(t, "room:library", "1", "47")
 			alice := loaded.Creatures["creature:alice"]
 			alice.Level = 50
-			alice.Stats = map[string]int{"class": legacyClassCleric, "level": 50, "intelligence": 25, "mpCurrent": 15}
+			alice.Stats = map[string]int{"class": model.ClassCleric, "level": 50, "intelligence": 25, "mpCurrent": 15}
 			alice.Metadata.Tags = []string{"SLOCAT"}
 			loaded.Creatures[alice.ID] = alice
 			mustAddLookPlayer(t, loaded, model.Player{

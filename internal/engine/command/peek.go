@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	peekClassBulsa = legacyClassBulsa
-	peekClassDM    = legacyClassDM
+	peekClassBulsa = model.ClassBulsa
+	peekClassDM    = model.ClassDM
 )
 
 type PeekRollFunc func(min int, max int) int
@@ -46,7 +46,7 @@ func NewPeekHandler(world PeekWorld, roll PeekRollFunc) Handler {
 			return StatusDefault, nil
 		}
 		class := creatureStat(actor, "class")
-		if class != legacyClassThief && class < legacyClassInvincible {
+		if class != model.ClassThief && class < model.ClassInvincible {
 			ctx.WriteString("당신 직업으로는 다른사람의 소지품을 볼 수 없습니다.")
 			return StatusDefault, nil
 		}
@@ -78,7 +78,7 @@ func NewPeekHandler(world PeekWorld, roll PeekRollFunc) Handler {
 			return StatusDefault, nil
 		}
 
-		if roll(1, 100) > peekCaughtChance(actor) && class < legacyClassCaretaker {
+		if roll(1, 100) > peekCaughtChance(actor) && class < model.ClassCaretaker {
 			actorName := attackCreatureName(actor)
 			victimName := attackCreatureName(victim)
 			_ = sendToPlayer(ctx, victim.PlayerID, actorName+"님이 당신의 소지품을 슬쩍 엿봅니다.")
@@ -122,7 +122,7 @@ func peekChance(actor model.Creature, target model.Creature) int {
 	if class >= peekClassBulsa {
 		return 100
 	}
-	if class == legacyClassCaretaker {
+	if class == model.ClassCaretaker {
 		return 90
 	}
 	chance := 25 + ((creatureLevel(actor)+3)/4)*10 - ((creatureLevel(target)+3)/4)*5

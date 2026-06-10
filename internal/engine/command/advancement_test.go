@@ -11,7 +11,7 @@ import (
 )
 
 func TestBuyStatesHandlerRaisesCaretakerHP(t *testing.T) {
-	world := state.NewWorld(buyStatesWorld(t, legacyClassCaretaker, map[string]int{
+	world := state.NewWorld(buyStatesWorld(t, model.ClassCaretaker, map[string]int{
 		"experience": 110000000,
 		"gold":       9000000,
 		"hpMax":      1000,
@@ -52,7 +52,7 @@ func TestBuyStatesHandlerRaisesCaretakerHP(t *testing.T) {
 }
 
 func TestBuyStatesHandlerRaisesBulsaAttribute(t *testing.T) {
-	world := state.NewWorld(buyStatesWorld(t, legacyClassBulsa, map[string]int{
+	world := state.NewWorld(buyStatesWorld(t, model.ClassBulsa, map[string]int{
 		"experience": 200000000,
 		"gold":       50000000,
 		"strength":   20,
@@ -89,7 +89,7 @@ func TestBuyStatesHandlerRaisesBulsaAttribute(t *testing.T) {
 }
 
 func TestBuyStatesHandlerRejectsAttributeWithoutLegacyGoldChunk(t *testing.T) {
-	world := state.NewWorld(buyStatesWorld(t, legacyClassCaretaker, map[string]int{
+	world := state.NewWorld(buyStatesWorld(t, model.ClassCaretaker, map[string]int{
 		"experience": 103000000,
 		"gold":       0,
 		"strength":   20,
@@ -126,7 +126,7 @@ func TestBuyStatesHandlerRejectsAttributeWithoutLegacyGoldChunk(t *testing.T) {
 }
 
 func TestBuyStatesHandlerCaretakerDexterityHPBonusUsesLegacyCommaExpression(t *testing.T) {
-	world := state.NewWorld(buyStatesWorld(t, legacyClassCaretaker, map[string]int{
+	world := state.NewWorld(buyStatesWorld(t, model.ClassCaretaker, map[string]int{
 		"experience": 103000000,
 		"gold":       3000000,
 		"dexterity":  20,
@@ -167,48 +167,48 @@ func TestBuyStatesHandlerRejectsInvalidCases(t *testing.T) {
 	}{
 		{
 			name:  "wrong class",
-			class: legacyClassFighter,
+			class: model.ClassFighter,
 			stats: map[string]int{"experience": 200000000, "gold": 100000000},
 			args:  []string{"체력"},
 			want:  "초인, 불사만이 가능합니다.",
 		},
 		{
 			name:  "missing target",
-			class: legacyClassCaretaker,
+			class: model.ClassCaretaker,
 			stats: map[string]int{"experience": 200000000, "gold": 100000000},
 			want:  "\"체력\" 과 \"도력\" 중 어느 것을 올리시려고요?",
 		},
 		{
 			name:  "low experience hp",
-			class: legacyClassCaretaker,
+			class: model.ClassCaretaker,
 			stats: map[string]int{"experience": 100000000, "gold": 100000000},
 			args:  []string{"체력"},
 			want:  "당신의 경험치로는 능력치 향상을 할 수 없습니다.",
 		},
 		{
 			name:  "low gold hp",
-			class: legacyClassCaretaker,
+			class: model.ClassCaretaker,
 			stats: map[string]int{"experience": 110000000, "gold": 100},
 			args:  []string{"체력"},
 			want:  "당신이 가진 돈으로는 향상을 할수 없습니다.",
 		},
 		{
 			name:  "unknown target",
-			class: legacyClassCaretaker,
+			class: model.ClassCaretaker,
 			stats: map[string]int{"experience": 110000000, "gold": 3000000},
 			args:  []string{"운"},
 			want:  "어떤 능력치를 올리시려고요?",
 		},
 		{
 			name:  "unknown target still checks experience first",
-			class: legacyClassCaretaker,
+			class: model.ClassCaretaker,
 			stats: map[string]int{"experience": 100000000, "gold": 3000000},
 			args:  []string{"운"},
 			want:  "당신의 경험치로는 능력치 향상을 할 수 없습니다.",
 		},
 		{
 			name:  "unknown target still checks gold first",
-			class: legacyClassCaretaker,
+			class: model.ClassCaretaker,
 			stats: map[string]int{"experience": 103000000, "gold": 0},
 			args:  []string{"운"},
 			want:  "당신이 가진 돈으로는 향상을 할수 없습니다.",
@@ -234,7 +234,7 @@ func TestBuyStatesHandlerRejectsInvalidCases(t *testing.T) {
 }
 
 func TestBuyStatesHandlerDispatchAlias(t *testing.T) {
-	world := state.NewWorld(buyStatesWorld(t, legacyClassCaretaker, map[string]int{
+	world := state.NewWorld(buyStatesWorld(t, model.ClassCaretaker, map[string]int{
 		"experience": 106000000,
 		"gold":       3000000,
 		"mpMax":      1000,
@@ -265,7 +265,7 @@ func TestBuyStatesHandlerDispatchAlias(t *testing.T) {
 }
 
 func TestBuyStatesHandlerBroadcastsLegacySuccessLine(t *testing.T) {
-	world := state.NewWorld(buyStatesWorld(t, legacyClassCaretaker, map[string]int{
+	world := state.NewWorld(buyStatesWorld(t, model.ClassCaretaker, map[string]int{
 		"experience": 103000000,
 		"gold":       3000000,
 		"hpMax":      100,
@@ -332,13 +332,13 @@ func buyStatesWorld(t *testing.T, class int, stats map[string]int) *worldload.Wo
 // Matches src/player.c up_level + global.c class_stats + level_cycle + needed_exp.
 func TestLegacyLevelUpFormulas(t *testing.T) {
 	// Table spot checks (from C)
-	if b := legacyClassStatBonusesFor(legacyClassFighter); b.hp != 6 || b.mp != 1 || b.hpStart != 56 {
+	if b := legacyClassStatBonusesFor(model.ClassFighter); b.hp != 6 || b.mp != 1 || b.hpStart != 56 {
 		t.Fatalf("fighter bonuses mismatch: %+v", b)
 	}
-	if b := legacyClassStatBonusesFor(legacyClassMage); b.hp != 4 || b.mp != 3 {
+	if b := legacyClassStatBonusesFor(model.ClassMage); b.hp != 4 || b.mp != 3 {
 		t.Fatalf("mage bonuses mismatch")
 	}
-	cyc := legacyLevelCycleFor(legacyClassAssassin)
+	cyc := legacyLevelCycleFor(model.ClassAssassin)
 	if cyc[0] != legacyStatCON || cyc[2] != legacyStatSTR {
 		t.Fatalf("assassin cycle mismatch: %v", cyc)
 	}
@@ -360,7 +360,7 @@ func TestLegacyLevelUpFormulas(t *testing.T) {
 	crt := model.Creature{ID: "c1", Stats: map[string]int{"strength": 10}}
 	// adapter to satisfy the anonymous interface expected by applyLegacyLevelUp
 	adapter := &levelUpAdapter{sets: mw.sets}
-	if err := applyLegacyLevelUp(adapter, crt, legacyClassAssassin, 3, 4); err != nil {
+	if err := applyLegacyLevelUp(adapter, crt, model.ClassAssassin, 3, 4); err != nil {
 		t.Fatalf("apply err: %v", err)
 	}
 	if got := mw.sets["pDice"]; got != 1 {
@@ -389,7 +389,7 @@ func TestLegacyLevelUpFormulas(t *testing.T) {
 			"SCLERIC",
 		}},
 	}
-	if err := applyLegacyLevelUp(&levelUpAdapter{sets: trainedSets}, trained, legacyClassAssassin, 3, 4); err != nil {
+	if err := applyLegacyLevelUp(&levelUpAdapter{sets: trainedSets}, trained, model.ClassAssassin, 3, 4); err != nil {
 		t.Fatalf("apply trained err: %v", err)
 	}
 	if got := trainedSets["pDice"]; got != 4 {

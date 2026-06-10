@@ -65,7 +65,7 @@ func TestDMUsers_DefaultMode(t *testing.T) {
 			"player:bob":    {ID: "player:bob", CreatureID: "creature:bob", AccountName: "bob_account"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:caster": {ID: "creature:caster", Stats: map[string]int{"class": legacyClassSubDM}},
+			"creature:caster": {ID: "creature:caster", Stats: map[string]int{"class": model.ClassSubDM}},
 			"creature:alice": {
 				ID:          "creature:alice",
 				DisplayName: "엘리스",
@@ -185,7 +185,7 @@ func TestDMUsers_UserIDModeFromParsedSlotWithoutSyntheticArgs(t *testing.T) {
 			"player:alice":  {ID: "player:alice", CreatureID: "creature:alice", AccountName: "alice_account"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:caster": {ID: "creature:caster", Stats: map[string]int{"class": legacyClassSubDM}},
+			"creature:caster": {ID: "creature:caster", Stats: map[string]int{"class": model.ClassSubDM}},
 			"creature:alice": {
 				ID:          "creature:alice",
 				DisplayName: "엘리스",
@@ -237,7 +237,7 @@ func TestDMUsers_UppercaseOptionsDoNotMatchLegacyLowercaseFlags(t *testing.T) {
 			"player:alice":  {ID: "player:alice", CreatureID: "creature:alice", AccountName: "alice_account"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:caster": {ID: "creature:caster", Stats: map[string]int{"class": legacyClassSubDM}},
+			"creature:caster": {ID: "creature:caster", Stats: map[string]int{"class": model.ClassSubDM}},
 			"creature:alice": {
 				ID:          "creature:alice",
 				DisplayName: "엘리스",
@@ -331,7 +331,7 @@ func TestDMUsers_InvisDMFilter(t *testing.T) {
 			"player:invisdm":   {ID: "player:invisdm", CreatureID: "creature:invisdm"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:caretaker": {ID: "creature:caretaker", Stats: map[string]int{"class": legacyClassCaretaker}},
+			"creature:caretaker": {ID: "creature:caretaker", Stats: map[string]int{"class": model.ClassCaretaker}},
 			"creature:subdm":     {ID: "creature:subdm", Stats: map[string]int{"class": 12}}, // Sub-DM
 			"creature:invisdm": {
 				ID:          "creature:invisdm",

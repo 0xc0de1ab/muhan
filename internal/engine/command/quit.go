@@ -99,5 +99,5 @@ func quitLowLevelCleanup(ctx *Context, world QuitWorld) (model.PlayerID, bool, e
 	if !ok {
 		return viewer.PlayerID, false, nil
 	}
-	return viewer.PlayerID, creatureClass(creature) < legacyClassInvincible && attackCreatureLevel(creature) < 6, nil
+	return viewer.PlayerID, creatureClass(creature) < model.ClassInvincible && attackCreatureLevel(creature) < 6, nil
 }

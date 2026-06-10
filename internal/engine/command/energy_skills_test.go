@@ -12,7 +12,7 @@ import (
 )
 
 func TestPowerHandlerSuccessAddsStrengthTagsCooldownAndExpiration(t *testing.T) {
-	world := state.NewWorld(energySkillWorld(t, legacyClassFighter, nil, false))
+	world := state.NewWorld(energySkillWorld(t, model.ClassFighter, nil, false))
 	handler := NewPowerHandler(world, fixedRoll(1))
 	var broadcasts []roomBroadcastRecord
 
@@ -55,12 +55,12 @@ func TestPowerHandlerRejectsInvalidStates(t *testing.T) {
 		setup func(*state.World)
 		want  string
 	}{
-		{name: "wrong class", class: legacyClassThief, want: "검사만 사용할 수 있는 기술입니다."},
-		{name: "invincible without training", class: legacyClassInvincible, want: "검사를 무적수련하지 않았습니다.."},
-		{name: "already active", class: legacyClassFighter, tags: []string{"PPOWER"}, want: "기공집결을 사용중입니다."},
+		{name: "wrong class", class: model.ClassThief, want: "검사만 사용할 수 있는 기술입니다."},
+		{name: "invincible without training", class: model.ClassInvincible, want: "검사를 무적수련하지 않았습니다.."},
+		{name: "already active", class: model.ClassFighter, tags: []string{"PPOWER"}, want: "기공집결을 사용중입니다."},
 		{
 			name:  "cooldown active",
-			class: legacyClassFighter,
+			class: model.ClassFighter,
 			setup: func(world *state.World) {
 				if err := world.SetCreatureCooldown("creature:alice", powerCooldownKey, time.Now().Unix(), powerSuccessCooldownSeconds); err != nil {
 					t.Fatalf("SetCreatureCooldown() error = %v", err)
@@ -68,7 +68,7 @@ func TestPowerHandlerRejectsInvalidStates(t *testing.T) {
 			},
 			want: "기다리세요.",
 		},
-		{name: "invincible with fighter training", class: legacyClassInvincible, tags: []string{"SFIGHTER"}, want: "기를 모으기 시작합니다"},
+		{name: "invincible with fighter training", class: model.ClassInvincible, tags: []string{"SFIGHTER"}, want: "기를 모으기 시작합니다"},
 	}
 
 	for _, tt := range tests {
@@ -92,7 +92,7 @@ func TestPowerHandlerRejectsInvalidStates(t *testing.T) {
 }
 
 func TestPowerHandlerFailureSetsShortCooldownWithoutStatus(t *testing.T) {
-	world := state.NewWorld(energySkillWorld(t, legacyClassFighter, nil, false))
+	world := state.NewWorld(energySkillWorld(t, model.ClassFighter, nil, false))
 	handler := NewPowerHandler(world, fixedRoll(100))
 	var broadcasts []roomBroadcastRecord
 
@@ -119,7 +119,7 @@ func TestPowerHandlerFailureSetsShortCooldownWithoutStatus(t *testing.T) {
 }
 
 func TestAccurateHandlerSuccessAddsThacoTagsCooldownAndExpiration(t *testing.T) {
-	world := state.NewWorld(energySkillWorld(t, legacyClassThief, nil, true))
+	world := state.NewWorld(energySkillWorld(t, model.ClassThief, nil, true))
 	world.RecalculateTHACOFunc = func(creatureID model.CreatureID) error {
 		c, _ := world.Creature(creatureID)
 		baseThaco := 10
@@ -176,13 +176,13 @@ func TestAccurateHandlerRejectsInvalidStates(t *testing.T) {
 		setup func(*state.World)
 		want  string
 	}{
-		{name: "wrong class", class: legacyClassFighter, wield: true, want: "자객과 도둑만 사용할 수 있는 기술입니다."},
-		{name: "invincible without training", class: legacyClassInvincible, wield: true, want: "자객이나 도둑을 무적수련하지 않았습니다.."},
-		{name: "already active", class: legacyClassAssassin, tags: []string{"PSLAYE"}, wield: true, want: "살기충전을 사용중입니다."},
-		{name: "missing weapon", class: legacyClassThief, want: "장비하고 있는 무기가 없습니다!"},
+		{name: "wrong class", class: model.ClassFighter, wield: true, want: "자객과 도둑만 사용할 수 있는 기술입니다."},
+		{name: "invincible without training", class: model.ClassInvincible, wield: true, want: "자객이나 도둑을 무적수련하지 않았습니다.."},
+		{name: "already active", class: model.ClassAssassin, tags: []string{"PSLAYE"}, wield: true, want: "살기충전을 사용중입니다."},
+		{name: "missing weapon", class: model.ClassThief, want: "장비하고 있는 무기가 없습니다!"},
 		{
 			name:  "cooldown active",
-			class: legacyClassThief,
+			class: model.ClassThief,
 			wield: true,
 			setup: func(world *state.World) {
 				if err := world.SetCreatureCooldown("creature:alice", accurateCooldownKey, time.Now().Unix(), accurateSuccessCooldownSeconds); err != nil {
@@ -191,7 +191,7 @@ func TestAccurateHandlerRejectsInvalidStates(t *testing.T) {
 			},
 			want: "기다리세요.",
 		},
-		{name: "invincible with thief training", class: legacyClassInvincible, tags: []string{"STHIEF"}, wield: true, want: "살기"},
+		{name: "invincible with thief training", class: model.ClassInvincible, tags: []string{"STHIEF"}, wield: true, want: "살기"},
 	}
 
 	for _, tt := range tests {
@@ -215,7 +215,7 @@ func TestAccurateHandlerRejectsInvalidStates(t *testing.T) {
 }
 
 func TestAccurateHandlerFailureSetsShortCooldownWithoutStatus(t *testing.T) {
-	world := state.NewWorld(energySkillWorld(t, legacyClassThief, nil, true))
+	world := state.NewWorld(energySkillWorld(t, model.ClassThief, nil, true))
 	handler := NewAccurateHandler(world, fixedRoll(100))
 	var broadcasts []roomBroadcastRecord
 
@@ -242,7 +242,7 @@ func TestAccurateHandlerFailureSetsShortCooldownWithoutStatus(t *testing.T) {
 }
 
 func TestAbsorbHandlerSuccessRevealsDrainsHealsAndStartsCooldown(t *testing.T) {
-	loaded := energySkillWorld(t, legacyClassInvincible, []string{"SMAGE", "invisible", "PINVIS"}, false)
+	loaded := energySkillWorld(t, model.ClassInvincible, []string{"SMAGE", "invisible", "PINVIS"}, false)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats["PINVIS"] = 1
 	loaded.Creatures[alice.ID] = alice
@@ -295,7 +295,7 @@ func TestAbsorbHandlerSuccessRevealsDrainsHealsAndStartsCooldown(t *testing.T) {
 }
 
 func TestAbsorbHandlerFailureStartsCooldownWithoutDamage(t *testing.T) {
-	world := state.NewWorld(energySkillWorld(t, legacyClassInvincible, []string{"SMAGE"}, false))
+	world := state.NewWorld(energySkillWorld(t, model.ClassInvincible, []string{"SMAGE"}, false))
 	handler := NewAbsorbHandler(world, fixedRoll(100))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -337,13 +337,13 @@ func TestAbsorbHandlerRejectsInvalidStates(t *testing.T) {
 		mutate func(*worldload.World)
 		want   string
 	}{
-		{name: "missing target", class: legacyClassInvincible, tags: []string{"SMAGE"}, want: "누구에게 주문을 거실려고요?"},
-		{name: "wrong class", class: legacyClassMage, tags: []string{"SMAGE"}, args: []string{"고블린"}, want: "무적이상만 쓸 수 있는 기술입니다."},
-		{name: "missing training", class: legacyClassInvincible, args: []string{"고블린"}, want: "도술사를 무적수련하지 않았습니다.."},
-		{name: "missing monster", class: legacyClassInvincible, tags: []string{"SMAGE"}, args: []string{"없는"}, want: "그런 괴물은 존재하지 않습니다."},
+		{name: "missing target", class: model.ClassInvincible, tags: []string{"SMAGE"}, want: "누구에게 주문을 거실려고요?"},
+		{name: "wrong class", class: model.ClassMage, tags: []string{"SMAGE"}, args: []string{"고블린"}, want: "무적이상만 쓸 수 있는 기술입니다."},
+		{name: "missing training", class: model.ClassInvincible, args: []string{"고블린"}, want: "도술사를 무적수련하지 않았습니다.."},
+		{name: "missing monster", class: model.ClassInvincible, tags: []string{"SMAGE"}, args: []string{"없는"}, want: "그런 괴물은 존재하지 않습니다."},
 		{
 			name:  "protected monster",
-			class: legacyClassInvincible,
+			class: model.ClassInvincible,
 			tags:  []string{"SMAGE"},
 			args:  []string{"고블린"},
 			mutate: func(loaded *worldload.World) {
@@ -355,7 +355,7 @@ func TestAbsorbHandlerRejectsInvalidStates(t *testing.T) {
 		},
 		{
 			name:  "dead target",
-			class: legacyClassInvincible,
+			class: model.ClassInvincible,
 			tags:  []string{"SMAGE"},
 			args:  []string{"고블린"},
 			mutate: func(loaded *worldload.World) {
@@ -389,7 +389,7 @@ func TestAbsorbHandlerRejectsInvalidStates(t *testing.T) {
 }
 
 func TestAbsorbHandlerWaitsBeforeProtectedTargetLikeLegacy(t *testing.T) {
-	loaded := energySkillWorld(t, legacyClassInvincible, []string{"SMAGE"}, false)
+	loaded := energySkillWorld(t, model.ClassInvincible, []string{"SMAGE"}, false)
 	goblin := loaded.Creatures["creature:goblin"]
 	goblin.Metadata.Tags = []string{"MUNKIL", "MMALES"}
 	loaded.Creatures[goblin.ID] = goblin
@@ -414,7 +414,7 @@ func TestAbsorbHandlerWaitsBeforeProtectedTargetLikeLegacy(t *testing.T) {
 }
 
 func TestAbsorbHandlerUndeadSuccessDrainsCasterManaOnly(t *testing.T) {
-	loaded := energySkillWorld(t, legacyClassInvincible, []string{"SMAGE"}, false)
+	loaded := energySkillWorld(t, model.ClassInvincible, []string{"SMAGE"}, false)
 	goblin := loaded.Creatures["creature:goblin"]
 	goblin.Metadata.Tags = []string{"MUNDED"}
 	loaded.Creatures[goblin.ID] = goblin
@@ -440,7 +440,7 @@ func TestAbsorbHandlerUndeadSuccessDrainsCasterManaOnly(t *testing.T) {
 }
 
 func TestAbsorbHandlerKillingDrainFinalizesMonster(t *testing.T) {
-	loaded := energySkillWorld(t, legacyClassInvincible, []string{"SMAGE"}, false)
+	loaded := energySkillWorld(t, model.ClassInvincible, []string{"SMAGE"}, false)
 	goblin := loaded.Creatures["creature:goblin"]
 	goblin.Stats["hpCurrent"] = 20
 	loaded.Creatures[goblin.ID] = goblin
@@ -468,7 +468,7 @@ func TestAbsorbHandlerKillingDrainFinalizesMonster(t *testing.T) {
 }
 
 func TestAbsorbHandlerUsesCustomDeathFinalizer(t *testing.T) {
-	loaded := energySkillWorld(t, legacyClassInvincible, []string{"SMAGE"}, false)
+	loaded := energySkillWorld(t, model.ClassInvincible, []string{"SMAGE"}, false)
 	goblin := loaded.Creatures["creature:goblin"]
 	goblin.Stats["hpCurrent"] = 20
 	loaded.Creatures[goblin.ID] = goblin
@@ -506,37 +506,37 @@ func TestEnergySkillHandlersCanBeRegisteredByDispatcherAliases(t *testing.T) {
 		{
 			name:  "power english",
 			line:  "power",
-			world: state.NewWorld(energySkillWorld(t, legacyClassFighter, nil, false)),
+			world: state.NewWorld(energySkillWorld(t, model.ClassFighter, nil, false)),
 			want:  "기를 모으기 시작합니다",
 		},
 		{
 			name:  "power korean",
 			line:  "기공집결",
-			world: state.NewWorld(energySkillWorld(t, legacyClassFighter, nil, false)),
+			world: state.NewWorld(energySkillWorld(t, model.ClassFighter, nil, false)),
 			want:  "기를 모으기 시작합니다",
 		},
 		{
 			name:  "accurate english",
 			line:  "accurate",
-			world: state.NewWorld(energySkillWorld(t, legacyClassThief, nil, true)),
+			world: state.NewWorld(energySkillWorld(t, model.ClassThief, nil, true)),
 			want:  "살기",
 		},
 		{
 			name:  "accurate korean",
 			line:  "살기충전",
-			world: state.NewWorld(energySkillWorld(t, legacyClassThief, nil, true)),
+			world: state.NewWorld(energySkillWorld(t, model.ClassThief, nil, true)),
 			want:  "살기",
 		},
 		{
 			name:  "absorb english",
 			line:  "absorb 고블린",
-			world: state.NewWorld(energySkillWorld(t, legacyClassInvincible, []string{"SMAGE"}, false)),
+			world: state.NewWorld(energySkillWorld(t, model.ClassInvincible, []string{"SMAGE"}, false)),
 			want:  "흡수했습니다",
 		},
 		{
 			name:  "absorb korean",
 			line:  "고블린 흡성대법",
-			world: state.NewWorld(energySkillWorld(t, legacyClassInvincible, []string{"SMAGE"}, false)),
+			world: state.NewWorld(energySkillWorld(t, model.ClassInvincible, []string{"SMAGE"}, false)),
 			want:  "흡수했습니다",
 		},
 	}

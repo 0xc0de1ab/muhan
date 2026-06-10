@@ -243,7 +243,7 @@ func ApplyMagicSummon(ctx *Context, world StatusWorld, actor model.Creature, obj
 	targetStr := strings.TrimSpace(getArg(resolved, 1))
 	how := determineHow(world, object)
 	class := creatureClass(actor)
-	costsHundredMP := class == legacyClassInvincible || class == legacyClassCaretaker
+	costsHundredMP := class == model.ClassInvincible || class == model.ClassCaretaker
 	requiredMP := 50
 	if costsHundredMP {
 		requiredMP = 100

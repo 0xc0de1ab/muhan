@@ -151,7 +151,7 @@ func TestFleeHandlerAppliesPaladinExperiencePenalty(t *testing.T) {
 	loaded := lookWorld(t)
 	creature := loaded.Creatures["creature:alice"]
 	creature.Level = 24
-	creature.Stats = map[string]int{"class": legacyClassPaladin, "level": 24, "experience": 1000, "dexterity": 30}
+	creature.Stats = map[string]int{"class": model.ClassPaladin, "level": 24, "experience": 1000, "dexterity": 30}
 	loaded.Creatures[creature.ID] = creature
 	runtime := state.NewWorld(loaded)
 	mustAddFleeEnemy(t, runtime)

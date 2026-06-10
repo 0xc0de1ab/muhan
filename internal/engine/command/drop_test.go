@@ -433,7 +433,7 @@ func TestDropHandlerRejectsSingleRoomDropProtectedQuestEventObjects(t *testing.T
 func TestDropHandlerAllowsDMToDropQuestObject(t *testing.T) {
 	world := newFakeDropWorld()
 	creature := world.creatures["creature:alice"]
-	creature.Stats["class"] = legacyClassDM
+	creature.Stats["class"] = model.ClassDM
 	world.creatures[creature.ID] = creature
 	addDropInventoryObject(world, "object:quest", "prototype:quest", "성물", map[string]string{"questnum": "1"}, nil)
 	handler := NewDropHandler(world)
@@ -813,7 +813,7 @@ func TestDropHandlerBulkDumpRoomConsumesObjectsAndRewardsGoldOnly(t *testing.T) 
 func TestDropHandlerBulkSkipsQuestObjectsBelowDM(t *testing.T) {
 	world := newFakeDropWorld()
 	creature := world.creatures["creature:alice"]
-	creature.Stats["class"] = legacyClassInvincible
+	creature.Stats["class"] = model.ClassInvincible
 	world.creatures[creature.ID] = creature
 	addDropInventoryObject(world, "object:quest", "prototype:quest", "성물", map[string]string{"questnum": "1"}, nil)
 	handler := NewDropHandler(world)
@@ -840,7 +840,7 @@ func TestDropHandlerBulkSkipsQuestObjectsBelowDM(t *testing.T) {
 func TestDropHandlerBulkAllowsDMQuestObjects(t *testing.T) {
 	world := newFakeDropWorld()
 	creature := world.creatures["creature:alice"]
-	creature.Stats["class"] = legacyClassDM
+	creature.Stats["class"] = model.ClassDM
 	world.creatures[creature.ID] = creature
 	addDropInventoryObject(world, "object:quest", "prototype:quest", "성물", map[string]string{"questnum": "1"}, nil)
 	handler := NewDropHandler(world)
@@ -1085,12 +1085,12 @@ func TestDropHandlerPutsAllMatchingQuestObjectsOnlyForDM(t *testing.T) {
 	}{
 		{
 			name:       "invincible still below DM",
-			class:      legacyClassInvincible,
+			class:      model.ClassInvincible,
 			wantOutput: "당신은 그것 안에 넣을 물건을 아무것도 갖고 있지 않습니다.",
 		},
 		{
 			name:       "DM",
-			class:      legacyClassDM,
+			class:      model.ClassDM,
 			wantOutput: "당신은 성물을 가방 안에 넣습니다.\n",
 			wantMoved:  true,
 		},

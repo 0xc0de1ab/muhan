@@ -43,7 +43,7 @@ func dmFinger(ctx *Context, resolved ResolvedCommand, world DMFingerWorld) (Stat
 
 	// 1. Enforce player class permissions: SUB_DM (12+).
 	class := creatureClass(creature)
-	if class < legacyClassSubDM {
+	if class < model.ClassSubDM {
 		return StatusPrompt, nil
 	}
 

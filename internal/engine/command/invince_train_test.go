@@ -5,11 +5,12 @@ import (
 	"testing"
 
 	"muhan/internal/commandspec"
+	"muhan/internal/world/model"
 	"muhan/internal/world/state"
 )
 
 func TestInvinceTrainHandlerPromptsAndCompletesRoomTrainingLikeLegacy(t *testing.T) {
-	runtime := state.NewWorld(trainWorld(t, []string{"train", "trainingBit5", "trainingBit6"}, legacyClassInvincible, 100, 1000000, 0))
+	runtime := state.NewWorld(trainWorld(t, []string{"train", "trainingBit5", "trainingBit6"}, model.ClassInvincible, 100, 1000000, 0))
 
 	var pending PendingLineHandler
 	ctx := invinceTrainPendingContext(&pending)
@@ -57,7 +58,7 @@ func TestInvinceTrainHandlerPromptsAndCompletesRoomTrainingLikeLegacy(t *testing
 }
 
 func TestInvinceTrainHandlerCancelDoesNotMutate(t *testing.T) {
-	runtime := state.NewWorld(trainWorld(t, []string{"train", "trainingBit4"}, legacyClassInvincible, 100, 1000000, 0))
+	runtime := state.NewWorld(trainWorld(t, []string{"train", "trainingBit4"}, model.ClassInvincible, 100, 1000000, 0))
 
 	var pending PendingLineHandler
 	ctx := invinceTrainPendingContext(&pending)
@@ -95,10 +96,10 @@ func TestInvinceTrainHandlerRejectsLegacyGates(t *testing.T) {
 		tag      string
 		want     string
 	}{
-		{name: "not training room", class: legacyClassInvincible, exp: 1000000, want: "이 곳은 수련장이 아닙니다!"},
-		{name: "low class", roomTags: []string{"train", "trainingBit5", "trainingBit6"}, class: legacyClassFighter, exp: 1000000, want: "무적 이상만 가능합니다."},
-		{name: "duplicate room training", roomTags: []string{"train", "trainingBit5", "trainingBit6"}, class: legacyClassInvincible, exp: 1000000, tag: "SFIGHTER", want: "이미 이 직업의 무적수련을 했습니다."},
-		{name: "insufficient experience", roomTags: []string{"train", "trainingBit5", "trainingBit6"}, class: legacyClassInvincible, exp: 999999, want: "무적수련을 하려면 경험치 100만이 필요합니다."},
+		{name: "not training room", class: model.ClassInvincible, exp: 1000000, want: "이 곳은 수련장이 아닙니다!"},
+		{name: "low class", roomTags: []string{"train", "trainingBit5", "trainingBit6"}, class: model.ClassFighter, exp: 1000000, want: "무적 이상만 가능합니다."},
+		{name: "duplicate room training", roomTags: []string{"train", "trainingBit5", "trainingBit6"}, class: model.ClassInvincible, exp: 1000000, tag: "SFIGHTER", want: "이미 이 직업의 무적수련을 했습니다."},
+		{name: "insufficient experience", roomTags: []string{"train", "trainingBit5", "trainingBit6"}, class: model.ClassInvincible, exp: 999999, want: "무적수련을 하려면 경험치 100만이 필요합니다."},
 	}
 
 	for _, tt := range tests {
@@ -124,7 +125,7 @@ func TestInvinceTrainHandlerRejectsLegacyGates(t *testing.T) {
 }
 
 func TestInvinceTrainHandlerCaretakerPromptAndDowngradeLikeLegacy(t *testing.T) {
-	runtime := state.NewWorld(trainWorld(t, []string{"train", "trainingBit4"}, legacyClassCaretaker, 100, 100500000, 0))
+	runtime := state.NewWorld(trainWorld(t, []string{"train", "trainingBit4"}, model.ClassCaretaker, 100, 100500000, 0))
 
 	var pending PendingLineHandler
 	ctx := invinceTrainPendingContext(&pending)
@@ -149,7 +150,7 @@ func TestInvinceTrainHandlerCaretakerPromptAndDowngradeLikeLegacy(t *testing.T) 
 	if creature.Stats["experience"] != 99500000 {
 		t.Fatalf("experience = %d, want 99500000", creature.Stats["experience"])
 	}
-	if creature.Stats["class"] != legacyClassInvincible {
+	if creature.Stats["class"] != model.ClassInvincible {
 		t.Fatalf("class = %d, want invincible", creature.Stats["class"])
 	}
 	if !hasAnyNormalizedFlag(creature.Metadata.Tags, "SMAGE") {
@@ -158,7 +159,7 @@ func TestInvinceTrainHandlerCaretakerPromptAndDowngradeLikeLegacy(t *testing.T) 
 }
 
 func TestInvinceTrainHandlerDownLevelsInvincibleAfterExperienceLoss(t *testing.T) {
-	loaded := trainWorld(t, []string{"train", "trainingBit5", "trainingBit6"}, legacyClassInvincible, 2, 1000000, 0)
+	loaded := trainWorld(t, []string{"train", "trainingBit5", "trainingBit6"}, model.ClassInvincible, 2, 1000000, 0)
 	creature := loaded.Creatures["creature:alice"]
 	creature.Metadata.Tags = append(creature.Metadata.Tags, "PUPDMG")
 	creature.Stats["hpMax"] = 500
@@ -218,7 +219,7 @@ func TestInvinceTrainHandlerDownLevelsInvincibleAfterExperienceLoss(t *testing.T
 }
 
 func TestInvinceTrainHandlerDownLevelAppliesLegacyStatCycle(t *testing.T) {
-	loaded := trainWorld(t, []string{"train", "trainingBit4"}, legacyClassInvincible, 4, 1000300, 0)
+	loaded := trainWorld(t, []string{"train", "trainingBit4"}, model.ClassInvincible, 4, 1000300, 0)
 	creature := loaded.Creatures["creature:alice"]
 	creature.Stats["hpMax"] = 500
 	creature.Stats["mpMax"] = 300
@@ -275,7 +276,7 @@ func TestInvinceTrainDispatcherAliasesUseRoomTrainingLikeLegacy(t *testing.T) {
 		{Name: "invince_train", Number: 156, Handler: "invince_train"},
 	})
 
-	runtime := state.NewWorld(trainWorld(t, []string{"train", "trainingBit4", "trainingBit5"}, legacyClassInvincible, 100, 1000000, 0))
+	runtime := state.NewWorld(trainWorld(t, []string{"train", "trainingBit4", "trainingBit5"}, model.ClassInvincible, 100, 1000000, 0))
 	dispatcher := Dispatcher{
 		Registry: registry,
 		Handlers: map[string]Handler{

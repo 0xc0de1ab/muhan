@@ -54,7 +54,7 @@ func NewScratchHandler(world ScratchWorld) Handler {
 			return StatusDefault, fmt.Errorf("scratch: actor creature %q not found", viewer.CreatureID)
 		}
 
-		if attackCreatureLevel(actor) < 20 && creatureClass(actor) < legacyClassInvincible {
+		if attackCreatureLevel(actor) < 20 && creatureClass(actor) < model.ClassInvincible {
 			ctx.WriteString("당신의 레벨로는 복권을 긁을 수 없습니다.\n")
 			return StatusDefault, nil
 		}

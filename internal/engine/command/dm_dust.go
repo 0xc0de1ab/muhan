@@ -41,7 +41,7 @@ func dmDust(ctx *Context, resolved ResolvedCommand, world DMDustWorld) (Status, 
 	}
 
 	class := creatureClass(creature)
-	if class < legacyClassSubDM {
+	if class < model.ClassSubDM {
 		return StatusPrompt, nil
 	}
 
@@ -60,7 +60,7 @@ func dmDust(ctx *Context, resolved ResolvedCommand, world DMDustWorld) (Status, 
 
 	// Check target's DM level
 	targetClass := creatureClass(targetCreature)
-	if targetClass >= legacyClassSubDM {
+	if targetClass >= model.ClassSubDM {
 		casterName := cleanDisplayText(creature.DisplayName)
 		if casterName == "" {
 			casterName = creature.DisplayName

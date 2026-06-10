@@ -31,7 +31,7 @@ func dmResave(ctx *Context, resolved ResolvedCommand, world DMResaveWorld) (Stat
 	}
 
 	class := creatureClass(creature)
-	if class < legacyClassDM {
+	if class < model.ClassDM {
 		return StatusPrompt, nil
 	}
 

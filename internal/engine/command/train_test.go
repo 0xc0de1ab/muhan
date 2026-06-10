@@ -48,7 +48,7 @@ func TestTrainHandlerRejectsRoomAndCostRequirements(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			runtime := state.NewWorld(trainWorld(t, tt.roomTags, legacyClassFighter, 1, tt.exp, tt.gold))
+			runtime := state.NewWorld(trainWorld(t, tt.roomTags, model.ClassFighter, 1, tt.exp, tt.gold))
 
 			ctx := &Context{ActorID: "player:alice"}
 			status, err := NewTrainHandler(runtime)(ctx, ResolvedCommand{})
@@ -68,7 +68,7 @@ func TestTrainHandlerRejectsRoomAndCostRequirements(t *testing.T) {
 }
 
 func TestTrainHandlerLevelsActorAndChargesGold(t *testing.T) {
-	runtime := state.NewWorld(trainWorld(t, []string{"train", "trainingBit5", "trainingBit6"}, legacyClassFighter, 1, 128, 6))
+	runtime := state.NewWorld(trainWorld(t, []string{"train", "trainingBit5", "trainingBit6"}, model.ClassFighter, 1, 128, 6))
 	var broadcasts []string
 
 	ctx := trainBroadcastContext(&broadcasts)
@@ -99,7 +99,7 @@ func TestTrainHandlerLevelsActorAndChargesGold(t *testing.T) {
 }
 
 func TestTrainHandlerAppliesLegacyMultiLevelLoop(t *testing.T) {
-	runtime := state.NewWorld(trainWorld(t, []string{"train", "trainingBit5", "trainingBit6"}, legacyClassFighter, 1, 384, 18))
+	runtime := state.NewWorld(trainWorld(t, []string{"train", "trainingBit5", "trainingBit6"}, model.ClassFighter, 1, 384, 18))
 	var broadcasts []string
 
 	ctx := trainBroadcastContext(&broadcasts)
@@ -126,7 +126,7 @@ func TestTrainHandlerAppliesLegacyMultiLevelLoop(t *testing.T) {
 }
 
 func TestTrainHandlerClearsUpDamageBeforeRoomCheckLikeLegacy(t *testing.T) {
-	loaded := trainWorld(t, nil, legacyClassBarbarian, 50, 0, 0)
+	loaded := trainWorld(t, nil, model.ClassBarbarian, 50, 0, 0)
 	creature := loaded.Creatures["creature:alice"]
 	creature.Metadata.Tags = []string{"PUPDMG", "upDamage"}
 	creature.Stats["pDice"] = 5
@@ -164,7 +164,7 @@ func TestTrainHandlerClearsUpDamageBeforeRoomCheckLikeLegacy(t *testing.T) {
 }
 
 func TestTrainHandlerRejectsInvincibleCaretakerTransitionWithoutAllTrainings(t *testing.T) {
-	runtime := state.NewWorld(trainWorld(t, []string{"train"}, legacyClassInvincible, legacyMaxAutoLevel-1, 100000000, 5000000))
+	runtime := state.NewWorld(trainWorld(t, []string{"train"}, model.ClassInvincible, legacyMaxAutoLevel-1, 100000000, 5000000))
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewTrainHandler(runtime)(ctx, ResolvedCommand{})
@@ -176,13 +176,13 @@ func TestTrainHandlerRejectsInvincibleCaretakerTransitionWithoutAllTrainings(t *
 		t.Fatalf("status/output = %d/%q, want %q", status, ctx.OutputString(), want)
 	}
 	creature, _ := runtime.Creature("creature:alice")
-	if creature.Stats["class"] != legacyClassInvincible || creature.Level != legacyMaxAutoLevel-1 || creature.Stats["gold"] != 5000000 {
+	if creature.Stats["class"] != model.ClassInvincible || creature.Level != legacyMaxAutoLevel-1 || creature.Stats["gold"] != 5000000 {
 		t.Fatalf("creature mutated on reject: class=%d level=%d gold=%d", creature.Stats["class"], creature.Level, creature.Stats["gold"])
 	}
 }
 
 func TestTrainHandlerTransitionsInvincibleToCaretakerLikeLegacy(t *testing.T) {
-	loaded := trainWorld(t, []string{"train"}, legacyClassInvincible, legacyMaxAutoLevel-1, 100000000, 5000000)
+	loaded := trainWorld(t, []string{"train"}, model.ClassInvincible, legacyMaxAutoLevel-1, 100000000, 5000000)
 	creature := loaded.Creatures["creature:alice"]
 	for _, training := range invinceTrainingSpecs {
 		creature.Metadata.Tags = append(creature.Metadata.Tags, training.tag)
@@ -204,7 +204,7 @@ func TestTrainHandlerTransitionsInvincibleToCaretakerLikeLegacy(t *testing.T) {
 	}
 	creature, _ = runtime.Creature("creature:alice")
 	for key, want := range map[string]int{
-		"class":     legacyClassCaretaker,
+		"class":     model.ClassCaretaker,
 		"level":     legacyMaxAutoLevel - 1,
 		"gold":      0,
 		"hpMax":     800,
@@ -225,7 +225,7 @@ func TestTrainHandlerTransitionsInvincibleToCaretakerLikeLegacy(t *testing.T) {
 }
 
 func TestTrainHandlerTransitionsCaretakerToBulsaLikeLegacy(t *testing.T) {
-	loaded := trainWorld(t, []string{"train"}, legacyClassCaretaker, legacyMaxAutoLevel-1, 100000000, 5000000)
+	loaded := trainWorld(t, []string{"train"}, model.ClassCaretaker, legacyMaxAutoLevel-1, 100000000, 5000000)
 	creature := loaded.Creatures["creature:alice"]
 	creature.Metadata.Tags = []string{"TRAINBUL"}
 	loaded.Creatures[creature.ID] = creature
@@ -245,7 +245,7 @@ func TestTrainHandlerTransitionsCaretakerToBulsaLikeLegacy(t *testing.T) {
 	}
 	creature, _ = runtime.Creature("creature:alice")
 	for key, want := range map[string]int{
-		"class":     legacyClassBulsa,
+		"class":     model.ClassBulsa,
 		"level":     legacyMaxAutoLevel - 1,
 		"gold":      0,
 		"hpMax":     3500,
@@ -273,7 +273,7 @@ func TestTrainDispatcherAliases(t *testing.T) {
 
 	for _, line := range []string{"수련", "train"} {
 		t.Run(line, func(t *testing.T) {
-			runtime := state.NewWorld(trainWorld(t, []string{"train", "trainingBit5", "trainingBit6"}, legacyClassFighter, 1, 128, 6))
+			runtime := state.NewWorld(trainWorld(t, []string{"train", "trainingBit5", "trainingBit6"}, model.ClassFighter, 1, 128, 6))
 			dispatcher := Dispatcher{
 				Registry: registry,
 				Handlers: map[string]Handler{

@@ -12,7 +12,7 @@ import (
 )
 
 func TestTurnHandlerDamagesUndeadTargetAndStartsCooldown(t *testing.T) {
-	world := state.NewWorld(turnWorld(t, legacyClassCleric))
+	world := state.NewWorld(turnWorld(t, model.ClassCleric))
 	dispatcher := turnDispatcher(t, world, fixedRoll(1))
 	var broadcasts []roomBroadcastRecord
 
@@ -44,7 +44,7 @@ func TestTurnHandlerDamagesUndeadTargetAndStartsCooldown(t *testing.T) {
 }
 
 func TestTurnHandlerFinalizesMonsterDeath(t *testing.T) {
-	loaded := turnWorld(t, legacyClassCleric)
+	loaded := turnWorld(t, model.ClassCleric)
 	mouse := loaded.Creatures["creature:mouse"]
 	mouse.Metadata.Tags = []string{"turnable"}
 	loaded.Creatures[mouse.ID] = mouse
@@ -69,7 +69,7 @@ func TestTurnHandlerFinalizesMonsterDeath(t *testing.T) {
 }
 
 func TestTurnHandlerUsesCustomDeathFinalizer(t *testing.T) {
-	loaded := turnWorld(t, legacyClassCleric)
+	loaded := turnWorld(t, model.ClassCleric)
 	mouse := loaded.Creatures["creature:mouse"]
 	mouse.Metadata.Tags = []string{"turnable"}
 	loaded.Creatures[mouse.ID] = mouse
@@ -106,36 +106,36 @@ func TestTurnHandlerRejectsInvalidStates(t *testing.T) {
 	}{
 		{
 			name:  "missing target",
-			class: legacyClassCleric,
+			class: model.ClassCleric,
 			want:  "누구에게 주문을 거실려고요?",
 		},
 		{
 			name:  "wrong class",
-			class: legacyClassFighter,
+			class: model.ClassFighter,
 			args:  []string{"해골"},
 			want:  "불제자와 무사만이 방혼술을 사용할 수 있습니다.",
 		},
 		{
 			name:  "invincible without cleric or paladin training",
-			class: legacyClassInvincible,
+			class: model.ClassInvincible,
 			args:  []string{"해골"},
 			want:  "불제자나 무사를 무적수련하지 않았습니다.",
 		},
 		{
 			name:  "missing monster",
-			class: legacyClassCleric,
+			class: model.ClassCleric,
 			args:  []string{"없는"},
 			want:  "그런 괴물은 존재하지 않습니다.",
 		},
 		{
 			name:  "paladin living monster",
-			class: legacyClassPaladin,
+			class: model.ClassPaladin,
 			args:  []string{"고블린"},
 			want:  "죽은 괴물에게만 사용가능합니다.",
 		},
 		{
 			name:  "protected undead",
-			class: legacyClassCleric,
+			class: model.ClassCleric,
 			args:  []string{"해골"},
 			mutate: func(loaded *worldload.World) {
 				skeleton := loaded.Creatures["creature:skeleton-1"]
@@ -168,7 +168,7 @@ func TestTurnHandlerRejectsInvalidStates(t *testing.T) {
 }
 
 func TestTurnHandlerClericCanAffectLivingMonsterLikeLegacy(t *testing.T) {
-	world := state.NewWorld(turnWorld(t, legacyClassCleric))
+	world := state.NewWorld(turnWorld(t, model.ClassCleric))
 	handler := NewTurnHandler(world, fixedRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -186,7 +186,7 @@ func TestTurnHandlerClericCanAffectLivingMonsterLikeLegacy(t *testing.T) {
 }
 
 func TestTurnHandlerRevealsPinvisBeforeCooldownAndKeepsHiddenLikeLegacy(t *testing.T) {
-	loaded := turnWorld(t, legacyClassCleric)
+	loaded := turnWorld(t, model.ClassCleric)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	alice.Stats["PHIDDN"] = 1
@@ -231,7 +231,7 @@ func TestTurnHandlerRevealsPinvisBeforeCooldownAndKeepsHiddenLikeLegacy(t *testi
 }
 
 func TestTurnHandlerInstantDisintegratesUndeadLikeLegacy(t *testing.T) {
-	world := state.NewWorld(turnWorld(t, legacyClassCleric))
+	world := state.NewWorld(turnWorld(t, model.ClassCleric))
 	handler := NewTurnHandler(world, turnRolls(t, 1, 100))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -248,7 +248,7 @@ func TestTurnHandlerInstantDisintegratesUndeadLikeLegacy(t *testing.T) {
 }
 
 func TestTurnHandlerInvincibleDamageUsesLegacyClassFormula(t *testing.T) {
-	loaded := turnWorld(t, legacyClassInvincible)
+	loaded := turnWorld(t, model.ClassInvincible)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"SCLERIC"}
 	loaded.Creatures[alice.ID] = alice
@@ -274,7 +274,7 @@ func TestTurnHandlerInvincibleDamageUsesLegacyClassFormula(t *testing.T) {
 }
 
 func TestTurnHandlerCaretakerDamageUsesLegacyClassFormula(t *testing.T) {
-	loaded := turnWorld(t, legacyClassCaretaker)
+	loaded := turnWorld(t, model.ClassCaretaker)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"SCLERIC"}
 	loaded.Creatures[alice.ID] = alice
@@ -300,7 +300,7 @@ func TestTurnHandlerCaretakerDamageUsesLegacyClassFormula(t *testing.T) {
 }
 
 func TestTurnHandlerBulsaDamageKeepsLegacyDanglingElseResult(t *testing.T) {
-	loaded := turnWorld(t, legacyClassBulsa)
+	loaded := turnWorld(t, model.ClassBulsa)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"SCLERIC"}
 	loaded.Creatures[alice.ID] = alice
@@ -326,7 +326,7 @@ func TestTurnHandlerBulsaDamageKeepsLegacyDanglingElseResult(t *testing.T) {
 }
 
 func TestTurnHandlerAllowsTrainedInvincibleAndTurnableAlias(t *testing.T) {
-	loaded := turnWorld(t, legacyClassInvincible)
+	loaded := turnWorld(t, model.ClassInvincible)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"SCLERIC"}
 	loaded.Creatures[alice.ID] = alice
@@ -347,7 +347,7 @@ func TestTurnHandlerAllowsTrainedInvincibleAndTurnableAlias(t *testing.T) {
 }
 
 func TestTurnHandlerFailureUsesCooldownWithoutDamage(t *testing.T) {
-	world := state.NewWorld(turnWorld(t, legacyClassPaladin))
+	world := state.NewWorld(turnWorld(t, model.ClassPaladin))
 	handler := NewTurnHandler(world, fixedRoll(100))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -376,7 +376,7 @@ func TestTurnHandlerFailureUsesCooldownWithoutDamage(t *testing.T) {
 func TestTurnHandlerCanBeRegisteredByDispatcher(t *testing.T) {
 	for _, line := range []string{"해골 방혼술", "turn 해골"} {
 		t.Run(line, func(t *testing.T) {
-			world := state.NewWorld(turnWorld(t, legacyClassCleric))
+			world := state.NewWorld(turnWorld(t, model.ClassCleric))
 			dispatcher := turnDispatcher(t, world, fixedRoll(1))
 
 			ctx := &Context{ActorID: "player:alice"}

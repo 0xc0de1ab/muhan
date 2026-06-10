@@ -44,7 +44,7 @@ func TestMagicEffectEnchant_Success(t *testing.T) {
 	creature := loaded.Creatures["creature:alice"]
 	creature.RoomID = "room:church"
 	creature.Stats = map[string]int{
-		"class":     legacyClassMage,
+		"class":     model.ClassMage,
 		"level":     12,
 		"mpCurrent": 25,
 	}
@@ -135,7 +135,7 @@ func TestMagicEffectRemoveCurse_Self(t *testing.T) {
 	creature.RoomID = "room:church"
 	creature.Metadata.Tags = []string{"SREMOV"}
 	creature.Stats = map[string]int{
-		"class":     legacyClassDM,
+		"class":     model.ClassDM,
 		"mpCurrent": 18,
 	}
 
@@ -192,7 +192,7 @@ func TestMagicEffectRemoveCurse_Target(t *testing.T) {
 	aliceCreature.RoomID = "room:church"
 	aliceCreature.Metadata.Tags = []string{"SREMOV"}
 	aliceCreature.Stats = map[string]int{
-		"class":     legacyClassDM,
+		"class":     model.ClassDM,
 		"mpCurrent": 18,
 	}
 	loaded.Creatures[aliceCreature.ID] = aliceCreature
@@ -288,7 +288,7 @@ func TestMagicEffectCurse_Self(t *testing.T) {
 	creature.RoomID = "room:church"
 	creature.Metadata.Tags = []string{"SCURSE"}
 	creature.Stats = map[string]int{
-		"class":     legacyClassDM,
+		"class":     model.ClassDM,
 		"mpCurrent": 25,
 	}
 

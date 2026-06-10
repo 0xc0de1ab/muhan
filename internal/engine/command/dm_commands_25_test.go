@@ -223,7 +223,7 @@ func TestUnifiedDMCommands25(t *testing.T) {
 			},
 			creatures: map[model.CreatureID]model.Creature{
 				"creature:dm":    {ID: "creature:dm", DisplayName: "DMPlayer", RoomID: "room:100", PlayerID: "player:dm", Stats: map[string]int{"class": 13}},
-				"creature:subdm": {ID: "creature:subdm", DisplayName: "SubDMPlayer", RoomID: "room:100", PlayerID: "player:subdm", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:subdm": {ID: "creature:subdm", DisplayName: "SubDMPlayer", RoomID: "room:100", PlayerID: "player:subdm", Stats: map[string]int{"class": model.ClassSubDM}},
 				"creature:alice": {ID: "creature:alice", DisplayName: "Alice", RoomID: "room:100", PlayerID: "player:alice", Stats: map[string]int{"class": 1}},
 				"creature:bob":   {ID: "creature:bob", DisplayName: "Bob", RoomID: "room:100", PlayerID: "player:bob", Stats: map[string]int{"class": 1}},
 			},

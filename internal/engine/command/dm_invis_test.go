@@ -98,31 +98,31 @@ func TestDMInvis_Permissions(t *testing.T) {
 	}{
 		{
 			name:       "class 9 (below SUB_DM)",
-			class:      legacyClassInvincible,
+			class:      model.ClassInvincible,
 			wantStatus: StatusPrompt,
 			wantDenied: true,
 		},
 		{
 			name:       "class 10 (caretaker below SUB_DM)",
-			class:      legacyClassCaretaker,
+			class:      model.ClassCaretaker,
 			wantStatus: StatusPrompt,
 			wantDenied: true,
 		},
 		{
 			name:       "class 11 (bulsa below SUB_DM)",
-			class:      legacyClassBulsa,
+			class:      model.ClassBulsa,
 			wantStatus: StatusPrompt,
 			wantDenied: true,
 		},
 		{
 			name:       "class 12 (SUB_DM)",
-			class:      legacyClassSubDM,
+			class:      model.ClassSubDM,
 			wantStatus: StatusDefault,
 			wantDenied: false,
 		},
 		{
 			name:       "class 13 (DM)",
-			class:      legacyClassDM,
+			class:      model.ClassDM,
 			wantStatus: StatusDefault,
 			wantDenied: false,
 		},
@@ -301,7 +301,7 @@ func TestDMInvisClearsLegacyStatFlagLikeC(t *testing.T) {
 		creatures: map[model.CreatureID]model.Creature{
 			"creature:alice": {
 				ID:    "creature:alice",
-				Stats: map[string]int{"class": legacyClassSubDM, "PDMINV": 1},
+				Stats: map[string]int{"class": model.ClassSubDM, "PDMINV": 1},
 			},
 		},
 	}

@@ -60,7 +60,7 @@ func IsBadItem(world InventoryWorld, object model.ObjectInstance) bool {
 	// 5. POTION && shotscur > 50
 	isPotion := objectLegacyType(world, object) == 6 ||
 		objectKindIs(world, object, model.ObjectKindPotion)
-	
+
 	shotscur := objectIntPropertyOrZero(world, object, "shotsCurrent")
 	if shotscur == 0 {
 		shotscur = objectIntPropertyOrZero(world, object, "shotscur")

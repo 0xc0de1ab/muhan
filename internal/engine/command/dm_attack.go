@@ -43,7 +43,7 @@ func dmAttack(ctx *Context, resolved ResolvedCommand, world DMAttackWorld) (Stat
 	}
 
 	class := creatureClass(creature)
-	if class < legacyClassDM {
+	if class < model.ClassDM {
 		return StatusPrompt, nil
 	}
 

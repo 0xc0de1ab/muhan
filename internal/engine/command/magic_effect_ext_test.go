@@ -154,7 +154,7 @@ func TestMagicEffectObjectSendSuccess(t *testing.T) {
 	// Setup caster (Alice) and target (Bob)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats = map[string]int{
-		"class":        legacyClassMage,
+		"class":        model.ClassMage,
 		"level":        25,
 		"intelligence": 25,
 		"mpCurrent":    100,
@@ -250,7 +250,7 @@ func TestMagicEffectObjectSendQueuesLegacySaves(t *testing.T) {
 			"weight": "5",
 		},
 	}
-	mock, alice, _ := objectSendWorld(t, object, legacyClassMage, 100)
+	mock, alice, _ := objectSendWorld(t, object, model.ClassMage, 100)
 	ctx := objectSendTestContext()
 	resolved := ResolvedCommand{
 		Args:   []string{"전송", "sword", "Bob"},
@@ -280,7 +280,7 @@ func TestMagicEffectObjectSendFailureWeightLimit(t *testing.T) {
 	// Setup caster (Alice)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats = map[string]int{
-		"class":        legacyClassMage,
+		"class":        model.ClassMage,
 		"level":        25,
 		"intelligence": 10, // lower intelligence
 		"mpCurrent":    100,
@@ -351,7 +351,7 @@ func TestMagicEffectObjectSendScrollBypassesCastClassAndMP(t *testing.T) {
 	loaded := emptyInventoryWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats = map[string]int{
-		"class":        legacyClassFighter,
+		"class":        model.ClassFighter,
 		"level":        25,
 		"intelligence": 25,
 		"mpCurrent":    0,
@@ -423,7 +423,7 @@ func TestMagicEffectObjectSendRejectsSavedPlayerWithoutActiveSession(t *testing.
 			"weight": "5",
 		},
 	}
-	mock, alice, _ := objectSendWorld(t, object, legacyClassMage, 100)
+	mock, alice, _ := objectSendWorld(t, object, model.ClassMage, 100)
 	ctx := objectSendTestContextWithActive(activeSession{ID: "session:alice", ActorID: "player:alice"})
 	resolved := ResolvedCommand{
 		Args:   []string{"전송", "sword", "Bob"},
@@ -457,7 +457,7 @@ func TestMagicEffectObjectSendRejectsActivePlayerIDAliasLikeLegacy(t *testing.T)
 			"weight": "5",
 		},
 	}
-	mock, alice, _ := objectSendWorld(t, object, legacyClassMage, 100)
+	mock, alice, _ := objectSendWorld(t, object, model.ClassMage, 100)
 	mock.players = map[model.PlayerID]model.Player{
 		"player:alice": {ID: "player:alice", DisplayName: "Alice", CreatureID: "creature:alice", RoomID: "room:library"},
 		"player:bob":   {ID: "player:bob", CreatureID: "creature:bob", RoomID: "room:library"},
@@ -508,7 +508,7 @@ func TestMagicEffectObjectSendUsesRootWeightLikeLegacy(t *testing.T) {
 			"weight": "5",
 		},
 	}
-	mock, alice, bob := objectSendWorld(t, box, legacyClassMage, 100)
+	mock, alice, bob := objectSendWorld(t, box, model.ClassMage, 100)
 	mock.objects["object:stone"] = model.ObjectInstance{
 		ID:       "object:stone",
 		Location: model.ObjectLocation{ContainerID: "object:box"},
@@ -550,7 +550,7 @@ func TestMagicEffectObjectSendUsesRootWeightForTargetCapacityLikeLegacy(t *testi
 			"weight": "1",
 		},
 	}
-	mock, alice, bob := objectSendWorld(t, box, legacyClassMage, 100)
+	mock, alice, bob := objectSendWorld(t, box, model.ClassMage, 100)
 	mock.objects["object:stone"] = model.ObjectInstance{
 		ID:       "object:stone",
 		Location: model.ObjectLocation{ContainerID: "object:box"},
@@ -602,7 +602,7 @@ func TestMagicEffectObjectSendRejectsDirectQuestChildLikeLegacy(t *testing.T) {
 			"weight": "1",
 		},
 	}
-	mock, alice, _ := objectSendWorld(t, box, legacyClassMage, 100)
+	mock, alice, _ := objectSendWorld(t, box, model.ClassMage, 100)
 	mock.objects["object:quest"] = model.ObjectInstance{
 		ID:       "object:quest",
 		Location: model.ObjectLocation{ContainerID: "object:box"},
@@ -647,7 +647,7 @@ func TestMagicEffectObjectSendRejectsDirectEventChildFlagsTokenLikeLegacy(t *tes
 			"weight": "1",
 		},
 	}
-	mock, alice, _ := objectSendWorld(t, box, legacyClassMage, 100)
+	mock, alice, _ := objectSendWorld(t, box, model.ClassMage, 100)
 	mock.objects["object:event-child"] = model.ObjectInstance{
 		ID:       "object:event-child",
 		Location: model.ObjectLocation{ContainerID: "object:box"},
@@ -692,7 +692,7 @@ func TestMagicEffectObjectSendAllowsDirectQuestChildForDMLikeLegacy(t *testing.T
 			"weight": "1",
 		},
 	}
-	mock, alice, bob := objectSendWorld(t, box, legacyClassDM, 100)
+	mock, alice, bob := objectSendWorld(t, box, model.ClassDM, 100)
 	mock.objects["object:quest"] = model.ObjectInstance{
 		ID:       "object:quest",
 		Location: model.ObjectLocation{ContainerID: "object:box"},
@@ -730,7 +730,7 @@ func TestMagicEffectObjectSendRejectsTopLevelQuestNumberLikeLegacy(t *testing.T)
 			"weight":   "1",
 		},
 	}
-	mock, alice, _ := objectSendWorld(t, object, legacyClassMage, 100)
+	mock, alice, _ := objectSendWorld(t, object, model.ClassMage, 100)
 	ctx := objectSendTestContext()
 	resolved := ResolvedCommand{
 		Args:   []string{"전송", "quest", "Bob"},
@@ -765,7 +765,7 @@ func TestMagicEffectObjectSendRejectsTopLevelEventLikeLegacy(t *testing.T) {
 			"weight": "1",
 		},
 	}
-	mock, alice, _ := objectSendWorld(t, object, legacyClassMage, 100)
+	mock, alice, _ := objectSendWorld(t, object, model.ClassMage, 100)
 	ctx := objectSendTestContext()
 	resolved := ResolvedCommand{
 		Args:   []string{"전송", "event", "Bob"},
@@ -795,7 +795,7 @@ func TestMagicEffectDispatcherRouting(t *testing.T) {
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"SMENDW"}
 	alice.Stats = map[string]int{
-		"class":        legacyClassMage,
+		"class":        model.ClassMage,
 		"level":        100,
 		"intelligence": 25,
 		"hpCurrent":    10,

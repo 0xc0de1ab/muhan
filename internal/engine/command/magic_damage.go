@@ -101,11 +101,11 @@ func mprofic(c model.Creature, index int) int {
 	var profArray [12]int64
 	class := creatureClass(c)
 	switch class {
-	case legacyClassMage, legacyClassInvincible, legacyClassCaretaker, legacyClassBulsa, legacyClassSubDM, legacyClassDM:
+	case model.ClassMage, model.ClassInvincible, model.ClassCaretaker, model.ClassBulsa, model.ClassSubDM, model.ClassDM:
 		profArray = [12]int64{0, 1024, 2048, 4096, 8192, 16384, 35768, 85536, 140000, 459410, 2073306, 500000000}
-	case legacyClassCleric:
+	case model.ClassCleric:
 		profArray = [12]int64{0, 1024, 4092, 8192, 16384, 32768, 70536, 119000, 226410, 709410, 2973307, 500000000}
-	case legacyClassPaladin, legacyClassRanger:
+	case model.ClassPaladin, model.ClassRanger:
 		profArray = [12]int64{0, 1024, 8192, 16384, 32768, 65536, 105000, 165410, 287306, 809410, 3538232, 500000000}
 	default:
 		profArray = [12]int64{0, 1024, 40000, 80000, 120000, 160000, 205000, 222000, 380000, 965410, 5495000, 500000000}
@@ -229,7 +229,7 @@ func magicBasicOffensiveRestrictionMessage(actor model.Creature, magicPower int)
 	class := creatureClass(actor)
 	switch magicPower {
 	case 15, magicPowerThunderbolt, magicPowerEarthquake, magicPowerFlameFill:
-		if class != legacyClassMage && class < legacyClassInvincible {
+		if class != model.ClassMage && class < model.ClassInvincible {
 			return "\n도술사만이 쓸 수 있는 마법입니다.\n"
 		}
 	case magicPowerSisix1, magicPowerSisix2, magicPowerSisix3, magicPowerSisix4:
@@ -237,7 +237,7 @@ func magicBasicOffensiveRestrictionMessage(actor model.Creature, magicPower int)
 			return "\n도술사를 무적수련한 사람만이 쓸 수 있는 마법입니다.\n"
 		}
 	case magicPowerXixix1, magicPowerXixix2, magicPowerXixix3, magicPowerXixix4:
-		if class < legacyClassCaretaker {
+		if class < model.ClassCaretaker {
 			return "\n초인 이상만이 사용할수 있는 마법입니다.\n"
 		}
 	}

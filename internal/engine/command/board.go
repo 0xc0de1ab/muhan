@@ -19,8 +19,8 @@ import (
 )
 
 const legacyBoardSpecial = 4
-const legacyBoardDMClass = legacyClassDM
-const legacyBoardSubDMClass = legacyClassSubDM
+const legacyBoardDMClass = model.ClassDM
+const legacyBoardSubDMClass = model.ClassSubDM
 
 const (
 	boardIndexNumberOff    = 0

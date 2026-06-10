@@ -80,7 +80,7 @@ func TestDMInfo(t *testing.T) {
 				"player:user1": {ID: "player:user1", CreatureID: "creature:user1"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:user1": {ID: "creature:user1", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:user1": {ID: "creature:user1", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 			rooms:      123,
 			monsters:   456,

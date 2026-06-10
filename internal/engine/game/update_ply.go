@@ -92,18 +92,7 @@ type PermanentCreatureDeathEvent struct {
 }
 
 // Define constants
-const (
-	legacyClassAssassin   = 1
-	legacyClassBarbarian  = 2
-	legacyClassCleric     = 3
-	legacyClassFighter    = 4
-	legacyClassMage       = 5
-	legacyClassPaladin    = 6
-	legacyClassRanger     = 7
-	legacyClassThief      = 8
-	legacyClassInvincible = 9
-	legacyClassBulsa      = 11
-)
+const ()
 
 var thacoList = [][]int{
 	{20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20}, // 0
@@ -165,7 +154,7 @@ func UpdatePlayerStatuses(world UpdatePlyWorld, t int64) {
 		}
 
 		class := creatureClass(c)
-		if class != legacyClassDM {
+		if class != model.ClassDM {
 			if ltime, ok := world.SessionLastInputTime(sessionID); ok {
 				if t-ltime > 300 {
 					_ = world.WriteToSession(sessionID, "\r\n입력없이 5분이상 유지하면 접속이 끊어집니다.\r\n", false)
@@ -249,7 +238,7 @@ func tickPlayer(world UpdatePlyWorld, playerID model.PlayerID, creatureID model.
 
 		if !roomHasAnyFlag(room, "RPHARM", "harm") && !ill {
 			hpAdd := 5 + legacyStatBonus(con)
-			if class == legacyClassBarbarian {
+			if class == model.ClassBarbarian {
 				hpAdd += 2
 			}
 			if hpAdd < 4 {
@@ -257,7 +246,7 @@ func tickPlayer(world UpdatePlyWorld, playerID model.PlayerID, creatureID model.
 			}
 
 			mpAdd := 5
-			if class == legacyClassMage {
+			if class == model.ClassMage {
 				mpAdd += 2
 			}
 			if intelligence > 17 {
@@ -398,7 +387,7 @@ func tickPlayer(world UpdatePlyWorld, playerID model.PlayerID, creatureID model.
 				_ = world.SetCreatureStat(c.ID, "mpCurrent", mpCur-drain)
 			} else if !ill {
 				mpAdd := 2
-				if class == legacyClassMage {
+				if class == model.ClassMage {
 					mpAdd += 2
 				}
 				if intelligence > 17 {
@@ -451,7 +440,7 @@ func tickPlayer(world UpdatePlyWorld, playerID model.PlayerID, creatureID model.
 				}
 			} else if !ill {
 				hpAdd := 3 + legacyStatBonus(con)
-				if class == legacyClassBarbarian {
+				if class == model.ClassBarbarian {
 					hpAdd += 2
 				}
 				if hpAdd < 1 {
@@ -1625,7 +1614,7 @@ func updateStatusExpirations(world UpdatePlyWorld, playerID model.PlayerID, crea
 		pdice := creatureStat(c, "pdice")
 		hpmax := creatureStat(c, "hpMax")
 		mpmax := creatureStat(c, "mpMax")
-		if class < legacyClassInvincible {
+		if class < model.ClassInvincible {
 			_ = world.SetCreatureStat(c.ID, "pdice", pdice-2)
 			_ = world.SetCreatureStat(c.ID, "hpMax", hpmax-50)
 			_ = world.SetCreatureStat(c.ID, "mpMax", mpmax-20)
@@ -1671,7 +1660,7 @@ func updateStatusExpirations(world UpdatePlyWorld, playerID model.PlayerID, crea
 	}
 
 	// PINVIS
-	if class < legacyClassDM {
+	if class < model.ClassDM {
 		if err := checkExpiry("PINVIS", 1200, func() error {
 			_ = world.WriteToSession(sessionID, ansiCode(c, 35)+"\n당신은 이제 눈에 보입니다."+ansiCode(c, 37)+ansiCode(c, 0), false)
 			return nil
@@ -1681,7 +1670,7 @@ func updateStatusExpirations(world UpdatePlyWorld, playerID model.PlayerID, crea
 	}
 
 	// PDINVI
-	if class < legacyClassDM {
+	if class < model.ClassDM {
 		if err := checkExpiry("PDINVI", 1200, func() error {
 			_ = world.WriteToSession(sessionID, ansiCode(c, 35)+"\n당신의 눈이 침침해졌습니다."+ansiCode(c, 37)+ansiCode(c, 0), false)
 			return nil
@@ -1691,7 +1680,7 @@ func updateStatusExpirations(world UpdatePlyWorld, playerID model.PlayerID, crea
 	}
 
 	// PDMAGI
-	if class < legacyClassDM {
+	if class < model.ClassDM {
 		if err := checkExpiry("PDMAGI", 1200, func() error {
 			_ = world.WriteToSession(sessionID, ansiCode(c, 35)+"\n당신의 감지력이 떨어졌습니다."+ansiCode(c, 37)+ansiCode(c, 0), false)
 			return nil
@@ -1716,7 +1705,7 @@ func updateStatusExpirations(world UpdatePlyWorld, playerID model.PlayerID, crea
 	}
 
 	// PLEVIT
-	if class < legacyClassDM {
+	if class < model.ClassDM {
 		if err := checkExpiry("PLEVIT", 1200, func() error {
 			_ = world.WriteToSession(sessionID, ansiCode(c, 35)+"\n당신은 땅에 내려섰습니다."+ansiCode(c, 37)+ansiCode(c, 0), false)
 			return nil
@@ -1766,7 +1755,7 @@ func updateStatusExpirations(world UpdatePlyWorld, playerID model.PlayerID, crea
 	}
 
 	// PFLYSP
-	if class < legacyClassDM {
+	if class < model.ClassDM {
 		if err := checkExpiry("PFLYSP", 1200, func() error {
 			_ = world.WriteToSession(sessionID, ansiCode(c, 33)+"\n당신은 더이상 날수 없습니다."+ansiCode(c, 37)+ansiCode(c, 0), false)
 			return nil
@@ -1800,7 +1789,7 @@ func updateStatusExpirations(world UpdatePlyWorld, playerID model.PlayerID, crea
 	}
 
 	// PKNOWA
-	if class < legacyClassDM {
+	if class < model.ClassDM {
 		if err := checkExpiry("PKNOWA", 1200, func() error {
 			_ = world.WriteToSession(sessionID, ansiCode(c, 36)+"\n당신의 분별력이 감퇴되었습니다."+ansiCode(c, 37)+ansiCode(c, 0), false)
 			return nil
@@ -1810,7 +1799,7 @@ func updateStatusExpirations(world UpdatePlyWorld, playerID model.PlayerID, crea
 	}
 
 	// PLIGHT
-	if class < legacyClassDM {
+	if class < model.ClassDM {
 		if err := checkExpiry("PLIGHT", 1200, func() error {
 			_ = world.WriteToSession(sessionID, ansiCode(c, 33)+"\n마법의 빛이 사라졌습니다."+ansiCode(c, 37)+ansiCode(c, 0), false)
 			playerName := creatureName(c)
@@ -1830,7 +1819,7 @@ func updateStatusExpirations(world UpdatePlyWorld, playerID model.PlayerID, crea
 	}
 
 	// PANGEL
-	if class < legacyClassDM {
+	if class < model.ClassDM {
 		if err := checkExpiry("PANGEL", 1200, func() error {
 			_ = world.WriteToSession(sessionID, ansiCode(c, 33)+"\n정령이 당신의 몸에서 떠나갑니다."+ansiCode(c, 37)+ansiCode(c, 0), false)
 			playerName := creatureName(c)
@@ -1842,7 +1831,7 @@ func updateStatusExpirations(world UpdatePlyWorld, playerID model.PlayerID, crea
 	}
 
 	// PREFLECT
-	if class < legacyClassDM {
+	if class < model.ClassDM {
 		if err := checkExpiry("PREFLECT", 1200, func() error {
 			_ = world.WriteToSession(sessionID, ansiCode(c, 32)+"\n당신의 반탄강기가 풀렸습니다."+ansiCode(c, 37)+ansiCode(c, 0), false)
 			playerName := creatureName(c)
@@ -2289,7 +2278,7 @@ func computeAC(c model.Creature, world UpdatePlyWorld) int {
 		ac += 20
 	}
 
-	if creatureClass(c) >= legacyClassBulsa {
+	if creatureClass(c) >= model.ClassBulsa {
 		ac -= 10
 		if con > 45 {
 			ac -= (con - 45)
@@ -2372,10 +2361,10 @@ func computeTHACO(c model.Creature, world UpdatePlyWorld) int {
 	if creatureHasAnyFlag(c, "PSLAYE", "slaye", "accurate", "slayer") {
 		thaco -= 3
 	}
-	if class == legacyClassDM {
+	if class == model.ClassDM {
 		thaco -= 60
 	}
-	if class == legacyClassBulsa {
+	if class == model.ClassBulsa {
 		thaco -= 14
 	}
 
@@ -2406,11 +2395,11 @@ func mprofic(c model.Creature, index int) int {
 	var profArray [12]int64
 	class := creatureClass(c)
 	switch class {
-	case legacyClassMage, legacyClassInvincible, legacyClassCaretaker, legacyClassBulsa, legacyClassSubDM, legacyClassDM:
+	case model.ClassMage, model.ClassInvincible, model.ClassCaretaker, model.ClassBulsa, model.ClassSubDM, model.ClassDM:
 		profArray = [12]int64{0, 1024, 2048, 4096, 8192, 16384, 35768, 85536, 140000, 459410, 2073306, 500000000}
-	case legacyClassCleric:
+	case model.ClassCleric:
 		profArray = [12]int64{0, 1024, 4092, 8192, 16384, 32768, 70536, 119000, 226410, 709410, 2973307, 500000000}
-	case legacyClassPaladin, legacyClassRanger:
+	case model.ClassPaladin, model.ClassRanger:
 		profArray = [12]int64{0, 1024, 8192, 16384, 32768, 65536, 105000, 165410, 287306, 809410, 3538232, 500000000}
 	default:
 		profArray = [12]int64{0, 1024, 40000, 80000, 120000, 160000, 205000, 222000, 380000, 965410, 5495000, 500000000}
@@ -2435,13 +2424,13 @@ func profic(c model.Creature, index int) int {
 	var profArray [12]int64
 	class := creatureClass(c)
 	switch class {
-	case legacyClassFighter, legacyClassInvincible, legacyClassCaretaker, legacyClassBulsa, legacyClassSubDM, legacyClassDM:
+	case model.ClassFighter, model.ClassInvincible, model.ClassCaretaker, model.ClassBulsa, model.ClassSubDM, model.ClassDM:
 		profArray = [12]int64{0, 768, 1024, 1440, 1910, 16000, 31214, 167000, 268488, 695000, 934808, 500000000}
-	case legacyClassBarbarian:
+	case model.ClassBarbarian:
 		profArray = [12]int64{0, 1536, 2048, 2880, 3820, 32000, 62428, 334000, 536976, 1390000, 1869616, 500000000}
-	case legacyClassThief, legacyClassRanger:
+	case model.ClassThief, model.ClassRanger:
 		profArray = [12]int64{0, 2304, 3072, 4320, 5730, 48000, 93642, 501000, 805464, 2085000, 2804424, 500000000}
-	case legacyClassCleric, legacyClassPaladin, legacyClassAssassin:
+	case model.ClassCleric, model.ClassPaladin, model.ClassAssassin:
 		profArray = [12]int64{0, 3072, 4096, 5076, 7640, 64000, 124856, 668000, 1073952, 2780000, 3939232, 500000000}
 	default:
 		profArray = [12]int64{0, 5376, 7168, 10080, 13370, 112000, 218498, 1169000, 1879416, 4865000, 6543656, 500000000}
@@ -2465,11 +2454,11 @@ func modProfic(c model.Creature, world UpdatePlyWorld) int {
 	var amt int
 	class := creatureClass(c)
 	switch class {
-	case legacyClassFighter, legacyClassBarbarian, legacyClassInvincible, legacyClassCaretaker:
+	case model.ClassFighter, model.ClassBarbarian, model.ClassInvincible, model.ClassCaretaker:
 		amt = 20
-	case legacyClassRanger, legacyClassPaladin:
+	case model.ClassRanger, model.ClassPaladin:
 		amt = 25
-	case legacyClassThief, legacyClassAssassin, legacyClassCleric:
+	case model.ClassThief, model.ClassAssassin, model.ClassCleric:
 		amt = 30
 	default:
 		amt = 40

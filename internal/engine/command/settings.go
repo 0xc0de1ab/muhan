@@ -271,7 +271,7 @@ func setPrivilegedCreatureSetting(ctx *Context, world SettingsWorld, creature mo
 	default:
 		return StatusDefault, false, nil
 	}
-	if creatureStat(creature, "class") >= legacyClassSubDM {
+	if creatureStat(creature, "class") >= model.ClassSubDM {
 		if _, err := setSettingsCreatureFlag(world, creature.ID, tag, true); err != nil {
 			return StatusDefault, true, err
 		}

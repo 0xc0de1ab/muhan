@@ -64,7 +64,7 @@ func NewTurnHandlerWithDeathFinalizer(world TurnWorld, roll SearchRollFunc, fina
 			ctx.WriteString("\n그런 괴물은 존재하지 않습니다.\n")
 			return StatusDefault, nil
 		}
-		if creatureClass(actor) == legacyClassPaladin && !turnCreatureTurnable(victim) {
+		if creatureClass(actor) == model.ClassPaladin && !turnCreatureTurnable(victim) {
 			ctx.WriteString("\n죽은 괴물에게만 사용가능합니다.\n")
 			return StatusDefault, nil
 		}
@@ -149,10 +149,10 @@ func NewTurnHandlerWithDeathFinalizer(world TurnWorld, roll SearchRollFunc, fina
 
 func turnClassRejection(actor model.Creature) string {
 	class := creatureClass(actor)
-	if class != legacyClassCleric && class != legacyClassPaladin && class < legacyClassInvincible {
+	if class != model.ClassCleric && class != model.ClassPaladin && class < model.ClassInvincible {
 		return "불제자와 무사만이 방혼술을 사용할 수 있습니다.\n"
 	}
-	if class >= legacyClassInvincible && !turnHasClericOrPaladinTraining(actor) {
+	if class >= model.ClassInvincible && !turnHasClericOrPaladinTraining(actor) {
 		return "\n불제자나 무사를 무적수련하지 않았습니다.\n"
 	}
 	return ""
@@ -200,7 +200,7 @@ func turnCreaturePronoun(creature model.Creature) string {
 func turnChance(actor model.Creature, target model.Creature) int {
 	chance := (((attackCreatureLevel(actor) + 3) / 4) - ((attackCreatureLevel(target) + 3) / 4)) * 20
 	chance += legacyStatBonus(creatureStat(actor, "piety")) * 5
-	if creatureClass(actor) == legacyClassPaladin {
+	if creatureClass(actor) == model.ClassPaladin {
 		chance += 25
 	} else {
 		chance += 15
@@ -218,9 +218,9 @@ func turnDamage(actor model.Creature, target model.Creature, rng SearchRollFunc)
 	class := creatureClass(actor)
 	var damage int
 	switch class {
-	case legacyClassCaretaker:
+	case model.ClassCaretaker:
 		damage = rng(3, class) * hpUnit
-	case legacyClassInvincible:
+	case model.ClassInvincible:
 		damage = rng(5, class) * hpUnit
 	default:
 		damage = hpCurrent / 3

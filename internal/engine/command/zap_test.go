@@ -139,14 +139,14 @@ func TestZapHandlerAppliesMagicItemRestrictions(t *testing.T) {
 	}{
 		{
 			name:          "evil only rejects good actor and drops wand",
-			creatureStats: map[string]int{"alignment": 101, "class": legacyClassFighter},
+			creatureStats: map[string]int{"alignment": 101, "class": model.ClassFighter},
 			objectTags:    []string{"evilOnly"},
 			want:          "\n마법봉의 수명이 다한 듯 수증기처럼 증발해 버렸습니다.\n",
 			wantDropped:   true,
 		},
 		{
 			name:          "class selective rejects unlisted class",
-			creatureStats: map[string]int{"class": legacyClassFighter},
+			creatureStats: map[string]int{"class": model.ClassFighter},
 			protoProps:    map[string]string{"classSelective": "1", "classMage": "1"},
 			want:          "\n당신직업세계에서 금하는 물건이기에 사용할 수 없습니다.\n",
 		},
@@ -309,7 +309,7 @@ func zapWorld(t *testing.T, roomID model.RoomID, shots string, magicPower string
 	creature.RoomID = roomID
 	creature.Inventory = model.ObjectRefList{ObjectIDs: []model.ObjectInstanceID{"object:wand", "object:stone"}}
 	creature.Stats = map[string]int{
-		"class":     legacyClassCleric,
+		"class":     model.ClassCleric,
 		"hpCurrent": 50,
 		"hpMax":     100,
 		"mpCurrent": 100,

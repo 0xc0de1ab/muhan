@@ -147,10 +147,10 @@ func NewStealHandler(world StealWorld, roll StealRollFunc) Handler {
 
 func stealActorAllowed(actor model.Creature) (bool, string) {
 	class := creatureStat(actor, "class")
-	if class == legacyClassThief {
+	if class == model.ClassThief {
 		return true, ""
 	}
-	if class < legacyClassInvincible {
+	if class < model.ClassInvincible {
 		return false, "도둑만 훔칠수 있습니다."
 	}
 	if creatureHasAnyFlag(actor, "STHIEF", "thiefSpell", "thiefMode") || creatureStat(actor, "STHIEF") != 0 {
@@ -236,7 +236,7 @@ func stealTargetForbiddenMessage(world StealWorld, viewer LookViewer, room model
 		return "이 방에서는 훔칠 수 없습니다.", true
 	}
 	class := creatureStat(actor, "class")
-	if class >= legacyClassSubDM {
+	if class >= model.ClassSubDM {
 		return "", false
 	}
 	if !creatureHasAnyFlag(actor, "chaos", "pchaos") {
@@ -292,7 +292,7 @@ func findStealObject(world InventoryWorld, victim model.Creature, target string,
 func stealChance(world InventoryWorld, actor model.Creature, victim model.Creature, object model.ObjectInstance) int {
 	class := creatureStat(actor, "class")
 	chance := 3 * ((creatureLevel(actor) + 3) / 4)
-	if class == legacyClassThief {
+	if class == model.ClassThief {
 		chance = 4 * ((creatureLevel(actor) + 3) / 4)
 	}
 	chance += legacyStatBonus(creatureStat(actor, "dexterity")) * 3
@@ -303,10 +303,10 @@ func stealChance(world InventoryWorld, actor model.Creature, victim model.Creatu
 	if stealObjectProtected(world, object) || creatureHasAnyFlag(victim, "noSteal", "munstl") {
 		chance = 0
 	}
-	if class == legacyClassDM {
+	if class == model.ClassDM {
 		chance = 100
 	}
-	if creatureStat(victim, "class") == legacyClassDM {
+	if creatureStat(victim, "class") == model.ClassDM {
 		chance = 0
 	}
 	if stealObjectHasTopLevelEventFlag(world, object) {

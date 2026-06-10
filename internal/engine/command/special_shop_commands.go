@@ -109,7 +109,7 @@ func NewBurnHandlerWithRoot(world BurnWorld, root string) Handler {
 		ctx.WriteString("당신은 약간의 상금과 경험을 받았습니다.")
 		if legacyBurnRoll(1, 3000) == 1 {
 			actorName := commandActorDisplayName(player, creature)
-			if creatureClass(creature) >= legacyClassInvincible {
+			if creatureClass(creature) >= model.ClassInvincible {
 				ctx.WriteString("\n신이 당신의 정성이 갸륵해서 엄청난 경험치와 돈벼락을 내립니다.")
 				invokeBroadcast(ctx, fmt.Sprintf("\n### 신이 %s에게 엄청난 경험치와 돈벼락을 내립니다.\n", actorName))
 				goldReward += 3000000
@@ -488,7 +488,7 @@ func legacyCarryObjectPrototypeID(number int) model.PrototypeID {
 }
 
 func burnProtectedQuestObject(world StatusWorld, creature model.Creature, object model.ObjectInstance) bool {
-	if creatureClass(creature) >= legacyClassSubDM {
+	if creatureClass(creature) >= model.ClassSubDM {
 		return false
 	}
 	if objectIntPropertyOrZero(world, object, "questNumber") == 0 &&
@@ -500,7 +500,7 @@ func burnProtectedQuestObject(world StatusWorld, creature model.Creature, object
 }
 
 func burnProtectedEventObject(world StatusWorld, creature model.Creature, object model.ObjectInstance) bool {
-	if creatureClass(creature) >= legacyClassSubDM {
+	if creatureClass(creature) >= model.ClassSubDM {
 		return false
 	}
 	if !objectHasAnyFlagOrProperty(world, object, "event", "OEVENT") {

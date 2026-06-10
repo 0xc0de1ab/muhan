@@ -41,7 +41,7 @@ func dmInvis(ctx *Context, resolved ResolvedCommand, world DMInvisWorld) (Status
 	}
 
 	class := creatureClass(creature)
-	if class < legacyClassSubDM {
+	if class < model.ClassSubDM {
 		return StatusPrompt, nil
 	}
 

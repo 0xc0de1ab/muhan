@@ -101,10 +101,10 @@ func NewHasteHandler(world HasteWorld, rng HasteRollFunc) Handler {
 
 func hasteClassRejection(actor model.Creature) string {
 	class := creatureClass(actor)
-	if class != legacyClassRanger && class < legacyClassInvincible {
+	if class != model.ClassRanger && class < model.ClassInvincible {
 		return "포졸만 사용할 수 있는 기술입니다.\n"
 	}
-	if class >= legacyClassInvincible && !hasteHasRangerTraining(actor) {
+	if class >= model.ClassInvincible && !hasteHasRangerTraining(actor) {
 		return "\n포졸을 무적수련하지 않았습니다..\n"
 	}
 	return ""

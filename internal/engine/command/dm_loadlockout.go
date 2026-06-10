@@ -38,7 +38,7 @@ func dmLoadLockout(ctx *Context, resolved ResolvedCommand, world DMLoadLockoutWo
 		return StatusPrompt, nil
 	}
 
-	if creatureClass(creature) < legacyClassDM {
+	if creatureClass(creature) < model.ClassDM {
 		return StatusPrompt, nil
 	}
 

@@ -423,7 +423,7 @@ func TestCastHandlerDrainExpHasNoLegacyMPCost(t *testing.T) {
 	actor := loaded.Creatures["creature:alice"]
 	actor.Level = 10
 	actor.Stats = map[string]int{
-		"class":            legacyClassDM,
+		"class":            model.ClassDM,
 		"level":            10,
 		"experience":       1000,
 		"proficiencySharp": 2000,
@@ -502,7 +502,7 @@ func TestCastHandlerRmGongUsesLegacyCostAndClass(t *testing.T) {
 	useSpellFailRoll(t, 0)
 	loaded := castWorld(t, "room:dojo", 100)
 	actor := loaded.Creatures["creature:alice"]
-	actor.Stats["class"] = legacyClassBulsa
+	actor.Stats["class"] = model.ClassBulsa
 	actor.Metadata.Tags = []string{"SRMGONG", "PFEARS"}
 	loaded.Creatures[actor.ID] = actor
 	runtime := state.NewWorld(loaded)
@@ -530,7 +530,7 @@ func TestCastHandlerObjectSendUsesDynamicCostWithoutCommonDeduction(t *testing.T
 	actor := loaded.Creatures["creature:alice"]
 	actor.Level = 25
 	actor.Stats = map[string]int{
-		"class":        legacyClassMage,
+		"class":        model.ClassMage,
 		"level":        25,
 		"intelligence": 0,
 		"mpCurrent":    9,
@@ -592,7 +592,7 @@ func TestCastHandlerObjectSendSpellFailKeepsObjectAndConsumesDynamicCost(t *test
 	actor := loaded.Creatures["creature:alice"]
 	actor.Level = 25
 	actor.Stats = map[string]int{
-		"class":        legacyClassMage,
+		"class":        model.ClassMage,
 		"level":        25,
 		"intelligence": 0,
 		"mpCurrent":    9,
@@ -757,35 +757,35 @@ func TestCastHandlerRecallUsesCLegacyGates(t *testing.T) {
 		{
 			name:   "not enough mp",
 			mp:     29,
-			class:  legacyClassFighter,
+			class:  model.ClassFighter,
 			want:   "\n당신이 도력이 부족합니다.\n",
 			wantMP: 29,
 		},
 		{
 			name:   "wrong class before learned check",
 			mp:     30,
-			class:  legacyClassFighter,
+			class:  model.ClassFighter,
 			want:   "\n불제자만이 이 주술을 사용할 수 있습니다.\n",
 			wantMP: 30,
 		},
 		{
 			name:   "untrained invincible before learned check",
 			mp:     30,
-			class:  legacyClassInvincible,
+			class:  model.ClassInvincible,
 			want:   "\n불제자를 무적수련하지 않았습니다..\n",
 			wantMP: 30,
 		},
 		{
 			name:   "unlearned cleric",
 			mp:     30,
-			class:  legacyClassCleric,
+			class:  model.ClassCleric,
 			want:   "\n당신은 아직 그런 주문을 터득하지 못했습니다.\n",
 			wantMP: 30,
 		},
 		{
 			name:      "success",
 			mp:        30,
-			class:     legacyClassCleric,
+			class:     model.ClassCleric,
 			tags:      []string{"SRECAL"},
 			want:      "귀환 주문을 외웠습니다.\n",
 			wantMP:    0,
@@ -867,7 +867,7 @@ func TestCastHandlerMagicTrackUsesCLegacyGates(t *testing.T) {
 		{
 			name:   "not enough mp",
 			mp:     12,
-			class:  legacyClassRanger,
+			class:  model.ClassRanger,
 			tags:   []string{"STRACK"},
 			args:   []string{"추적", "Bob"},
 			want:   "\n당신의 도력이 부족합니다.\n",
@@ -876,7 +876,7 @@ func TestCastHandlerMagicTrackUsesCLegacyGates(t *testing.T) {
 		{
 			name:   "wrong class before learned check",
 			mp:     13,
-			class:  legacyClassFighter,
+			class:  model.ClassFighter,
 			args:   []string{"추적", "Bob"},
 			want:   "\n포졸만이 이 주술을 사용할 수 있습니다.\n",
 			wantMP: 13,
@@ -884,7 +884,7 @@ func TestCastHandlerMagicTrackUsesCLegacyGates(t *testing.T) {
 		{
 			name:   "untrained invincible before learned check",
 			mp:     13,
-			class:  legacyClassInvincible,
+			class:  model.ClassInvincible,
 			args:   []string{"추적", "Bob"},
 			want:   "\n포졸을 무적수련하지 않았습니다..\n",
 			wantMP: 13,
@@ -892,7 +892,7 @@ func TestCastHandlerMagicTrackUsesCLegacyGates(t *testing.T) {
 		{
 			name:   "unlearned ranger",
 			mp:     13,
-			class:  legacyClassRanger,
+			class:  model.ClassRanger,
 			args:   []string{"추적", "Bob"},
 			want:   "\n당신은 아직 그런 주술을 터득하지 못했습니다.\n",
 			wantMP: 13,
@@ -900,7 +900,7 @@ func TestCastHandlerMagicTrackUsesCLegacyGates(t *testing.T) {
 		{
 			name:      "success",
 			mp:        13,
-			class:     legacyClassRanger,
+			class:     model.ClassRanger,
 			tags:      []string{"STRACK"},
 			args:      []string{"추적", "Bob"},
 			want:      "\n!!당신은 Bob의 흔적을 찾아내는데 성공했습니다.!!\n그를 추적하여 달려갑니다.\n",
@@ -925,7 +925,7 @@ func TestCastHandlerMagicTrackUsesCLegacyGates(t *testing.T) {
 				DisplayName: "Bob",
 				PlayerID:    "player:bob",
 				RoomID:      "room:garden",
-				Stats:       map[string]int{"class": legacyClassFighter, "level": 5},
+				Stats:       map[string]int{"class": model.ClassFighter, "level": 5},
 			})
 			actor := loaded.Creatures["creature:alice"]
 			actor.Level = 10
@@ -986,7 +986,7 @@ func TestCastHandlerFullHealUsesCLegacyGatesAndDailyLimit(t *testing.T) {
 		{
 			name:   "wrong class before learned check",
 			mp:     50,
-			class:  legacyClassFighter,
+			class:  model.ClassFighter,
 			hp:     3,
 			hpMax:  10,
 			want:   "\n불제자와 무사만이 이 주술을 사용할 수 있습니다.\n",
@@ -996,7 +996,7 @@ func TestCastHandlerFullHealUsesCLegacyGatesAndDailyLimit(t *testing.T) {
 		{
 			name:   "unlearned cleric",
 			mp:     50,
-			class:  legacyClassCleric,
+			class:  model.ClassCleric,
 			hp:     3,
 			hpMax:  10,
 			want:   "\n당신은 아직 그런 주술을 터득하지 못했습니다.\n",
@@ -1006,7 +1006,7 @@ func TestCastHandlerFullHealUsesCLegacyGatesAndDailyLimit(t *testing.T) {
 		{
 			name:   "daily exhausted before heal",
 			mp:     50,
-			class:  legacyClassCleric,
+			class:  model.ClassCleric,
 			tags:   []string{"SFHEAL"},
 			props:  map[string]string{"dailyFullHealMax": "10", "dailyFullHealCur": "0"},
 			hp:     3,
@@ -1018,7 +1018,7 @@ func TestCastHandlerFullHealUsesCLegacyGatesAndDailyLimit(t *testing.T) {
 		{
 			name:      "success decrements daily",
 			mp:        50,
-			class:     legacyClassCleric,
+			class:     model.ClassCleric,
 			tags:      []string{"SFHEAL"},
 			props:     map[string]string{"dailyFullHealMax": "10", "dailyFullHealCur": "10"},
 			hp:        3,
@@ -1083,7 +1083,7 @@ func TestCastHandlerFullHealCaretakerTargetCostsHundredMP(t *testing.T) {
 		Stats:       map[string]int{"hpCurrent": 3, "hpMax": 10},
 	})
 	actor := loaded.Creatures["creature:alice"]
-	actor.Stats["class"] = legacyClassCaretaker
+	actor.Stats["class"] = model.ClassCaretaker
 	actor.Metadata.Tags = []string{"SCLERIC", "SFHEAL"}
 	actor.Properties = map[string]string{"dailyFullHealCur": "3"}
 	loaded.Creatures[actor.ID] = actor
@@ -1113,7 +1113,7 @@ func TestCastHandlerFullHealCaretakerTargetCostsHundredMP(t *testing.T) {
 func TestCastHandlerFullHealExplicitSelfAliasUsesTargetBranchLikeLegacy(t *testing.T) {
 	loaded := castWorld(t, "room:dojo", 50)
 	actor := loaded.Creatures["creature:alice"]
-	actor.Stats["class"] = legacyClassCleric
+	actor.Stats["class"] = model.ClassCleric
 	actor.Stats["hpCurrent"] = 3
 	actor.Stats["hpMax"] = 10
 	actor.Metadata.Tags = []string{"SFHEAL"}
@@ -1155,7 +1155,7 @@ func TestCastHandlerMagic6StateSpellsUseEffectOwnedCost(t *testing.T) {
 			loaded := castWorld(t, "room:dojo", tt.cost)
 			actor := loaded.Creatures["creature:alice"]
 			actor.Metadata.Tags = []string{tt.learned}
-			actor.Stats["class"] = legacyClassCleric
+			actor.Stats["class"] = model.ClassCleric
 			actor.Stats["level"] = 10
 			loaded.Creatures[actor.ID] = actor
 			runtime := state.NewWorld(loaded)
@@ -1190,25 +1190,25 @@ func TestCastHandlerClericUtilitySpellsUseEffectGateOrder(t *testing.T) {
 		{
 			name:  "remove disease wrong class before learned check",
 			spell: "치료",
-			class: legacyClassFighter,
+			class: model.ClassFighter,
 			want:  "\n이 주술은 불제자만이 사용할 수 있습니다.\n",
 		},
 		{
 			name:  "remove disease unlearned cleric",
 			spell: "치료",
-			class: legacyClassCleric,
+			class: model.ClassCleric,
 			want:  "\n당신은 아직 그런 주문을 터득하지 못했습니다.\n",
 		},
 		{
 			name:  "remove blindness wrong class before learned check",
 			spell: "개안술",
-			class: legacyClassFighter,
+			class: model.ClassFighter,
 			want:  "이 기술은 불제자와 무사만이 사용할 수 있습니다.",
 		},
 		{
 			name:  "remove blindness unlearned cleric",
 			spell: "개안술",
-			class: legacyClassCleric,
+			class: model.ClassCleric,
 			want:  "당신은 아직 그런 주문을 터득하지 못했습니다.",
 		},
 	}
@@ -1274,7 +1274,7 @@ func TestCastHandlerRemoveDiseaseSuccessUsesEffectOwnedCost(t *testing.T) {
 	useSpellFailRoll(t, 0)
 	loaded := castWorld(t, "room:dojo", 12)
 	actor := loaded.Creatures["creature:alice"]
-	actor.Stats["class"] = legacyClassCleric
+	actor.Stats["class"] = model.ClassCleric
 	actor.Metadata.Tags = []string{"SRMDIS", "PDISEA"}
 	loaded.Creatures[actor.ID] = actor
 	player := loaded.Players["player:alice"]
@@ -1340,7 +1340,7 @@ func TestCastHandlerRemoveBlindnessSuccessUsesEffectOwnedCost(t *testing.T) {
 	useSpellFailRoll(t, 0)
 	loaded := castWorld(t, "room:dojo", 12)
 	actor := loaded.Creatures["creature:alice"]
-	actor.Stats["class"] = legacyClassCleric
+	actor.Stats["class"] = model.ClassCleric
 	actor.Metadata.Tags = []string{"SRMBLD"}
 	loaded.Creatures[actor.ID] = actor
 	runtime := state.NewWorld(loaded)
@@ -1362,7 +1362,7 @@ func TestCastHandlerRemoveBlindnessSuccessUsesEffectOwnedCost(t *testing.T) {
 func TestCastHandlerDMSkipsSpellCooldownCheck(t *testing.T) {
 	loaded := castWorld(t, "room:dojo", 20)
 	creature := loaded.Creatures["creature:alice"]
-	creature.Stats["class"] = legacyClassDM
+	creature.Stats["class"] = model.ClassDM
 	loaded.Creatures[creature.ID] = creature
 	runtime := state.NewWorld(loaded)
 
@@ -1436,7 +1436,7 @@ func TestCastHandlerRemoveCurseUsesCLegacyCost(t *testing.T) {
 	loaded := castWorld(t, "room:dojo", 18)
 	actor := loaded.Creatures["creature:alice"]
 	actor.Metadata.Tags = append(actor.Metadata.Tags, "SREMOV")
-	actor.Stats["class"] = legacyClassDM
+	actor.Stats["class"] = model.ClassDM
 	loaded.Creatures[actor.ID] = actor
 
 	weaponID := model.ObjectInstanceID("object:cursed_sword")
@@ -1476,7 +1476,7 @@ func TestCastHandlerRoomVigorUsesCLegacyCost(t *testing.T) {
 	actor := loaded.Creatures["creature:alice"]
 	actor.Level = 100
 	actor.Metadata.Tags = append(actor.Metadata.Tags, "SRVIGO")
-	actor.Stats["class"] = legacyClassCleric
+	actor.Stats["class"] = model.ClassCleric
 	actor.Stats["level"] = 100
 	actor.Stats["intelligence"] = 30
 	actor.Stats["piety"] = 30
@@ -1510,7 +1510,7 @@ func TestCastHandlerRoomVigorSpellFailConsumesPrepaidCost(t *testing.T) {
 	loaded.Rooms[room.ID] = room
 	actor := loaded.Creatures["creature:alice"]
 	actor.Metadata.Tags = append(actor.Metadata.Tags, "SRVIGO")
-	actor.Stats["class"] = legacyClassCleric
+	actor.Stats["class"] = model.ClassCleric
 	actor.Stats["mpCurrent"] = 12
 	actor.Stats["hpCurrent"] = 5
 	actor.Stats["hpMax"] = 20
@@ -1545,20 +1545,20 @@ func TestCastHandlerRoomVigorUsesCLegacyGateOrder(t *testing.T) {
 		{
 			name:  "unlearned before mp and class",
 			mp:    11,
-			class: legacyClassFighter,
+			class: model.ClassFighter,
 			want:  "당신은 아직 그런 주문을 터득하지 못했습니다.",
 		},
 		{
 			name:  "class before mp",
 			mp:    11,
-			class: legacyClassFighter,
+			class: model.ClassFighter,
 			tags:  []string{"SRVIGO"},
 			want:  "이 주술은 불제자만이 사용할 수 있습니다.",
 		},
 		{
 			name:  "mp after learned and class",
 			mp:    11,
-			class: legacyClassCleric,
+			class: model.ClassCleric,
 			tags:  []string{"SRVIGO"},
 			want:  "당신의 도력이 부족합니다",
 		},
@@ -1609,7 +1609,7 @@ func TestCastHandlerCurseSpellFailConsumesCMPWithoutMutatingEquipment(t *testing
 			actor := loaded.Creatures["creature:alice"]
 			actor.Level = 1
 			actor.Metadata.Tags = []string{tt.tag}
-			actor.Stats["class"] = legacyClassBarbarian
+			actor.Stats["class"] = model.ClassBarbarian
 			actor.Stats["level"] = 1
 			actor.Stats["intelligence"] = 0
 
@@ -1700,7 +1700,7 @@ func castWorld(t *testing.T, roomID model.RoomID, mp int) *worldload.World {
 	creature.RoomID = roomID
 	creature.Metadata.Tags = []string{"SVIGOR", "SDETEC"}
 	creature.Stats = map[string]int{
-		"class":     legacyClassCleric,
+		"class":     model.ClassCleric,
 		"hpCurrent": 10,
 		"hpMax":     20,
 		"mpCurrent": mp,

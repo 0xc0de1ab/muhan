@@ -12,7 +12,7 @@ import (
 )
 
 func TestAngelHandlerSuccessAddsStatusCooldownAndExpirationWithoutReveal(t *testing.T) {
-	loaded := angelWorld(t, legacyClassMage, 50)
+	loaded := angelWorld(t, model.ClassMage, 50)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"hidden", "PBLIND", "PSILNC"}
 	loaded.Creatures[alice.ID] = alice
@@ -69,7 +69,7 @@ func TestAngelHandlerSuccessAddsStatusCooldownAndExpirationWithoutReveal(t *test
 }
 
 func TestAngelHandlerAlreadySummonedRejects(t *testing.T) {
-	loaded := angelWorld(t, legacyClassMage, 50)
+	loaded := angelWorld(t, model.ClassMage, 50)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"PANGEL"}
 	loaded.Creatures[alice.ID] = alice
@@ -91,7 +91,7 @@ func TestAngelHandlerAlreadySummonedRejects(t *testing.T) {
 }
 
 func TestAngelHandlerCooldownPrecedesChant(t *testing.T) {
-	loaded := angelWorld(t, legacyClassMage, 50)
+	loaded := angelWorld(t, model.ClassMage, 50)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"hidden"}
 	loaded.Creatures[alice.ID] = alice
@@ -116,7 +116,7 @@ func TestAngelHandlerCooldownPrecedesChant(t *testing.T) {
 }
 
 func TestAngelHandlerFailureDoesNotStartCooldownOrReveal(t *testing.T) {
-	loaded := angelWorld(t, legacyClassInvincible, 10)
+	loaded := angelWorld(t, model.ClassInvincible, 10)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"SMAGE", "hidden"}
 	loaded.Creatures[alice.ID] = alice
@@ -155,25 +155,25 @@ func TestAngelHandlerRejectsClassAndUntrainedInvincible(t *testing.T) {
 	}{
 		{
 			name:  "wrong class",
-			class: legacyClassFighter,
+			class: model.ClassFighter,
 			level: 50,
 			want:  "도술사 50 이상만 사용할 수 있는 기술입니다.",
 		},
 		{
 			name:  "mage below level fifty",
-			class: legacyClassMage,
+			class: model.ClassMage,
 			level: 49,
 			want:  "도술사 50 이상만 사용할 수 있는 기술입니다.",
 		},
 		{
 			name:  "invincible without mage training",
-			class: legacyClassInvincible,
+			class: model.ClassInvincible,
 			level: 50,
 			want:  "도술사를 무적수련하지 않았습니다..",
 		},
 		{
 			name:   "invincible with mage training",
-			class:  legacyClassInvincible,
+			class:  model.ClassInvincible,
 			level:  10,
 			tags:   []string{"SMAGE"},
 			want:   "정령이 응답합니다",
@@ -209,7 +209,7 @@ func TestAngelHandlerRejectsClassAndUntrainedInvincible(t *testing.T) {
 func TestAngelHandlerCanBeRegisteredByDispatcherAliases(t *testing.T) {
 	for _, line := range []string{"정령소환술", "angel"} {
 		t.Run(line, func(t *testing.T) {
-			runtime := state.NewWorld(angelWorld(t, legacyClassMage, 50))
+			runtime := state.NewWorld(angelWorld(t, model.ClassMage, 50))
 			dispatcher := Dispatcher{
 				Registry: mustRegistry(t, []commandspec.CommandSpec{
 					{Name: "정령소환술", Number: 169, Handler: "angel"},

@@ -53,11 +53,11 @@ func magicEffectMagicTrack(
 	how := determineHow(world, object)
 	if how == howCast {
 		class := creatureClass(actor)
-		if class != legacyClassRanger && class < legacyClassInvincible {
+		if class != model.ClassRanger && class < model.ClassInvincible {
 			ctx.WriteString("\n포졸만이 이 주술을 사용할 수 있습니다.\n")
 			return false, nil
 		}
-		if class >= legacyClassInvincible && !creatureHasAnyFlag(actor, "SRANGER", "rangerSpell", "rangerTraining", "rangerMode") {
+		if class >= model.ClassInvincible && !creatureHasAnyFlag(actor, "SRANGER", "rangerSpell", "rangerTraining", "rangerMode") {
 			ctx.WriteString("\n포졸을 무적수련하지 않았습니다..\n")
 			return false, nil
 		}
@@ -112,7 +112,7 @@ func magicEffectMagicTrack(
 		ctx.WriteString("\n그런 사람은 존재하지 않습니다.\n")
 		return false, nil
 	}
-	if creatureClass(targetCreature) > legacyClassCaretaker {
+	if creatureClass(targetCreature) > model.ClassCaretaker {
 		ctx.WriteString("\n그 사람이 어디에 있는지 추적할수 없습니다.\n")
 		return false, nil
 	}
@@ -191,7 +191,7 @@ func magicEffectMagicTrack(
 	if err != nil {
 		return false, err
 	}
-	if !dailyOK && how == howCast && creatureClass(actor) < legacyClassCaretaker {
+	if !dailyOK && how == howCast && creatureClass(actor) < model.ClassCaretaker {
 		ctx.WriteString("\n당신의 몸이 너무 피곤해 이 주술을 더 이상 펼칠 수 없습니다.\n")
 		return false, nil
 	}
@@ -286,7 +286,7 @@ func magicEffectLocatePlayer(
 	// C magic7.c only blocks exact DM targets from non-DM casters.
 	targetClass := getCreatureClass(targetCreature)
 	casterClass := getCreatureClass(actor)
-	if targetClass == legacyClassDM && casterClass != legacyClassDM {
+	if targetClass == model.ClassDM && casterClass != model.ClassDM {
 		ctx.WriteString("그 사람의 정신력이 너무 높아 투시를 할 수 없습니다.")
 		return false, nil
 	}
@@ -323,7 +323,7 @@ func magicEffectLocatePlayer(
 	chance = minInt(85, chance)
 
 	// Success roll
-	if targetClass < legacyClassSubDM && locatePlayerRandIntn(100)+1 < chance {
+	if targetClass < model.ClassSubDM && locatePlayerRandIntn(100)+1 < chance {
 		// Look up target room and render
 		targetRoom, found := world.Room(targetCreature.RoomID)
 		if !found {

@@ -163,7 +163,7 @@ func TestDMSpy(t *testing.T) {
 				"player:caster": {ID: "player:caster", CreatureID: "creature:caster"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:caster": {ID: "creature:caster", Stats: map[string]int{"class": legacyClassBulsa}},
+				"creature:caster": {ID: "creature:caster", Stats: map[string]int{"class": model.ClassBulsa}},
 			},
 			wantStatus: StatusPrompt,
 			wantOutput: "",
@@ -181,7 +181,7 @@ func TestDMSpy(t *testing.T) {
 			creatures: map[model.CreatureID]model.Creature{
 				"creature:caster": {
 					ID:    "creature:caster",
-					Stats: map[string]int{"class": legacyClassSubDM},
+					Stats: map[string]int{"class": model.ClassSubDM},
 					Metadata: model.Metadata{
 						Tags: []string{"PSPYON"},
 					},
@@ -201,7 +201,7 @@ func TestDMSpy(t *testing.T) {
 				"player:caster": {ID: "player:caster", CreatureID: "creature:caster"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:caster": {ID: "creature:caster", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:caster": {ID: "creature:caster", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 			wantStatus: StatusDefault,
 			wantOutput: "누굴 염탐합니까??\n",
@@ -214,7 +214,7 @@ func TestDMSpy(t *testing.T) {
 				"player:caster": {ID: "player:caster", CreatureID: "creature:caster"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:caster": {ID: "creature:caster", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:caster": {ID: "creature:caster", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 			wantStatus: StatusDefault,
 			wantOutput: "누굴 감시하려구요.\n",
@@ -231,7 +231,7 @@ func TestDMSpy(t *testing.T) {
 				"player:target": {ID: "player:target", DisplayName: "target", CreatureID: "creature:target"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:caster": {ID: "creature:caster", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:caster": {ID: "creature:caster", Stats: map[string]int{"class": model.ClassSubDM}},
 				"creature:target": {ID: "creature:target", DisplayName: "target"},
 			},
 			wantStatus:   StatusDefault,
@@ -253,7 +253,7 @@ func TestDMSpy(t *testing.T) {
 				"player:target": {ID: "player:target", DisplayName: "target", CreatureID: "creature:target"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:caster": {ID: "creature:caster", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:caster": {ID: "creature:caster", Stats: map[string]int{"class": model.ClassSubDM}},
 				"creature:target": {ID: "creature:target"},
 			},
 			wantStatus: StatusDefault,
@@ -274,7 +274,7 @@ func TestDMSpy(t *testing.T) {
 				"player:target": {ID: "player:target", DisplayName: "target", CreatureID: "creature:target"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:caster": {ID: "creature:caster", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:caster": {ID: "creature:caster", Stats: map[string]int{"class": model.ClassSubDM}},
 				"creature:target": {ID: "creature:target"},
 			},
 			wantStatus: StatusDefault,
@@ -370,7 +370,7 @@ func TestDMSpyTogglesLegacyStatFlagsLikeC(t *testing.T) {
 			creatures: map[model.CreatureID]model.Creature{
 				"creature:caster": {
 					ID:    "creature:caster",
-					Stats: map[string]int{"class": legacyClassSubDM, "PSPYON": 1, "PDMINV": 1},
+					Stats: map[string]int{"class": model.ClassSubDM, "PSPYON": 1, "PDMINV": 1},
 				},
 			},
 			spies: map[model.PlayerID]model.PlayerID{
@@ -405,7 +405,7 @@ func TestDMSpyTogglesLegacyStatFlagsLikeC(t *testing.T) {
 				"player:target": {ID: "player:target", DisplayName: "Target", CreatureID: "creature:target"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:caster": {ID: "creature:caster", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:caster": {ID: "creature:caster", Stats: map[string]int{"class": model.ClassSubDM}},
 				"creature:target": {ID: "creature:target", DisplayName: "Target"},
 			},
 		}
@@ -439,7 +439,7 @@ func TestDMSpyUsesParsedTargetSlotLikeCWhenArgsMissing(t *testing.T) {
 			"player:target": {ID: "player:target", DisplayName: "Target", CreatureID: "creature:target"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:caster": {ID: "creature:caster", Stats: map[string]int{"class": legacyClassSubDM}},
+			"creature:caster": {ID: "creature:caster", Stats: map[string]int{"class": model.ClassSubDM}},
 			"creature:target": {ID: "creature:target", DisplayName: "Target"},
 		},
 	}

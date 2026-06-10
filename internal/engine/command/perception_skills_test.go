@@ -12,7 +12,7 @@ import (
 )
 
 func TestRedEyeHandlerDamagesRemoteMonster(t *testing.T) {
-	loaded := perceptionWorld(t, legacyClassInvincible, []string{"SPALADIN", "STHIEF", "hidden", "PHIDDN", "invisible", "PINVIS"})
+	loaded := perceptionWorld(t, model.ClassInvincible, []string{"SPALADIN", "STHIEF", "hidden", "PHIDDN", "invisible", "PINVIS"})
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats["PHIDDN"] = 1
 	alice.Stats["PINVIS"] = 1
@@ -66,7 +66,7 @@ func TestRedEyeHandlerDamagesRemoteMonster(t *testing.T) {
 }
 
 func TestRedEyeHandlerUsesCustomDeathFinalizer(t *testing.T) {
-	loaded := perceptionWorld(t, legacyClassInvincible, []string{"SPALADIN", "STHIEF"})
+	loaded := perceptionWorld(t, model.ClassInvincible, []string{"SPALADIN", "STHIEF"})
 	goblin := loaded.Creatures["creature:goblin"]
 	goblin.Stats["hpCurrent"] = 1
 	loaded.Creatures[goblin.ID] = goblin
@@ -102,13 +102,13 @@ func TestRedEyeHandlerRejectsInvalidUse(t *testing.T) {
 		mutate func(*worldload.World)
 		want   string
 	}{
-		{name: "wrong class", class: legacyClassFighter, tags: []string{"SPALADIN"}, args: []string{"player:bob", "고블린"}, want: "무적 이상만 사용할 수 있는 기술입니다."},
-		{name: "missing training", class: legacyClassInvincible, args: []string{"player:bob", "고블린"}, want: "무사를 무적수련하지 않았습니다.."},
-		{name: "missing args", class: legacyClassInvincible, tags: []string{"SPALADIN"}, want: "사용법: 혈마안"},
-		{name: "missing player", class: legacyClassInvincible, tags: []string{"SPALADIN"}, args: []string{"player:none", "고블린"}, want: "그런 사람은 존재하지 않습니다."},
+		{name: "wrong class", class: model.ClassFighter, tags: []string{"SPALADIN"}, args: []string{"player:bob", "고블린"}, want: "무적 이상만 사용할 수 있는 기술입니다."},
+		{name: "missing training", class: model.ClassInvincible, args: []string{"player:bob", "고블린"}, want: "무사를 무적수련하지 않았습니다.."},
+		{name: "missing args", class: model.ClassInvincible, tags: []string{"SPALADIN"}, want: "사용법: 혈마안"},
+		{name: "missing player", class: model.ClassInvincible, tags: []string{"SPALADIN"}, args: []string{"player:none", "고블린"}, want: "그런 사람은 존재하지 않습니다."},
 		{
 			name:  "same room target",
-			class: legacyClassInvincible,
+			class: model.ClassInvincible,
 			tags:  []string{"SPALADIN"},
 			args:  []string{"player:bob", "고블린"},
 			mutate: func(loaded *worldload.World) {
@@ -149,7 +149,7 @@ func TestRedEyeHandlerRejectsInvalidUse(t *testing.T) {
 }
 
 func TestRedEyeHandlerFailurePrimesEnemyAndStartsCooldown(t *testing.T) {
-	loaded := perceptionWorld(t, legacyClassInvincible, []string{"SPALADIN", "STHIEF"})
+	loaded := perceptionWorld(t, model.ClassInvincible, []string{"SPALADIN", "STHIEF"})
 	world := state.NewWorld(loaded)
 	handler := NewRedEyeHandler(world, fixedPerceptionRoll(22))
 
@@ -187,7 +187,7 @@ func TestRedEyeHandlerFailurePrimesEnemyAndStartsCooldown(t *testing.T) {
 }
 
 func TestRedEyeHandlerRejectsActorGroupBeforeRevealAndCooldown(t *testing.T) {
-	loaded := perceptionWorld(t, legacyClassInvincible, []string{"SPALADIN", "hidden", "PHIDDN", "invisible", "PINVIS"})
+	loaded := perceptionWorld(t, model.ClassInvincible, []string{"SPALADIN", "hidden", "PHIDDN", "invisible", "PINVIS"})
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats["PHIDDN"] = 1
 	alice.Stats["PINVIS"] = 1
@@ -222,7 +222,7 @@ func TestRedEyeHandlerRejectsActorGroupBeforeRevealAndCooldown(t *testing.T) {
 }
 
 func TestRedEyeHandlerRejectsTargetGroupBeforeRevealAndCooldown(t *testing.T) {
-	loaded := perceptionWorld(t, legacyClassInvincible, []string{"SPALADIN", "hidden", "PHIDDN", "invisible", "PINVIS"})
+	loaded := perceptionWorld(t, model.ClassInvincible, []string{"SPALADIN", "hidden", "PHIDDN", "invisible", "PINVIS"})
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats["PHIDDN"] = 1
 	alice.Stats["PINVIS"] = 1
@@ -257,7 +257,7 @@ func TestRedEyeHandlerRejectsTargetGroupBeforeRevealAndCooldown(t *testing.T) {
 }
 
 func TestRedEyeHandlerCooldownPrecedesTargetLookupAndReveal(t *testing.T) {
-	loaded := perceptionWorld(t, legacyClassInvincible, []string{"SPALADIN", "STHIEF", "hidden", "PHIDDN", "invisible", "PINVIS"})
+	loaded := perceptionWorld(t, model.ClassInvincible, []string{"SPALADIN", "STHIEF", "hidden", "PHIDDN", "invisible", "PINVIS"})
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats["PHIDDN"] = 1
 	alice.Stats["PINVIS"] = 1
@@ -288,7 +288,7 @@ func TestRedEyeHandlerCooldownPrecedesTargetLookupAndReveal(t *testing.T) {
 }
 
 func TestRedEyeHandlerInvalidEnemyRevealsWithoutStartingCooldown(t *testing.T) {
-	loaded := perceptionWorld(t, legacyClassInvincible, []string{"SPALADIN", "STHIEF", "hidden", "PHIDDN", "invisible", "PINVIS"})
+	loaded := perceptionWorld(t, model.ClassInvincible, []string{"SPALADIN", "STHIEF", "hidden", "PHIDDN", "invisible", "PINVIS"})
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats["PHIDDN"] = 1
 	alice.Stats["PINVIS"] = 1
@@ -320,7 +320,7 @@ func TestRedEyeHandlerInvalidEnemyRevealsWithoutStartingCooldown(t *testing.T) {
 }
 
 func TestThiefStatHandlerRendersObjectDetails(t *testing.T) {
-	loaded := perceptionWorld(t, legacyClassInvincible, []string{"SPALADIN", "STHIEF", "hidden", "PHIDDN", "invisible", "PINVIS"})
+	loaded := perceptionWorld(t, model.ClassInvincible, []string{"SPALADIN", "STHIEF", "hidden", "PHIDDN", "invisible", "PINVIS"})
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats["PHIDDN"] = 1
 	alice.Stats["PINVIS"] = 1
@@ -369,7 +369,7 @@ func TestThiefStatHandlerRendersObjectDetails(t *testing.T) {
 }
 
 func TestThiefStatHandlerRendersCreatureDetailsAndStatus(t *testing.T) {
-	world := state.NewWorld(perceptionWorld(t, legacyClassInvincible, []string{"SPALADIN", "STHIEF"}))
+	world := state.NewWorld(perceptionWorld(t, model.ClassInvincible, []string{"SPALADIN", "STHIEF"}))
 	handler := NewThiefStatHandler(world, fixedPerceptionRoll(20))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -397,7 +397,7 @@ func TestThiefStatHandlerRendersCreatureDetailsAndStatus(t *testing.T) {
 }
 
 func TestThiefStatHandlerCooldownPrecedesBlindAndReveal(t *testing.T) {
-	loaded := perceptionWorld(t, legacyClassInvincible, []string{"STHIEF", "PBLIND", "hidden", "PHIDDN", "invisible", "PINVIS"})
+	loaded := perceptionWorld(t, model.ClassInvincible, []string{"STHIEF", "PBLIND", "hidden", "PHIDDN", "invisible", "PINVIS"})
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats["PHIDDN"] = 1
 	alice.Stats["PINVIS"] = 1
@@ -428,7 +428,7 @@ func TestThiefStatHandlerCooldownPrecedesBlindAndReveal(t *testing.T) {
 }
 
 func TestThiefStatHandlerBlindDoesNotStartCooldown(t *testing.T) {
-	world := state.NewWorld(perceptionWorld(t, legacyClassInvincible, []string{"STHIEF", "PBLIND"}))
+	world := state.NewWorld(perceptionWorld(t, model.ClassInvincible, []string{"STHIEF", "PBLIND"}))
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewThiefStatHandler(world, fixedPerceptionRoll(20))(ctx, ResolvedCommand{Args: []string{"상인"}})
@@ -446,7 +446,7 @@ func TestThiefStatHandlerBlindDoesNotStartCooldown(t *testing.T) {
 }
 
 func TestThiefStatHandlerBlocksCombatBeforeRevealLikeLegacy(t *testing.T) {
-	loaded := perceptionWorld(t, legacyClassInvincible, []string{"STHIEF", "hidden", "PHIDDN", "invisible", "PINVIS"})
+	loaded := perceptionWorld(t, model.ClassInvincible, []string{"STHIEF", "hidden", "PHIDDN", "invisible", "PINVIS"})
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats["PHIDDN"] = 1
 	alice.Stats["PINVIS"] = 1
@@ -478,7 +478,7 @@ func TestThiefStatHandlerBlocksCombatBeforeRevealLikeLegacy(t *testing.T) {
 }
 
 func TestThiefStatHandlerFailedMonsterObjectPeekPrimesEnemy(t *testing.T) {
-	loaded := perceptionWorld(t, legacyClassInvincible, []string{"STHIEF"})
+	loaded := perceptionWorld(t, model.ClassInvincible, []string{"STHIEF"})
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 1
 	alice.Stats["level"] = 1
@@ -503,13 +503,13 @@ func TestThiefStatHandlerFailedMonsterObjectPeekPrimesEnemy(t *testing.T) {
 }
 
 func TestThiefStatHandlerFailedMonsterCreaturePeekPrimesEnemy(t *testing.T) {
-	loaded := perceptionWorld(t, legacyClassInvincible, []string{"STHIEF"})
+	loaded := perceptionWorld(t, model.ClassInvincible, []string{"STHIEF"})
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 1
 	alice.Stats["level"] = 1
 	loaded.Creatures[alice.ID] = alice
 	merchant := loaded.Creatures["creature:merchant"]
-	merchant.Stats["class"] = legacyClassCaretaker
+	merchant.Stats["class"] = model.ClassCaretaker
 	loaded.Creatures[merchant.ID] = merchant
 	world := state.NewWorld(loaded)
 
@@ -531,7 +531,7 @@ func TestThiefStatHandlerFailedMonsterCreaturePeekPrimesEnemy(t *testing.T) {
 }
 
 func TestThiefStatHandlerPDMINVOwnerFallsBackToSelfLikeLegacy(t *testing.T) {
-	loaded := perceptionWorld(t, legacyClassInvincible, []string{"STHIEF"})
+	loaded := perceptionWorld(t, model.ClassInvincible, []string{"STHIEF"})
 	bobPlayer := loaded.Players["player:bob"]
 	bobPlayer.RoomID = "room:start"
 	loaded.Players[bobPlayer.ID] = bobPlayer
@@ -575,10 +575,10 @@ func TestThiefStatHandlerRejectsClassTrainingBlindAndMissingTarget(t *testing.T)
 		args  []string
 		want  string
 	}{
-		{name: "wrong class", class: legacyClassThief, tags: []string{"STHIEF"}, args: []string{"상인"}, want: "무적 이상만 사용할 수 있는 기술입니다."},
-		{name: "missing training", class: legacyClassInvincible, args: []string{"상인"}, want: "도둑을 무적수련하지 않았습니다.."},
-		{name: "missing target", class: legacyClassInvincible, tags: []string{"STHIEF"}, want: "무엇을 분석하시려구요?"},
-		{name: "blind", class: legacyClassInvincible, tags: []string{"STHIEF", "PBLIND"}, args: []string{"상인"}, want: "당신은 눈이 멀어 천안술을 펼칠 수 없습니다."},
+		{name: "wrong class", class: model.ClassThief, tags: []string{"STHIEF"}, args: []string{"상인"}, want: "무적 이상만 사용할 수 있는 기술입니다."},
+		{name: "missing training", class: model.ClassInvincible, args: []string{"상인"}, want: "도둑을 무적수련하지 않았습니다.."},
+		{name: "missing target", class: model.ClassInvincible, tags: []string{"STHIEF"}, want: "무엇을 분석하시려구요?"},
+		{name: "blind", class: model.ClassInvincible, tags: []string{"STHIEF", "PBLIND"}, args: []string{"상인"}, want: "당신은 눈이 멀어 천안술을 펼칠 수 없습니다."},
 	}
 
 	for _, tt := range tests {
@@ -641,14 +641,14 @@ func perceptionWorld(t *testing.T, class int, actorTags []string) *worldload.Wor
 		DisplayName: "Bob",
 		PlayerID:    "player:bob",
 		RoomID:      "room:remote",
-		Stats:       map[string]int{"class": legacyClassFighter, "level": 20, "hpCurrent": 80, "hpMax": 80, "thaco": 10},
+		Stats:       map[string]int{"class": model.ClassFighter, "level": 20, "hpCurrent": 80, "hpMax": 80, "thaco": 10},
 	})
 	mustAddLookCreature(t, loaded, model.Creature{
 		ID:          "creature:goblin",
 		Kind:        model.CreatureKindMonster,
 		DisplayName: "고블린",
 		RoomID:      "room:remote",
-		Stats:       map[string]int{"class": legacyClassFighter, "level": 8, "hpCurrent": 300, "hpMax": 300, "armor": 0},
+		Stats:       map[string]int{"class": model.ClassFighter, "level": 8, "hpCurrent": 300, "hpMax": 300, "armor": 0},
 	})
 	mustAddLookCreature(t, loaded, model.Creature{
 		ID:          "creature:merchant",
@@ -656,7 +656,7 @@ func perceptionWorld(t *testing.T, class int, actorTags []string) *worldload.Wor
 		DisplayName: "상인",
 		RoomID:      "room:start",
 		Stats: map[string]int{
-			"class": legacyClassFighter, "level": 8, "race": 1, "alignment": 120,
+			"class": model.ClassFighter, "level": 8, "race": 1, "alignment": 120,
 			"hpCurrent": 35, "hpMax": 35, "mpCurrent": 4, "mpMax": 4,
 			"experience": 200, "gold": 25, "armor": 80, "sDice": 4, "nDice": 2, "pDice": 1,
 			"strength": 12, "dexterity": 13, "constitution": 11, "intelligence": 10, "piety": 9, "thaco": 15,

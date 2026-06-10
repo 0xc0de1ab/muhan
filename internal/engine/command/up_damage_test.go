@@ -12,7 +12,7 @@ import (
 )
 
 func TestUpDamageHandlerSuccessBoostsBarbarianStartsCooldownAndExpiration(t *testing.T) {
-	world := state.NewWorld(upDamageWorld(t, legacyClassBarbarian, 50))
+	world := state.NewWorld(upDamageWorld(t, model.ClassBarbarian, 50))
 	handler := NewUpDamageHandler(world, fixedRoll(1))
 	var broadcasts []roomBroadcastRecord
 
@@ -64,7 +64,7 @@ func TestUpDamageHandlerSuccessBoostsBarbarianStartsCooldownAndExpiration(t *tes
 }
 
 func TestUpDamageHandlerSuccessBoostsInvincibleWithTraining(t *testing.T) {
-	loaded := upDamageWorld(t, legacyClassInvincible, 80)
+	loaded := upDamageWorld(t, model.ClassInvincible, 80)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"SBARBARIAN"}
 	loaded.Creatures[alice.ID] = alice
@@ -105,32 +105,32 @@ func TestUpDamageHandlerRejectsInvalidStates(t *testing.T) {
 	}{
 		{
 			name:  "wrong class",
-			class: legacyClassFighter,
+			class: model.ClassFighter,
 			level: 50,
 			want:  "권법가 레벨 50이상만 쓸수 있는 기술입니다.",
 		},
 		{
 			name:  "barbarian below level 50",
-			class: legacyClassBarbarian,
+			class: model.ClassBarbarian,
 			level: 49,
 			want:  "권법가 레벨 50이상만 쓸수 있는 기술입니다.",
 		},
 		{
 			name:  "invincible without barbarian training",
-			class: legacyClassInvincible,
+			class: model.ClassInvincible,
 			level: 80,
 			want:  "아직 권법가를 무적수련하지 않았습니다.",
 		},
 		{
 			name:  "already active",
-			class: legacyClassBarbarian,
+			class: model.ClassBarbarian,
 			level: 50,
 			tags:  []string{"PUPDMG"},
 			want:  "당신은 지금 잠력격발을 사용중입니다.",
 		},
 		{
 			name:  "cooldown active",
-			class: legacyClassBarbarian,
+			class: model.ClassBarbarian,
 			level: 50,
 			setup: func(world *state.World) {
 				if err := world.SetCreatureCooldown("creature:alice", upDamageCooldownKey, time.Now().Unix(), upDamageSuccessCooldownSeconds); err != nil {
@@ -166,7 +166,7 @@ func TestUpDamageHandlerRejectsInvalidStates(t *testing.T) {
 }
 
 func TestUpDamageHandlerFailureSetsShortCooldownWithoutBoost(t *testing.T) {
-	world := state.NewWorld(upDamageWorld(t, legacyClassBarbarian, 50))
+	world := state.NewWorld(upDamageWorld(t, model.ClassBarbarian, 50))
 	handler := NewUpDamageHandler(world, fixedRoll(100))
 	var broadcasts []roomBroadcastRecord
 
@@ -204,7 +204,7 @@ func TestUpDamageHandlerFailureSetsShortCooldownWithoutBoost(t *testing.T) {
 func TestUpDamageHandlerCanBeRegisteredByDispatcherAliases(t *testing.T) {
 	for _, line := range []string{"잠력격발", "up_dmg"} {
 		t.Run(line, func(t *testing.T) {
-			world := state.NewWorld(upDamageWorld(t, legacyClassBarbarian, 50))
+			world := state.NewWorld(upDamageWorld(t, model.ClassBarbarian, 50))
 			dispatcher := Dispatcher{
 				Registry: mustRegistry(t, []commandspec.CommandSpec{
 					{Name: "잠력격발", Number: 99, Handler: "up_dmg"},

@@ -73,7 +73,7 @@ func newTrackHandler(world TrackWorld, roll SearchRollFunc) Handler {
 
 func trackActorAllowed(creature model.Creature) bool {
 	class := creatureClass(creature)
-	return class == legacyClassRanger || class >= legacyClassInvincible
+	return class == model.ClassRanger || class >= model.ClassInvincible
 }
 
 func trackClearActorHidden(world TrackWorld, playerID model.PlayerID, creature model.Creature) error {

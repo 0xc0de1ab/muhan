@@ -14,7 +14,7 @@ import (
 )
 
 func TestBurnHandlerKeepsHiddenWithoutArgumentLikeLegacy(t *testing.T) {
-	runtime := state.NewWorld(burnWorld(t, "room:burn", legacyClassFighter))
+	runtime := state.NewWorld(burnWorld(t, "room:burn", model.ClassFighter))
 	setBurnActorHidden(t, runtime)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -29,7 +29,7 @@ func TestBurnHandlerKeepsHiddenWithoutArgumentLikeLegacy(t *testing.T) {
 }
 
 func TestBurnHandlerChecksCooldownBeforeHiddenAndLookupLikeLegacy(t *testing.T) {
-	runtime := state.NewWorld(burnWorld(t, "room:burn", legacyClassFighter))
+	runtime := state.NewWorld(burnWorld(t, "room:burn", model.ClassFighter))
 	setBurnActorHidden(t, runtime)
 	if err := runtime.SetCreatureCooldown("creature:alice", burnCooldownKey, time.Now().Unix(), 5); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
@@ -103,7 +103,7 @@ func TestBurnHandlerClearsHiddenBeforeFailureBranchesLikeLegacy(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			runtime := state.NewWorld(burnWorld(t, tt.roomID, legacyClassFighter))
+			runtime := state.NewWorld(burnWorld(t, tt.roomID, model.ClassFighter))
 			setBurnActorHidden(t, runtime)
 			if tt.setup != nil {
 				tt.setup(t, runtime)
@@ -128,7 +128,7 @@ func TestBurnHandlerClearsHiddenBeforeFailureBranchesLikeLegacy(t *testing.T) {
 
 func TestBurnHandlerSuccessBroadcastsDestroysTreeAndSetsCooldownLikeLegacy(t *testing.T) {
 	withLegacyBurnRoll(t, fixedRoll(3000))
-	runtime := state.NewWorld(burnWorld(t, "room:burn", legacyClassFighter))
+	runtime := state.NewWorld(burnWorld(t, "room:burn", model.ClassFighter))
 	setBurnActorHidden(t, runtime)
 	var broadcasts []roomBroadcastRecord
 	ctx := contextWithRoomBroadcast("player:alice", "session:alice", &broadcasts)
@@ -167,7 +167,7 @@ func TestBurnHandlerSuccessBroadcastsDestroysTreeAndSetsCooldownLikeLegacy(t *te
 
 func TestBurnHandlerUsesOnlyFirstArgumentLikeLegacy(t *testing.T) {
 	withLegacyBurnRoll(t, fixedRoll(3000))
-	runtime := state.NewWorld(burnWorld(t, "room:burn", legacyClassFighter))
+	runtime := state.NewWorld(burnWorld(t, "room:burn", model.ClassFighter))
 	var broadcasts []roomBroadcastRecord
 	ctx := contextWithRoomBroadcast("player:alice", "session:alice", &broadcasts)
 
@@ -204,7 +204,7 @@ func TestBurnHandlerUnlinksLegacyMailScrollLikeC(t *testing.T) {
 		t.Fatalf("WriteFile(mail) error = %v", err)
 	}
 
-	runtime := state.NewWorld(burnWorld(t, "room:burn", legacyClassFighter))
+	runtime := state.NewWorld(burnWorld(t, "room:burn", model.ClassFighter))
 	if _, err := runtime.SetObjectProperty("object:stick", "type", strconv.Itoa(legacyObjectScroll)); err != nil {
 		t.Fatalf("SetObjectProperty(type) error = %v", err)
 	}
@@ -243,7 +243,7 @@ func TestBurnHandlerLegacyJackpotRewardsAndBroadcasts(t *testing.T) {
 	}{
 		{
 			name:             "ordinary class",
-			class:            legacyClassFighter,
+			class:            model.ClassFighter,
 			wantGold:         100011,
 			wantExperience:   10101,
 			wantOutput:       "신이 당신의 정성이 갸륵해서 경험치와 돈벼락을 내립니다.",
@@ -251,7 +251,7 @@ func TestBurnHandlerLegacyJackpotRewardsAndBroadcasts(t *testing.T) {
 		},
 		{
 			name:             "invincible class",
-			class:            legacyClassInvincible,
+			class:            model.ClassInvincible,
 			wantGold:         3000011,
 			wantExperience:   300101,
 			wantOutput:       "신이 당신의 정성이 갸륵해서 엄청난 경험치와 돈벼락을 내립니다.",

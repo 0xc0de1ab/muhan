@@ -224,7 +224,7 @@ func RenderHealth(player model.Player, creature model.Creature) string {
 	experience := creatureStat(creature, "experience")
 	gold := creatureStat(creature, "gold")
 	class := creatureClass(creature)
-	if class == legacyClassCaretaker || class == legacyClassBulsa {
+	if class == model.ClassCaretaker || class == model.ClassBulsa {
 		upgrade := 0
 		if experience >= buyStatesExperienceBase {
 			upgrade = experience - buyStatesExperienceBase
@@ -381,7 +381,7 @@ func RenderPlayerInfoSpells(player model.Player, creature model.Creature) string
 		b.WriteString(".\n")
 	}
 	b.WriteString(statusQuestProgressLine(creature))
-	if creatureClass(creature) >= legacyClassInvincible {
+	if creatureClass(creature) >= model.ClassInvincible {
 		b.WriteString("\n무적수련 : ")
 		training := statusInvincibleTrainingNames(player, creature)
 		if len(training) == 0 {
@@ -508,15 +508,15 @@ func statusWeaponProficiency(creature model.Creature, idx int) int {
 
 func statusWeaponProficiencyThresholds(class int) []int {
 	switch class {
-	case legacyClassFighter, legacyClassInvincible, legacyClassCaretaker, legacyClassBulsa, legacyClassSubDM, legacyClassDM:
+	case model.ClassFighter, model.ClassInvincible, model.ClassCaretaker, model.ClassBulsa, model.ClassSubDM, model.ClassDM:
 		return []int{0, 768, 1024, 1440, 1910, 16000, 31214, 167000, 268488, 695000, 934808, 500000000}
-	case legacyClassBarbarian:
+	case model.ClassBarbarian:
 		return []int{0, 1536, 2048, 2880, 3820, 32000, 62428, 334000, 536976, 1390000, 1869616, 500000000}
-	case legacyClassThief, legacyClassRanger:
+	case model.ClassThief, model.ClassRanger:
 		return []int{0, 2304, 3072, 4320, 5730, 48000, 93642, 501000, 805464, 2085000, 2804424, 500000000}
-	case legacyClassCleric, legacyClassPaladin, legacyClassAssassin:
+	case model.ClassCleric, model.ClassPaladin, model.ClassAssassin:
 		return []int{0, 3072, 4096, 5076, 7640, 64000, 124856, 668000, 1073952, 2780000, 3939232, 500000000}
-	case legacyClassMage:
+	case model.ClassMage:
 		return []int{0, 5376, 7168, 10080, 13370, 112000, 218498, 1169000, 1879416, 4865000, 6543656, 500000000}
 	default:
 		return []int{0, 768, 1024, 1440, 1910, 16000, 31214, 167000, 268488, 695000, 934808, 500000000}
@@ -727,12 +727,12 @@ func whereVisibleEntries(ctx *Context, world StatusWorld, actorPlayer model.Play
 
 func whereHiddenFrom(actorPlayer model.Player, actor model.Creature, targetPlayer model.Player, target model.Creature) bool {
 	actorClass := creatureClass(actor)
-	if creatureHasAnyFlag(target, "PDMINV", "dmInvisible") && actorClass < legacyClassDM {
+	if creatureHasAnyFlag(target, "PDMINV", "dmInvisible") && actorClass < model.ClassDM {
 		return true
 	}
 	if creatureHasAnyFlag(target, "PINVIS", "invisible") &&
 		!creatureHasAnyFlag(actor, "PDINVI", "detectInvisible") &&
-		actorClass < legacyClassDM &&
+		actorClass < model.ClassDM &&
 		targetPlayer.ID != actorPlayer.ID {
 		return true
 	}
@@ -795,14 +795,14 @@ func wherePlayerRoomID(player model.Player, creature model.Creature) model.RoomI
 func whereCanSeeRoom(actorPlayer model.Player, actor model.Creature, targetPlayer model.Player, target model.Creature) bool {
 	targetClass := creatureClass(target)
 	targetMarried := statusEffectActive(targetPlayer, target, "PMARRI", "married", "marriage", "marriageFlag")
-	if targetClass <= legacyClassInvincible && !targetMarried {
+	if targetClass <= model.ClassInvincible && !targetMarried {
 		return true
 	}
 	actorClass := creatureClass(actor)
-	if actorClass > legacyClassInvincible && !targetMarried {
+	if actorClass > model.ClassInvincible && !targetMarried {
 		return true
 	}
-	if actorClass >= legacyClassDM {
+	if actorClass >= model.ClassDM {
 		return true
 	}
 	if actorPlayer.ID == targetPlayer.ID {

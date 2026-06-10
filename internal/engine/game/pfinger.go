@@ -15,11 +15,7 @@ import (
 	"muhan/internal/world/model"
 )
 
-const (
-	legacyClassCaretaker = 10
-	legacyClassSubDM     = 12
-	legacyClassDM        = 13
-)
+const ()
 
 func NewPfingerHandler(world WhoisWorld, root string) enginecmd.Handler {
 	return func(ctx *enginecmd.Context, resolved enginecmd.ResolvedCommand) (enginecmd.Status, error) {
@@ -148,8 +144,8 @@ func pfingerOfflinePlayer(world WhoisWorld, name string) (model.Player, model.Cr
 }
 
 func pfingerCanSeeOffline(actor model.Creature, target model.Creature) bool {
-	return creatureIntValueDefault(actor, "class", 0) >= legacyClassDM ||
-		creatureIntValueDefault(target, "class", 0) < legacyClassSubDM
+	return creatureIntValueDefault(actor, "class", 0) >= model.ClassDM ||
+		creatureIntValueDefault(target, "class", 0) < model.ClassSubDM
 }
 
 func pfingerCanSeeActive(actor model.Creature, target model.Creature) bool {
@@ -158,10 +154,10 @@ func pfingerCanSeeActive(actor model.Creature, target model.Creature) bool {
 	}
 	actorClass := creatureIntValueDefault(actor, "class", 0)
 	targetClass := creatureIntValueDefault(target, "class", 0)
-	if actorClass < legacyClassDM {
+	if actorClass < model.ClassDM {
 		return false
 	}
-	return !(actorClass == legacyClassCaretaker && targetClass == legacyClassDM)
+	return !(actorClass == model.ClassCaretaker && targetClass == model.ClassDM)
 }
 
 func renderPfingerIdentity(name string, creature model.Creature) string {

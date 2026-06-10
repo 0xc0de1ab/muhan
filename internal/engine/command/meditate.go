@@ -93,10 +93,10 @@ func NewMeditateHandler(world MeditateWorld, rng SearchRollFunc) Handler {
 
 func meditateClassRejection(actor model.Creature) string {
 	class := creatureClass(actor)
-	if class != legacyClassPaladin && class != legacyClassCleric && class < legacyClassInvincible {
+	if class != model.ClassPaladin && class != model.ClassCleric && class < model.ClassInvincible {
 		return "무사 불제자만 사용할 수 있는 기술입니다.\n"
 	}
-	if class >= legacyClassInvincible && !meditateHasClericOrPaladinTraining(actor) {
+	if class >= model.ClassInvincible && !meditateHasClericOrPaladinTraining(actor) {
 		return "\n무사나 불제자를 무적수련하지 않았습니다..\n"
 	}
 	return ""

@@ -715,11 +715,11 @@ func broadcastSocialLine(ctx *enginecmd.Context, resolved enginecmd.ResolvedComm
 		actorClass = creatureStat(actorCreature, "class")
 		actorLevel = broadcastSocialCreatureLevel(actorCreature)
 	}
-	if actorOK && creatureFlagEnabled(actorCreature, "PSILNC", "silenced", "silence") && actorClass < legacyClassSubDM {
+	if actorOK && creatureFlagEnabled(actorCreature, "PSILNC", "silenced", "silence") && actorClass < model.ClassSubDM {
 		ctx.WriteString(config.silencedMessage)
 		return enginecmd.StatusDefault, nil
 	}
-	if actorLevel < 20 && actorClass < legacyClassCaretaker {
+	if actorLevel < 20 && actorClass < model.ClassCaretaker {
 		ctx.WriteString(config.lowLevelMessage)
 		return enginecmd.StatusDefault, nil
 	}
@@ -728,7 +728,7 @@ func broadcastSocialLine(ctx *enginecmd.Context, resolved enginecmd.ResolvedComm
 		return enginecmd.StatusDefault, nil
 	}
 	discount := broadcastSocialDiscount(actorCreature, actorOK, memory, sessionID, now)
-	if actorClass < legacyClassSubDM {
+	if actorClass < model.ClassSubDM {
 		hpCurrent := creatureStat(actorCreature, "hpCurrent")
 		if hpCurrent <= discount {
 			ctx.WriteString(config.lowHPMessage)
@@ -1200,7 +1200,7 @@ func socialReplyTargetHiddenFromActor(world PlayerLookup, actorID model.PlayerID
 	if !actorOK || !targetOK {
 		return false
 	}
-	if creatureStat(actor, "class") >= legacyClassDM {
+	if creatureStat(actor, "class") >= model.ClassDM {
 		return false
 	}
 	return creatureFlagEnabled(target, "PINVIS", "invisible", "invisibility") &&
@@ -1213,7 +1213,7 @@ func socialActorBlocksTell(world PlayerLookup, actorID model.PlayerID, targetID 
 		return false
 	}
 	actor, ok := playerCreature(familyWorld, actorID)
-	if ok && creatureStat(actor, "class") >= legacyClassDM {
+	if ok && creatureStat(actor, "class") >= model.ClassDM {
 		return false
 	}
 	creature, ok := playerCreature(familyWorld, targetID)

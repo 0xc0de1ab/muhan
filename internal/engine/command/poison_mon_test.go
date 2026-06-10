@@ -13,7 +13,7 @@ import (
 
 func TestPoisonMonHandlerPoisonsMonsterDamagesStartsCooldownAndRevealsActor(t *testing.T) {
 	withAttackRolls(t, 1, 20, 5)
-	loaded := poisonMonWorld(t, legacyClassInvincible, true)
+	loaded := poisonMonWorld(t, model.ClassInvincible, true)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = append(alice.Metadata.Tags, "hidden", "PHIDDN", "invisible", "PINVIS")
 	alice.Stats["PHIDDN"] = 1
@@ -83,7 +83,7 @@ func TestPoisonMonHandlerPoisonsMonsterDamagesStartsCooldownAndRevealsActor(t *t
 
 func TestPoisonMonHandlerFailureUsesCooldownWithoutPoisonOrDamage(t *testing.T) {
 	withAttackRolls(t, 100)
-	world := state.NewWorld(poisonMonWorld(t, legacyClassInvincible, true))
+	world := state.NewWorld(poisonMonWorld(t, model.ClassInvincible, true))
 	handler := NewPoisonMonHandler(world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -167,14 +167,14 @@ func TestPoisonMonHandlerRejectsInvalidInputs(t *testing.T) {
 		mutate  func(*worldload.World)
 		want    string
 	}{
-		{name: "missing target", class: legacyClassInvincible, trained: true, want: "누구를 중독시키시려고요?"},
-		{name: "low class", class: legacyClassAssassin, trained: true, args: []string{"고블린"}, want: "무적이상만 쓸 수 있는 기술입니다."},
-		{name: "untrained invincible", class: legacyClassInvincible, args: []string{"고블린"}, want: "아직 자객을무적수련하지 않았습니다."},
-		{name: "missing monster", class: legacyClassInvincible, trained: true, args: []string{"없는"}, want: "그런 괴물은 존재하지 않습니다."},
-		{name: "player target is not valid", class: legacyClassInvincible, trained: true, args: []string{"Bob"}, want: "그런 괴물은 존재하지 않습니다."},
+		{name: "missing target", class: model.ClassInvincible, trained: true, want: "누구를 중독시키시려고요?"},
+		{name: "low class", class: model.ClassAssassin, trained: true, args: []string{"고블린"}, want: "무적이상만 쓸 수 있는 기술입니다."},
+		{name: "untrained invincible", class: model.ClassInvincible, args: []string{"고블린"}, want: "아직 자객을무적수련하지 않았습니다."},
+		{name: "missing monster", class: model.ClassInvincible, trained: true, args: []string{"없는"}, want: "그런 괴물은 존재하지 않습니다."},
+		{name: "player target is not valid", class: model.ClassInvincible, trained: true, args: []string{"Bob"}, want: "그런 괴물은 존재하지 않습니다."},
 		{
 			name:    "protected male monster",
-			class:   legacyClassInvincible,
+			class:   model.ClassInvincible,
 			trained: true,
 			args:    []string{"고블린"},
 			mutate: func(loaded *worldload.World) {
@@ -211,7 +211,7 @@ func TestPoisonMonHandlerCanBeRegisteredByDispatcher(t *testing.T) {
 	for _, line := range []string{"고블린 독살포", "poison_mon 고블린"} {
 		t.Run(line, func(t *testing.T) {
 			withAttackRolls(t, 1, 100)
-			world := state.NewWorld(poisonMonWorld(t, legacyClassInvincible, true))
+			world := state.NewWorld(poisonMonWorld(t, model.ClassInvincible, true))
 			dispatcher := poisonMonDispatcher(t, world)
 
 			ctx := &Context{ActorID: "player:alice"}
@@ -227,7 +227,7 @@ func TestPoisonMonHandlerCanBeRegisteredByDispatcher(t *testing.T) {
 }
 
 func TestPoisonMonLegacyFormulaHelpers(t *testing.T) {
-	actor := model.Creature{Stats: map[string]int{"class": legacyClassInvincible, "level": 20, "dexterity": 20}}
+	actor := model.Creature{Stats: map[string]int{"class": model.ClassInvincible, "level": 20, "dexterity": 20}}
 	target := model.Creature{Stats: map[string]int{"level": 1, "hpCurrent": 80}}
 	if got, want := poisonMonChance(actor, target), 80; got != want {
 		t.Fatalf("poisonMonChance() = %d, want capped %d", got, want)
@@ -235,11 +235,11 @@ func TestPoisonMonLegacyFormulaHelpers(t *testing.T) {
 	if got, want := poisonMonCooldownSeconds(actor), int64(20); got != want {
 		t.Fatalf("poisonMonCooldownSeconds(invincible) = %d, want %d", got, want)
 	}
-	actor.Stats["class"] = legacyClassCaretaker
+	actor.Stats["class"] = model.ClassCaretaker
 	if got, want := poisonMonCooldownSeconds(actor), int64(18); got != want {
 		t.Fatalf("poisonMonCooldownSeconds(caretaker) = %d, want %d", got, want)
 	}
-	actor.Stats["class"] = legacyClassBulsa
+	actor.Stats["class"] = model.ClassBulsa
 	if got, want := poisonMonCooldownSeconds(actor), int64(16); got != want {
 		t.Fatalf("poisonMonCooldownSeconds(bulsa) = %d, want %d", got, want)
 	}

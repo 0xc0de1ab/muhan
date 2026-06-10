@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	picklockThiefClass      = legacyClassThief
-	picklockInvincibleClass = legacyClassInvincible
+	picklockThiefClass      = model.ClassThief
+	picklockInvincibleClass = model.ClassInvincible
 )
 
 type PicklockRollFunc func(min, max int) int

@@ -12,7 +12,7 @@ import (
 )
 
 func TestMeditateHandlerSuccessAddsTagsIntelligenceCooldownAndExpiration(t *testing.T) {
-	world := state.NewWorld(meditateWorld(t, legacyClassCleric))
+	world := state.NewWorld(meditateWorld(t, model.ClassCleric))
 	handler := NewMeditateHandler(world, fixedRoll(1))
 	var broadcasts []roomBroadcastRecord
 
@@ -66,24 +66,24 @@ func TestMeditateHandlerRejectsClassAndAlreadyActive(t *testing.T) {
 	}{
 		{
 			name:  "wrong class",
-			class: legacyClassFighter,
+			class: model.ClassFighter,
 			want:  "무사 불제자만 사용할 수 있는 기술입니다.",
 		},
 		{
 			name:  "invincible without training",
-			class: legacyClassInvincible,
+			class: model.ClassInvincible,
 			want:  "무사나 불제자를 무적수련하지 않았습니다..",
 		},
 		{
 			name:   "already meditating",
-			class:  legacyClassPaladin,
+			class:  model.ClassPaladin,
 			tags:   []string{"PMEDIT"},
 			want:   "당신은 벌써 참선을 했습니다.",
 			active: true,
 		},
 		{
 			name:   "invincible with paladin training",
-			class:  legacyClassInvincible,
+			class:  model.ClassInvincible,
 			tags:   []string{"SPALADIN"},
 			want:   "참선에 들어갑니다",
 			active: true,
@@ -116,7 +116,7 @@ func TestMeditateHandlerRejectsClassAndAlreadyActive(t *testing.T) {
 }
 
 func TestMeditateHandlerFailureSetsShortCooldownWithoutTags(t *testing.T) {
-	world := state.NewWorld(meditateWorld(t, legacyClassCleric))
+	world := state.NewWorld(meditateWorld(t, model.ClassCleric))
 	handler := NewMeditateHandler(world, fixedRoll(100))
 	var broadcasts []roomBroadcastRecord
 
@@ -153,7 +153,7 @@ func TestMeditateHandlerFailureSetsShortCooldownWithoutTags(t *testing.T) {
 func TestMeditateHandlerCanBeRegisteredByDispatcherAliases(t *testing.T) {
 	for _, line := range []string{"참선", "meditate"} {
 		t.Run(line, func(t *testing.T) {
-			world := state.NewWorld(meditateWorld(t, legacyClassCleric))
+			world := state.NewWorld(meditateWorld(t, model.ClassCleric))
 			dispatcher := Dispatcher{
 				Registry: mustRegistry(t, []commandspec.CommandSpec{
 					{Name: "참선", Number: 90, Handler: "meditate"},

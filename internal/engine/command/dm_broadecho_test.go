@@ -69,7 +69,7 @@ func TestDMBroadecho(t *testing.T) {
 				"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 			wantStatus: StatusDefault,
 			wantOutput: "무얼 방송합니까?\n",
@@ -82,7 +82,7 @@ func TestDMBroadecho(t *testing.T) {
 				"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 			wantStatus: StatusDefault,
 			wantOutput: "무얼 방송합니까?\n",
@@ -95,7 +95,7 @@ func TestDMBroadecho(t *testing.T) {
 				"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 			wantStatus:    StatusDefault,
 			wantBroadcast: "\n### hello world",
@@ -109,7 +109,7 @@ func TestDMBroadecho(t *testing.T) {
 				"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 			wantStatus:    StatusDefault,
 			wantBroadcast: "\n### hello   world",
@@ -123,7 +123,7 @@ func TestDMBroadecho(t *testing.T) {
 				"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 			wantStatus:    StatusDefault,
 			wantBroadcast: "\n### hello   world  ",
@@ -136,7 +136,7 @@ func TestDMBroadecho(t *testing.T) {
 				"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 			wantStatus:    StatusDefault,
 			wantBroadcast: "\nhello world",
@@ -149,7 +149,7 @@ func TestDMBroadecho(t *testing.T) {
 				"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 			wantStatus: StatusDefault,
 		},
@@ -161,7 +161,7 @@ func TestDMBroadecho(t *testing.T) {
 				"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 			wantStatus: StatusDefault,
 		},
@@ -173,7 +173,7 @@ func TestDMBroadecho(t *testing.T) {
 				"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}},
 			},
 			broadcastErr:  errors.New("broadcast failed"),
 			wantStatus:    StatusDefault,
@@ -231,7 +231,7 @@ func TestDMBroadechoDashNRespectsPNOBRDLikeLegacyBroadcast(t *testing.T) {
 			"player:bob":   {ID: "player:bob", CreatureID: "creature:bob"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:subdm": {ID: "creature:subdm", Stats: map[string]int{"class": legacyClassSubDM}},
+			"creature:subdm": {ID: "creature:subdm", Stats: map[string]int{"class": model.ClassSubDM}},
 			"creature:alice": {ID: "creature:alice", DisplayName: "Alice"},
 			"creature:bob": {
 				ID:          "creature:bob",

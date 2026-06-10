@@ -516,7 +516,7 @@ func dmSetRoomTestWorld() *mockDMSetWorld {
 			"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassDM}, RoomID: "room:00001"},
+			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassDM}, RoomID: "room:00001"},
 		},
 		rooms: map[model.RoomID]model.Room{
 			"room:00001": {ID: "room:00001", Properties: map[string]string{}},
@@ -614,7 +614,7 @@ func TestDMSetCreatureFlagTogglesLegacyStatLikeC(t *testing.T) {
 				creatures: map[model.CreatureID]model.Creature{
 					"creature:alice": {
 						ID:     "creature:alice",
-						Stats:  map[string]int{"class": legacyClassDM},
+						Stats:  map[string]int{"class": model.ClassDM},
 						RoomID: "room:00001",
 					},
 					"creature:goblin": {
@@ -662,8 +662,8 @@ func TestDMSetCreatureOnlinePlayerLookupUsesActiveSessions(t *testing.T) {
 			"player:bob":   {ID: "player:bob", DisplayName: "Bob", CreatureID: "creature:bob"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassDM}, RoomID: "room:00001"},
-			"creature:bob":   {ID: "creature:bob", DisplayName: "Bob", RoomID: "room:00002", Stats: map[string]int{"class": legacyClassFighter}},
+			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassDM}, RoomID: "room:00001"},
+			"creature:bob":   {ID: "creature:bob", DisplayName: "Bob", RoomID: "room:00002", Stats: map[string]int{"class": model.ClassFighter}},
 		},
 		creatureStats: make(map[model.CreatureID]map[string]int),
 		creatureProps: make(map[model.CreatureID]map[string]string),
@@ -712,8 +712,8 @@ func TestDMSetCreatureSavedPlayerWithoutActiveSessionIsNotFound(t *testing.T) {
 			"player:bob":   {ID: "player:bob", DisplayName: "Bob", CreatureID: "creature:bob"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassDM}, RoomID: "room:00001"},
-			"creature:bob":   {ID: "creature:bob", DisplayName: "Bob", RoomID: "room:00002", Stats: map[string]int{"class": legacyClassFighter}},
+			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassDM}, RoomID: "room:00001"},
+			"creature:bob":   {ID: "creature:bob", DisplayName: "Bob", RoomID: "room:00002", Stats: map[string]int{"class": model.ClassFighter}},
 		},
 		creatureStats: make(map[model.CreatureID]map[string]int),
 		creatureProps: make(map[model.CreatureID]map[string]string),
@@ -761,7 +761,7 @@ func TestDMSetCreatureRoomLookupPrefersPlayerBeforeMonsterLikeLegacy(t *testing.
 			"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice":      {ID: "creature:alice", Stats: map[string]int{"class": legacyClassDM}, RoomID: "room:00001"},
+			"creature:alice":      {ID: "creature:alice", Stats: map[string]int{"class": model.ClassDM}, RoomID: "room:00001"},
 			"creature:bob-mon":    {ID: "creature:bob-mon", Kind: model.CreatureKindMonster, DisplayName: "Bob", RoomID: "room:00001"},
 			"creature:bob-player": {ID: "creature:bob-player", Kind: model.CreatureKindPlayer, PlayerID: "player:bob", DisplayName: "Bob", RoomID: "room:00001"},
 		},
@@ -797,7 +797,7 @@ func TestDMSetCreatureRoomLookupFallsBackToMonsterOrdinalLikeLegacy(t *testing.T
 			"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice":      {ID: "creature:alice", Stats: map[string]int{"class": legacyClassDM}, RoomID: "room:00001"},
+			"creature:alice":      {ID: "creature:alice", Stats: map[string]int{"class": model.ClassDM}, RoomID: "room:00001"},
 			"creature:bob-player": {ID: "creature:bob-player", Kind: model.CreatureKindPlayer, PlayerID: "player:bob", DisplayName: "Bob", RoomID: "room:00001"},
 			"creature:bob-mon-1":  {ID: "creature:bob-mon-1", Kind: model.CreatureKindMonster, DisplayName: "Bob", RoomID: "room:00001"},
 			"creature:bob-mon-2":  {ID: "creature:bob-mon-2", Kind: model.CreatureKindMonster, DisplayName: "Bob", RoomID: "room:00001"},
@@ -832,14 +832,14 @@ func TestDMSetCreatureRoomLookupSkipsFindCrtInvisibleTargetsLikeLegacy(t *testin
 				"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassDM}, RoomID: "room:00001"},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassDM}, RoomID: "room:00001"},
 				"creature:ghost": {
 					ID:          "creature:ghost",
 					Kind:        model.CreatureKindPlayer,
 					PlayerID:    "player:ghost",
 					DisplayName: "Ghost",
 					RoomID:      "room:00001",
-					Stats:       map[string]int{"class": legacyClassCaretaker},
+					Stats:       map[string]int{"class": model.ClassCaretaker},
 					Metadata:    model.Metadata{Tags: []string{"PDMINV"}},
 				},
 			},
@@ -869,7 +869,7 @@ func TestDMSetCreatureRoomLookupSkipsFindCrtInvisibleTargetsLikeLegacy(t *testin
 				"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassDM}, RoomID: "room:00001"},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassDM}, RoomID: "room:00001"},
 				"creature:shade": {
 					ID:          "creature:shade",
 					Kind:        model.CreatureKindMonster,
@@ -1140,7 +1140,7 @@ func dmSetObjectTestWorld() *mockDMSetWorld {
 			"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassDM}, RoomID: "room:00001"},
+			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassDM}, RoomID: "room:00001"},
 		},
 		rooms: map[model.RoomID]model.Room{
 			"room:00001": {
@@ -1181,7 +1181,7 @@ func TestDMSetObjectPrefersActorInventoryBeforeRoomLikeLegacy(t *testing.T) {
 		creatures: map[model.CreatureID]model.Creature{
 			"creature:alice": {
 				ID:        "creature:alice",
-				Stats:     map[string]int{"class": legacyClassDM},
+				Stats:     map[string]int{"class": model.ClassDM},
 				RoomID:    "room:00001",
 				Inventory: model.ObjectRefList{ObjectIDs: []model.ObjectInstanceID{"object:inventory-sword"}},
 			},
@@ -1237,7 +1237,7 @@ func TestDMSetObjectExplicitCreatureTargetLikeLegacy(t *testing.T) {
 			"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassDM}, RoomID: "room:00001"},
+			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassDM}, RoomID: "room:00001"},
 			"creature:guard": {
 				ID:          "creature:guard",
 				Kind:        model.CreatureKindMonster,
@@ -1279,7 +1279,7 @@ func TestDMSetObjectExplicitCreatureTargetPrefersMonsterBeforeRoomPlayerLikeLega
 			"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassDM}, RoomID: "room:00001"},
+			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassDM}, RoomID: "room:00001"},
 			"creature:bob-player": {
 				ID:          "creature:bob-player",
 				Kind:        model.CreatureKindPlayer,
@@ -1338,7 +1338,7 @@ func TestDMSetObjectAppliesFindObjInvisibleVisibility(t *testing.T) {
 			creatures: map[model.CreatureID]model.Creature{
 				"creature:alice": {
 					ID:       "creature:alice",
-					Stats:    map[string]int{"class": legacyClassDM},
+					Stats:    map[string]int{"class": model.ClassDM},
 					RoomID:   "room:00001",
 					Metadata: model.Metadata{Tags: actorTags},
 				},
@@ -1399,7 +1399,7 @@ func TestDMSetObjectExplicitCreatureTargetAppliesFindObjVisibility(t *testing.T)
 			creatures: map[model.CreatureID]model.Creature{
 				"creature:alice": {
 					ID:       "creature:alice",
-					Stats:    map[string]int{"class": legacyClassDM},
+					Stats:    map[string]int{"class": model.ClassDM},
 					RoomID:   "room:00001",
 					Metadata: model.Metadata{Tags: actorTags},
 				},
@@ -1461,7 +1461,7 @@ func TestDMSetObjectEquipmentLookupMatchesLegacyContexts(t *testing.T) {
 			creatures: map[model.CreatureID]model.Creature{
 				"creature:alice": {
 					ID:        "creature:alice",
-					Stats:     map[string]int{"class": legacyClassDM},
+					Stats:     map[string]int{"class": model.ClassDM},
 					RoomID:    "room:00001",
 					Equipment: map[string]model.ObjectInstanceID{"held": "object:held-sword"},
 				},
@@ -1496,7 +1496,7 @@ func TestDMSetObjectEquipmentLookupMatchesLegacyContexts(t *testing.T) {
 				"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassDM}, RoomID: "room:00001"},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassDM}, RoomID: "room:00001"},
 				"creature:guard": {
 					ID:          "creature:guard",
 					Kind:        model.CreatureKindMonster,
@@ -1610,7 +1610,7 @@ func TestDMSetExitDoesNotRequireDestinationRoomLikeLegacy(t *testing.T) {
 			"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassDM}, RoomID: "room:00001"},
+			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassDM}, RoomID: "room:00001"},
 		},
 		rooms: map[model.RoomID]model.Room{
 			"room:00001": {
@@ -1653,7 +1653,7 @@ func TestDMSetExitDoubleWayKeepsForwardLinkWhenReverseRoomMissingLikeLegacy(t *t
 			"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassDM}, RoomID: "room:00001"},
+			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassDM}, RoomID: "room:00001"},
 		},
 		rooms: map[model.RoomID]model.Room{
 			"room:00001": {
@@ -1697,7 +1697,7 @@ func TestDMSetExitExplicitReverseNameIsNotExpandedLikeLegacy(t *testing.T) {
 			"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassDM}, RoomID: "room:00001"},
+			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassDM}, RoomID: "room:00001"},
 		},
 		rooms: map[model.RoomID]model.Room{
 			"room:00001": {
@@ -1857,7 +1857,7 @@ func dmSetExitFlagWorld() *mockDMSetWorld {
 			"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassDM}, RoomID: "room:00001"},
+			"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassDM}, RoomID: "room:00001"},
 		},
 		rooms: map[model.RoomID]model.Room{
 			"room:00001": {

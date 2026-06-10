@@ -13,7 +13,7 @@ func TestMagicEffectDrainExpSelf(t *testing.T) {
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 10
 	alice.Stats = map[string]int{
-		"class":            legacyClassDM,
+		"class":            model.ClassDM,
 		"level":            10,
 		"experience":       1000,
 		"proficiencySharp": 2000,
@@ -65,7 +65,7 @@ func TestMagicEffectDrainExpTarget(t *testing.T) {
 	loaded := readScrollWorld(t, "room:library", "1", "48")
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 10
-	alice.Stats = map[string]int{"class": legacyClassDM, "level": 10, "experience": 1000}
+	alice.Stats = map[string]int{"class": model.ClassDM, "level": 10, "experience": 1000}
 	alice.Metadata.Tags = []string{"SDREXP"}
 	loaded.Creatures[alice.ID] = alice
 
@@ -171,7 +171,7 @@ func TestMagicEffectDrainExpLegacyRestrictions(t *testing.T) {
 		{
 			name: "cast requires learned spell first",
 			config: func(alice *model.Creature) model.ObjectInstance {
-				alice.Stats = map[string]int{"class": legacyClassDM, "level": 10, "experience": 1000}
+				alice.Stats = map[string]int{"class": model.ClassDM, "level": 10, "experience": 1000}
 				return model.ObjectInstance{}
 			},
 			wantOut: "\n당신은 아직 그런 주문을 터득하지 못했습니다.\n",
@@ -179,7 +179,7 @@ func TestMagicEffectDrainExpLegacyRestrictions(t *testing.T) {
 		{
 			name: "cast is DM only",
 			config: func(alice *model.Creature) model.ObjectInstance {
-				alice.Stats = map[string]int{"class": legacyClassMage, "level": 10, "experience": 1000}
+				alice.Stats = map[string]int{"class": model.ClassMage, "level": 10, "experience": 1000}
 				alice.Metadata.Tags = []string{"SDREXP"}
 				return model.ObjectInstance{}
 			},
@@ -188,7 +188,7 @@ func TestMagicEffectDrainExpLegacyRestrictions(t *testing.T) {
 		{
 			name: "scroll is rejected",
 			config: func(alice *model.Creature) model.ObjectInstance {
-				alice.Stats = map[string]int{"class": legacyClassDM, "level": 10, "experience": 1000}
+				alice.Stats = map[string]int{"class": model.ClassDM, "level": 10, "experience": 1000}
 				alice.Metadata.Tags = []string{"SDREXP"}
 				return model.ObjectInstance{ID: "object:scroll", Properties: map[string]string{"type": "7"}}
 			},
@@ -197,7 +197,7 @@ func TestMagicEffectDrainExpLegacyRestrictions(t *testing.T) {
 		{
 			name: "explicit self alias uses target branch and misses",
 			config: func(alice *model.Creature) model.ObjectInstance {
-				alice.Stats = map[string]int{"class": legacyClassDM, "level": 10, "experience": 1000}
+				alice.Stats = map[string]int{"class": model.ClassDM, "level": 10, "experience": 1000}
 				alice.Metadata.Tags = []string{"SDREXP"}
 				return model.ObjectInstance{}
 			},
@@ -207,7 +207,7 @@ func TestMagicEffectDrainExpLegacyRestrictions(t *testing.T) {
 		{
 			name: "missing target",
 			config: func(alice *model.Creature) model.ObjectInstance {
-				alice.Stats = map[string]int{"class": legacyClassDM, "level": 10, "experience": 1000}
+				alice.Stats = map[string]int{"class": model.ClassDM, "level": 10, "experience": 1000}
 				alice.Metadata.Tags = []string{"SDREXP"}
 				return model.ObjectInstance{}
 			},
@@ -258,7 +258,7 @@ func TestMagicEffectDrainExpNamedSelfUsesTargetBranchLikeLegacy(t *testing.T) {
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 10
 	alice.Stats = map[string]int{
-		"class":            legacyClassDM,
+		"class":            model.ClassDM,
 		"level":            10,
 		"experience":       1000,
 		"proficiencySharp": 2000,
@@ -795,7 +795,7 @@ func magicEffectTestHasExactTag(tags []string, want string) bool {
 func TestMagicEffectRmGongSelf(t *testing.T) {
 	loaded := readScrollWorld(t, "room:library", "1", "62")
 	alice := loaded.Creatures["creature:alice"]
-	alice.Stats = map[string]int{"class": legacyClassBulsa, "mpCurrent": 100}
+	alice.Stats = map[string]int{"class": model.ClassBulsa, "mpCurrent": 100}
 	alice.Metadata.Tags = []string{"fearful", "SRMGONG"}
 	loaded.Creatures[alice.ID] = alice
 
@@ -832,7 +832,7 @@ func TestMagicEffectRmGongSelf(t *testing.T) {
 func TestMagicEffectRmGongExplicitSelfAliasMissesLikeLegacy(t *testing.T) {
 	loaded := readScrollWorld(t, "room:library", "1", "62")
 	alice := loaded.Creatures["creature:alice"]
-	alice.Stats = map[string]int{"class": legacyClassBulsa, "mpCurrent": 100}
+	alice.Stats = map[string]int{"class": model.ClassBulsa, "mpCurrent": 100}
 	alice.Metadata.Tags = []string{"fearful", "SRMGONG"}
 	loaded.Creatures[alice.ID] = alice
 
@@ -868,7 +868,7 @@ func TestMagicEffectRmGongExplicitSelfAliasMissesLikeLegacy(t *testing.T) {
 func TestMagicEffectRmGongNamedSelfUsesTargetBranchLikeLegacy(t *testing.T) {
 	loaded := readScrollWorld(t, "room:library", "1", "62")
 	alice := loaded.Creatures["creature:alice"]
-	alice.Stats = map[string]int{"class": legacyClassBulsa, "mpCurrent": 100}
+	alice.Stats = map[string]int{"class": model.ClassBulsa, "mpCurrent": 100}
 	alice.Metadata.Tags = []string{"fearful", "SRMGONG"}
 	loaded.Creatures[alice.ID] = alice
 
@@ -922,7 +922,7 @@ func TestMagicEffectRmGongPotionUsesLegacyOutput(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			loaded := readScrollWorld(t, "room:library", "1", "62")
 			alice := loaded.Creatures["creature:alice"]
-			alice.Stats = map[string]int{"class": legacyClassBulsa}
+			alice.Stats = map[string]int{"class": model.ClassBulsa}
 			alice.Metadata.Tags = tt.tags
 			loaded.Creatures[alice.ID] = alice
 
@@ -982,7 +982,7 @@ func TestMagicEffectRmGongRejectsWrongClassWithLegacyText(t *testing.T) {
 func TestMagicEffectRmGongMissingTargetUsesLegacyText(t *testing.T) {
 	loaded := readScrollWorld(t, "room:library", "1", "62")
 	alice := loaded.Creatures["creature:alice"]
-	alice.Stats = map[string]int{"class": legacyClassBulsa}
+	alice.Stats = map[string]int{"class": model.ClassBulsa}
 	loaded.Creatures[alice.ID] = alice
 	runtime := state.NewWorld(loaded)
 
@@ -1005,7 +1005,7 @@ func TestMagicEffectRmGongMissingTargetUsesLegacyText(t *testing.T) {
 func TestMagicEffectRmGongPotionRejectsExplicitTargetBeforeLookup(t *testing.T) {
 	loaded := readScrollWorld(t, "room:library", "1", "62")
 	alice := loaded.Creatures["creature:alice"]
-	alice.Stats = map[string]int{"class": legacyClassBulsa}
+	alice.Stats = map[string]int{"class": model.ClassBulsa}
 	loaded.Creatures[alice.ID] = alice
 	runtime := state.NewWorld(loaded)
 	ctx := &Context{ActorID: "player:alice"}
@@ -1036,7 +1036,7 @@ func TestMagicEffectRmGongPotionRejectsExplicitTargetBeforeLookup(t *testing.T) 
 func TestMagicEffectRmGongTarget(t *testing.T) {
 	loaded := readScrollWorld(t, "room:library", "1", "62")
 	alice := loaded.Creatures["creature:alice"]
-	alice.Stats = map[string]int{"class": legacyClassBulsa, "mpCurrent": 100}
+	alice.Stats = map[string]int{"class": model.ClassBulsa, "mpCurrent": 100}
 	alice.Metadata.Tags = []string{"SRMGONG"}
 	loaded.Creatures[alice.ID] = alice
 
@@ -1100,7 +1100,7 @@ func TestMagicEffectAgent2TargetMessagesResolveActiveSession(t *testing.T) {
 			power: magicPowerDrainExp,
 			configure: func(alice, bob *model.Creature) {
 				alice.Level = 10
-				alice.Stats = map[string]int{"class": legacyClassDM, "level": 10, "experience": 1000}
+				alice.Stats = map[string]int{"class": model.ClassDM, "level": 10, "experience": 1000}
 				alice.Metadata.Tags = []string{"SDREXP"}
 				bob.Level = 5
 				bob.Stats = map[string]int{"level": 5, "experience": 500, "proficiencySharp": 1500}
@@ -1122,7 +1122,7 @@ func TestMagicEffectAgent2TargetMessagesResolveActiveSession(t *testing.T) {
 			name:  "rm gong",
 			power: magicPowerRmGong,
 			configure: func(alice, bob *model.Creature) {
-				alice.Stats = map[string]int{"class": legacyClassBulsa, "level": 10, "mpCurrent": 100}
+				alice.Stats = map[string]int{"class": model.ClassBulsa, "level": 10, "mpCurrent": 100}
 				alice.Metadata.Tags = []string{"SRMGONG"}
 				bob.Stats = map[string]int{"level": 5}
 				bob.Metadata.Tags = []string{"fearful"}

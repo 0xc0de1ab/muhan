@@ -328,7 +328,7 @@ func TestPfingerHandlerMissingAndPrivateCases(t *testing.T) {
 		Kind:        model.CreatureKindPlayer,
 		DisplayName: "Hidden",
 		PlayerID:    "Hidden",
-		Stats:       map[string]int{"class": legacyClassSubDM, "race": 5},
+		Stats:       map[string]int{"class": model.ClassSubDM, "race": 5},
 	})
 
 	world := state.NewWorld(loaded)
@@ -776,7 +776,7 @@ func TestTellHandlerMatchesLegacyPIGNOROrderAndDMBYPASS(t *testing.T) {
 		t.Fatalf("last sender = %q/%v, want empty/false", got, ok)
 	}
 
-	setSocialCreatureStat(t, world, "creature:alice", "class", legacyClassDM)
+	setSocialCreatureStat(t, world, "creature:alice", "class", model.ClassDM)
 	if err := loop.HandleEvent(context.Background(), session.Event{SessionID: "s1", Kind: session.EventLine, Line: "Bob 관리자 이야기"}); err != nil {
 		t.Fatal(err)
 	}
@@ -1486,7 +1486,7 @@ func TestGroupTalkHandlerHonorsLegacyPIGNOR(t *testing.T) {
 	assertCommand(t, bob, session.Command{Write: "Bob가 그룹원들에게 \"리더\"라고 말합니다.\nAlice님은 이야기 듣기 거부 상태입니다.\n"})
 	assertNoCommand(t, alice)
 
-	setSocialCreatureStat(t, world, "creature:bob", "class", legacyClassCaretaker)
+	setSocialCreatureStat(t, world, "creature:bob", "class", model.ClassCaretaker)
 	if err := loop.HandleEvent(context.Background(), session.Event{SessionID: "s2", Kind: session.EventLine, Line: "관리 그룹말"}); err != nil {
 		t.Fatal(err)
 	}

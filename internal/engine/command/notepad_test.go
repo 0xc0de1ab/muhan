@@ -217,7 +217,7 @@ func TestNotepadPaginatesPlainReadLikeLegacyViewFile(t *testing.T) {
 			"player:dm": {ID: "player:dm", CreatureID: "creature:dm"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": legacyClassCaretaker}},
+			"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": model.ClassCaretaker}},
 		},
 	}
 
@@ -269,7 +269,7 @@ func TestNotepadDeleteIgnoresUnlinkFailureLikeC(t *testing.T) {
 			"player:dm": {ID: "player:dm", CreatureID: "creature:dm"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": legacyClassCaretaker}},
+			"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": model.ClassCaretaker}},
 		},
 	}
 	ctx := &Context{ActorID: "player:dm"}

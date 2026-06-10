@@ -12,7 +12,7 @@ import (
 )
 
 func TestPrayHandlerSuccessAddsPietyTagsCooldownAndExpiration(t *testing.T) {
-	loaded := prayWorld(t, legacyClassCleric)
+	loaded := prayWorld(t, model.ClassCleric)
 	runtime := state.NewWorld(loaded)
 	handler := NewPrayHandler(runtime, fixedRoll(1))
 	var broadcasts []roomBroadcastRecord
@@ -62,19 +62,19 @@ func TestPrayHandlerRejectsClassAndUntrainedInvincible(t *testing.T) {
 	}{
 		{
 			name:  "wrong class",
-			class: legacyClassFighter,
+			class: model.ClassFighter,
 			want:  "불제자와 무사만이 신께 기원할 수 있습니다.",
 			piety: 30,
 		},
 		{
 			name:  "invincible without training",
-			class: legacyClassInvincible,
+			class: model.ClassInvincible,
 			want:  "불제자나 무사를 무적수련하지 않았습니다..",
 			piety: 30,
 		},
 		{
 			name:   "invincible with cleric training",
-			class:  legacyClassInvincible,
+			class:  model.ClassInvincible,
 			tags:   []string{"SCLERIC"},
 			want:   "신앙심이 깊어지는",
 			piety:  35,
@@ -111,7 +111,7 @@ func TestPrayHandlerRejectsClassAndUntrainedInvincible(t *testing.T) {
 }
 
 func TestPrayHandlerAlreadyPrayedSkipsCooldownAndPiety(t *testing.T) {
-	loaded := prayWorld(t, legacyClassPaladin)
+	loaded := prayWorld(t, model.ClassPaladin)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"PPRAYD"}
 	loaded.Creatures[alice.ID] = alice
@@ -138,7 +138,7 @@ func TestPrayHandlerAlreadyPrayedSkipsCooldownAndPiety(t *testing.T) {
 }
 
 func TestPrayHandlerFailureSetsShortCooldownWithoutTags(t *testing.T) {
-	runtime := state.NewWorld(prayWorld(t, legacyClassCleric))
+	runtime := state.NewWorld(prayWorld(t, model.ClassCleric))
 	handler := NewPrayHandler(runtime, fixedRoll(100))
 
 	var broadcasts []roomBroadcastRecord
@@ -173,7 +173,7 @@ func TestPrayHandlerFailureSetsShortCooldownWithoutTags(t *testing.T) {
 }
 
 func TestPrayHandlerCanBeRegisteredByDispatcher(t *testing.T) {
-	runtime := state.NewWorld(prayWorld(t, legacyClassCleric))
+	runtime := state.NewWorld(prayWorld(t, model.ClassCleric))
 	dispatcher := Dispatcher{
 		Registry: mustRegistry(t, []commandspec.CommandSpec{
 			{Name: "신원법", Number: 65, Handler: "pray"},
@@ -193,7 +193,7 @@ func TestPrayHandlerCanBeRegisteredByDispatcher(t *testing.T) {
 		t.Fatalf("status/output = %d/%q, want Korean command success", status, ctx.OutputString())
 	}
 
-	runtime = state.NewWorld(prayWorld(t, legacyClassCleric))
+	runtime = state.NewWorld(prayWorld(t, model.ClassCleric))
 	dispatcher.Handlers["pray"] = NewPrayHandler(runtime, fixedRoll(1))
 	ctx = &Context{ActorID: "player:alice"}
 	status, err = dispatcher.DispatchLine(ctx, "pray")

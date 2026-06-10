@@ -1,35 +1,21 @@
 package command
 
-// Standard legacy class ID mappings (matching the original C source structure)
-const (
-	legacyClassAssassin   = 1
-	legacyClassBarbarian  = 2
-	legacyClassCleric     = 3
-	legacyClassFighter    = 4
-	legacyClassMage       = 5
-	legacyClassPaladin    = 6
-	legacyClassRanger     = 7
-	legacyClassThief      = 8
-	legacyClassInvincible = 9
-	legacyClassCaretaker  = 10
-	legacyClassBulsa      = 11
-	legacyClassSubDM      = 12
-	legacyClassDM         = 13
-)
+import "muhan/internal/world/model"
 
+// Standard legacy class ID mappings (matching the original C source structure)
 // Legacy alias mappings used in magic_heal.go
 const (
-	healClassAssassin   = legacyClassAssassin
-	healClassBarbarian  = legacyClassBarbarian
-	healClassCleric     = legacyClassCleric
-	healClassFighter    = legacyClassFighter
-	healClassMage       = legacyClassMage
-	healClassPaladin    = legacyClassPaladin
-	healClassRanger     = legacyClassRanger
-	healClassThief      = legacyClassThief
-	healClassInvincible = legacyClassInvincible
-	healClassCaretaker  = legacyClassCaretaker
-	healClassBulsa      = legacyClassBulsa
-	healClassSubDM      = legacyClassSubDM
-	healClassDM         = legacyClassDM
+	healClassAssassin   = model.ClassAssassin
+	healClassBarbarian  = model.ClassBarbarian
+	healClassCleric     = model.ClassCleric
+	healClassFighter    = model.ClassFighter
+	healClassMage       = model.ClassMage
+	healClassPaladin    = model.ClassPaladin
+	healClassRanger     = model.ClassRanger
+	healClassThief      = model.ClassThief
+	healClassInvincible = model.ClassInvincible
+	healClassCaretaker  = model.ClassCaretaker
+	healClassBulsa      = model.ClassBulsa
+	healClassSubDM      = model.ClassSubDM
+	healClassDM         = model.ClassDM
 )

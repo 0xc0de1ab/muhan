@@ -208,10 +208,10 @@ func backstabCharmedTargetRefusal(victim model.Creature) string {
 
 func backstabClassRejection(actor model.Creature) string {
 	class := creatureClass(actor)
-	if class != legacyClassThief && class != legacyClassAssassin && class < legacyClassInvincible {
+	if class != model.ClassThief && class != model.ClassAssassin && class < model.ClassInvincible {
 		return "도둑이나 자객만 사용할 수 있는 기술입니다.\n"
 	}
-	if class >= legacyClassInvincible && !backstabHasThiefOrAssassinTraining(actor) {
+	if class >= model.ClassInvincible && !backstabHasThiefOrAssassinTraining(actor) {
 		return "\n도둑이나 자객을 무적수련하지 않았습니다..\n"
 	}
 	return ""
@@ -270,7 +270,7 @@ func backstabLands(actor model.Creature, victim model.Creature, weaponProf int) 
 }
 
 func backstabDamage(world InventoryWorld, actor model.Creature, victim model.Creature, weapon model.ObjectInstance) int {
-	if creatureClass(victim) > legacyClassCaretaker {
+	if creatureClass(victim) > model.ClassCaretaker {
 		return 1
 	}
 	backstabProf := getCreatureProficiency(actor, "proficiency/backstab")
@@ -281,7 +281,7 @@ func backstabDamage(world InventoryWorld, actor model.Creature, victim model.Cre
 		damage = 1
 	}
 	damage += backstabProf/10 + weaponProf/10
-	if creatureClass(actor) == legacyClassThief {
+	if creatureClass(actor) == model.ClassThief {
 		multiplier := attackRoll(20, 35) / 10
 		if multiplier < 1 {
 			multiplier = 1

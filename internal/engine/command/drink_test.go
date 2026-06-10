@@ -268,14 +268,14 @@ func TestDrinkHandlerAppliesMagicItemRestrictions(t *testing.T) {
 	}{
 		{
 			name:          "good only rejects evil actor and drops potion",
-			creatureStats: map[string]int{"alignment": -101, "class": legacyClassFighter},
+			creatureStats: map[string]int{"alignment": -101, "class": model.ClassFighter},
 			objectTags:    []string{"goodOnly"},
 			want:          "치료약이 당신의 손안에서 타버립니다.\n",
 			wantDropped:   true,
 		},
 		{
 			name:          "class selective rejects unlisted class",
-			creatureStats: map[string]int{"class": legacyClassFighter},
+			creatureStats: map[string]int{"class": model.ClassFighter},
 			protoProps:    map[string]string{"classSelective": "1", "classMage": "1"},
 			want:          "\n당신직업상 그 물건을 금하고 있기 때문에 먹을 수 없습니다.\n",
 		},
@@ -394,7 +394,7 @@ func TestDrinkHandlerSpecialPotionAppliesSafePDiceEffectsAndDestroysPotion(t *te
 			name:  "case 4 increases base stats within legacy cap",
 			pDice: "4",
 			stats: map[string]int{
-				"class": legacyClassFighter, "level": 8,
+				"class": model.ClassFighter, "level": 8,
 				"strength": 10, "intelligence": 10, "piety": 10, "constitution": 10, "dexterity": 10,
 			},
 			wantStats:  map[string]int{"strength": 11, "intelligence": 11, "piety": 11, "constitution": 11, "dexterity": 11},
@@ -404,7 +404,7 @@ func TestDrinkHandlerSpecialPotionAppliesSafePDiceEffectsAndDestroysPotion(t *te
 			name:  "case 4 leaves high stats unchanged",
 			pDice: "4",
 			stats: map[string]int{
-				"class": legacyClassFighter, "level": 1,
+				"class": model.ClassFighter, "level": 1,
 				"strength": 20, "intelligence": 20, "piety": 20, "constitution": 20, "dexterity": 20,
 			},
 			wantStats:  map[string]int{"strength": 20, "intelligence": 20, "piety": 20, "constitution": 20, "dexterity": 20},
@@ -578,7 +578,7 @@ func drinkWorld(t *testing.T, roomID model.RoomID, shots string, magicPower stri
 	creature.RoomID = roomID
 	creature.Inventory = model.ObjectRefList{ObjectIDs: []model.ObjectInstanceID{"object:potion", "object:stone"}}
 	creature.Stats = map[string]int{
-		"class":     legacyClassCleric,
+		"class":     model.ClassCleric,
 		"hpCurrent": 50,
 		"hpMax":     100,
 		"mpCurrent": 100,

@@ -52,7 +52,7 @@ func TestDMAc_Handler(t *testing.T) {
 				"creature:caster": {
 					ID: "creature:caster",
 					Stats: map[string]int{
-						"class": legacyClassBulsa,
+						"class": model.ClassBulsa,
 					},
 				},
 			},
@@ -94,7 +94,7 @@ func TestDMAc_Handler(t *testing.T) {
 				"creature:caster": {
 					ID: "creature:caster",
 					Stats: map[string]int{
-						"class":     legacyClassSubDM,
+						"class":     model.ClassSubDM,
 						"hpMax":     100,
 						"hpCurrent": 50,
 						"mpMax":     50,
@@ -323,7 +323,7 @@ func TestDMAc_Handler(t *testing.T) {
 				"creature:caster": {
 					ID: "creature:caster",
 					Stats: map[string]int{
-						"class": legacyClassSubDM,
+						"class": model.ClassSubDM,
 					},
 				},
 				"creature:bob": {

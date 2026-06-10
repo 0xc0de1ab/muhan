@@ -38,7 +38,7 @@ func dmAc(ctx *Context, resolved ResolvedCommand, world DMAcWorld) (Status, erro
 	}
 
 	class := creatureClass(creature)
-	if class < legacyClassSubDM {
+	if class < model.ClassSubDM {
 		return StatusPrompt, nil
 	}
 

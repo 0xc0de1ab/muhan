@@ -32,7 +32,7 @@ func dmRmstat(ctx *Context, resolved ResolvedCommand, world DMRmstatWorld) (Stat
 	}
 
 	class := dmRmstatClass(creature)
-	if class != legacyClassZoneMaker && class < legacyClassSubDM {
+	if class != legacyClassZoneMaker && class < model.ClassSubDM {
 		return StatusPrompt, nil
 	}
 

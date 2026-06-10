@@ -30,8 +30,8 @@ func TestDMRmstatRejectsUnauthorized(t *testing.T) {
 		{name: "thief", class: 2},
 		{name: "assassin", class: 3},
 		{name: "invalid class 9", class: 9},
-		{name: "caretaker below SUB_DM", class: legacyClassCaretaker},
-		{name: "bulsa below SUB_DM", class: legacyClassBulsa},
+		{name: "caretaker below SUB_DM", class: model.ClassCaretaker},
+		{name: "bulsa below SUB_DM", class: model.ClassBulsa},
 	}
 
 	for _, tt := range tests {
@@ -79,7 +79,7 @@ func TestDMRmstatAcceptsAuthorized(t *testing.T) {
 		},
 		{
 			name:       "sub_dm",
-			class:      legacyClassSubDM,
+			class:      model.ClassSubDM,
 			roomID:     "room:00001",
 			wantOutput: "방번호 #1\n",
 		},
@@ -126,11 +126,11 @@ func TestDMRmstatAcceptsAuthorized(t *testing.T) {
 }
 
 func TestDMRmstatClassNormalizesStatAndPropertyKeys(t *testing.T) {
-	if got := dmRmstatClass(model.Creature{Stats: map[string]int{"CLA-SS": legacyClassSubDM}}); got != legacyClassSubDM {
-		t.Fatalf("dmRmstatClass(normalized stat) = %d, want %d", got, legacyClassSubDM)
+	if got := dmRmstatClass(model.Creature{Stats: map[string]int{"CLA-SS": model.ClassSubDM}}); got != model.ClassSubDM {
+		t.Fatalf("dmRmstatClass(normalized stat) = %d, want %d", got, model.ClassSubDM)
 	}
-	if got := dmRmstatClass(model.Creature{Properties: map[string]string{"cla ss": "12"}}); got != legacyClassSubDM {
-		t.Fatalf("dmRmstatClass(normalized property) = %d, want %d", got, legacyClassSubDM)
+	if got := dmRmstatClass(model.Creature{Properties: map[string]string{"cla ss": "12"}}); got != model.ClassSubDM {
+		t.Fatalf("dmRmstatClass(normalized property) = %d, want %d", got, model.ClassSubDM)
 	}
 }
 

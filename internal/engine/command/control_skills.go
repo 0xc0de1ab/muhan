@@ -294,7 +294,7 @@ func NewLionScreamHandlerWithDeathFinalizer(world LionScreamWorld, finalizer Att
 }
 
 func pobackClassRejection(actor model.Creature) string {
-	if creatureClass(actor) < legacyClassInvincible {
+	if creatureClass(actor) < model.ClassInvincible {
 		return "무적이상만 쓸수 있는 기술입니다.\n"
 	}
 	if !guardHasRangerTraining(actor) {
@@ -389,8 +389,8 @@ func pobackCreaturePronoun(creature model.Creature) string {
 
 func lionScreamClassRejection(actor model.Creature) string {
 	class := creatureClass(actor)
-	if class < legacyClassInvincible {
-		if class == legacyClassPaladin && attackCreatureLevel(actor) >= 50 {
+	if class < model.ClassInvincible {
+		if class == model.ClassPaladin && attackCreatureLevel(actor) >= 50 {
 			return ""
 		}
 		return "무사 레벨 50이상만 쓸수 있는 기술입니다.\n"

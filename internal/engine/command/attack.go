@@ -61,7 +61,7 @@ func NewAttackHandlerWithDeathFinalizer(world AttackWorld, finalizer AttackDeath
 			ctx.WriteString("자기 자신은 공격할 수 없습니다.\n")
 			return StatusDefault, nil
 		}
-		if (attackerClass == legacyClassPaladin || attackerClass >= legacyClassInvincible) &&
+		if (attackerClass == model.ClassPaladin || attackerClass >= model.ClassInvincible) &&
 			attackActorAlreadyFighting(world, room, viewer, attacker) {
 			ctx.WriteString("당신은 지금 싸우고 있잖아요!")
 			return StatusDefault, nil
@@ -595,7 +595,7 @@ func attackCreatureDeflectsMundane(world InventoryWorld, attacker model.Creature
 	if !attackCreatureHasFlag(victim, "magicOrEnchantedOnly", "enchantOnly", "menonl", "MENONL") {
 		return false
 	}
-	if creatureClass(attacker) >= legacyClassCaretaker {
+	if creatureClass(attacker) >= model.ClassCaretaker {
 		return false
 	}
 	weaponID := equippedObjectID(attacker, "wield")
@@ -617,12 +617,12 @@ func attackMultiAttackCount(attacker model.Creature) int {
 	class := creatureClass(attacker)
 	level := attackCreatureLevel(attacker)
 	count := 1
-	if (class == legacyClassInvincible && level > 100) || class > legacyClassInvincible {
+	if (class == model.ClassInvincible && level > 100) || class > model.ClassInvincible {
 		if (level-97)/10+attackRoll(0, 3) > 2 {
 			count++
 		}
 	}
-	if class > legacyClassInvincible && attackRoll(1, 4) == 1 {
+	if class > model.ClassInvincible && attackRoll(1, 4) == 1 {
 		count++
 	}
 	return count
@@ -758,7 +758,7 @@ func attackDamageOutcome(world InventoryWorld, attacker model.Creature, victim m
 
 func attackApplyPaladinAlignment(damage int, attacker model.Creature) attackDamageResult {
 	outcome := attackDamageResult{Damage: damage, Hit: true}
-	if creatureClass(attacker) != legacyClassPaladin {
+	if creatureClass(attacker) != model.ClassPaladin {
 		return outcome
 	}
 	alignment := creatureStat(attacker, "alignment")
@@ -797,7 +797,7 @@ func attackClassIgnoresWeaponProficiency(class int) bool {
 }
 
 func attackClassAddsUnarmedLevelBonus(class int) bool {
-	return class == attackClassBarbarian || class > legacyClassInvincible
+	return class == attackClassBarbarian || class > model.ClassInvincible
 }
 
 func heldWeaponDamageBonus(world InventoryWorld, attacker model.Creature) int {

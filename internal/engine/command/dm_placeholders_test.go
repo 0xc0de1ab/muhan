@@ -36,7 +36,7 @@ func TestNewDMPlaceholderHandlersRegistersRequestedKeys(t *testing.T) {
 }
 
 func TestDMPlaceholderHandlerRejectsUnprivilegedActor(t *testing.T) {
-	world := dmPlaceholderWorldWithClass(legacyClassFighter)
+	world := dmPlaceholderWorldWithClass(model.ClassFighter)
 	handler := NewDMPlaceholderHandler(world)
 	ctx := &Context{ActorID: "player:alice"}
 
@@ -58,8 +58,8 @@ func TestDMPlaceholderHandlerRejectsWhenAuthorityCannotBeVerified(t *testing.T) 
 		ctx   *Context
 		world DMPlaceholderWorld
 	}{
-		{name: "nil context", world: dmPlaceholderWorldWithClass(legacyClassCaretaker)},
-		{name: "missing actor", ctx: &Context{}, world: dmPlaceholderWorldWithClass(legacyClassCaretaker)},
+		{name: "nil context", world: dmPlaceholderWorldWithClass(model.ClassCaretaker)},
+		{name: "missing actor", ctx: &Context{}, world: dmPlaceholderWorldWithClass(model.ClassCaretaker)},
 		{name: "nil world", ctx: &Context{ActorID: "player:alice"}},
 		{name: "missing player", ctx: &Context{ActorID: "player:alice"}, world: dmPlaceholderTestWorld{}},
 		{
@@ -98,8 +98,8 @@ func TestDMPlaceholderHandlerReportsUnimplementedForPrivilegedActor(t *testing.T
 		class int
 	}{
 		{name: "zonemaker", class: legacyClassZoneMaker},
-		{name: "caretaker", class: legacyClassCaretaker},
-		{name: "sub dm", class: legacyClassSubDM},
+		{name: "caretaker", class: model.ClassCaretaker},
+		{name: "sub dm", class: model.ClassSubDM},
 	}
 
 	for _, tt := range tests {

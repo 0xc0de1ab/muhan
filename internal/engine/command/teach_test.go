@@ -11,7 +11,7 @@ import (
 )
 
 func TestTeachHandlerTeachesKnownSpellToRoomPlayer(t *testing.T) {
-	loaded := teachWorld(t, legacyClassCleric, []string{"rcast"})
+	loaded := teachWorld(t, model.ClassCleric, []string{"rcast"})
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"hidden", "PHIDDN", "SVIGOR"}
 	alice.Stats["PHIDDN"] = 1
@@ -72,7 +72,7 @@ func TestTeachHandlerTeachesKnownSpellToRoomPlayer(t *testing.T) {
 }
 
 func TestTeachHandlerSendsTargetMessageAndExcludesTargetFromRoomBroadcast(t *testing.T) {
-	loaded := teachWorld(t, legacyClassCleric, []string{"rcast"})
+	loaded := teachWorld(t, model.ClassCleric, []string{"rcast"})
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"SVIGOR"}
 	loaded.Creatures[alice.ID] = alice
@@ -153,20 +153,20 @@ func TestTeachHandlerRejectsInvalidStates(t *testing.T) {
 	}{
 		{
 			name:  "not casting room",
-			class: legacyClassCleric,
+			class: model.ClassCleric,
 			args:  []string{"Bob", "회복"},
 			want:  "주문 전수장에서만 가능합니다.",
 		},
 		{
 			name:     "missing args - no target",
-			class:    legacyClassCleric,
+			class:    model.ClassCleric,
 			roomTags: []string{"rcast"},
 			args:     []string{},
 			want:     "누구에게 비법을 전수시키실겁니까?",
 		},
 		{
 			name:     "missing args - no spell",
-			class:    legacyClassCleric,
+			class:    model.ClassCleric,
 			roomTags: []string{"rcast"},
 			args:     []string{"Bob"},
 			want:     "누구에게 비법을 전수시키실겁니까?",
@@ -174,7 +174,7 @@ func TestTeachHandlerRejectsInvalidStates(t *testing.T) {
 
 		{
 			name:      "blind",
-			class:     legacyClassCleric,
+			class:     model.ClassCleric,
 			roomTags:  []string{"rcast"},
 			args:      []string{"Bob", "회복"},
 			actorTags: []string{"blind"},
@@ -182,7 +182,7 @@ func TestTeachHandlerRejectsInvalidStates(t *testing.T) {
 		},
 		{
 			name:       "silenced",
-			class:      legacyClassCleric,
+			class:      model.ClassCleric,
 			roomTags:   []string{"rcast"},
 			args:       []string{"Bob", "회복"},
 			playerTags: []string{"PSILNC"},
@@ -190,49 +190,49 @@ func TestTeachHandlerRejectsInvalidStates(t *testing.T) {
 		},
 		{
 			name:     "wrong class",
-			class:    legacyClassFighter,
+			class:    model.ClassFighter,
 			roomTags: []string{"rcast"},
 			args:     []string{"Bob", "회복"},
 			want:     "\n도술사와 불제자만이 전수시킬 수 있는 능력이 있습니다.\n",
 		},
 		{
 			name:     "missing target",
-			class:    legacyClassCleric,
+			class:    model.ClassCleric,
 			roomTags: []string{"rcast"},
 			args:     []string{"없는", "회복"},
 			want:     "\n그런 사람은 존재하지 않습니다.\n",
 		},
 		{
 			name:     "spell does not exist",
-			class:    legacyClassCleric,
+			class:    model.ClassCleric,
 			roomTags: []string{"rcast"},
 			args:     []string{"Bob", "nonexistent"},
 			want:     "\n그런 주문이 존재하지 않습니다.\n",
 		},
 		{
 			name:     "basic group is not a legacy spell",
-			class:    legacyClassCleric,
+			class:    model.ClassCleric,
 			roomTags: []string{"rcast"},
 			args:     []string{"Bob", "기본"},
 			want:     "\n그런 주문이 존재하지 않습니다.\n",
 		},
 		{
 			name:     "ambiguous spell name",
-			class:    legacyClassCleric,
+			class:    model.ClassCleric,
 			roomTags: []string{"rcast"},
 			args:     []string{"Bob", "천"},
 			want:     "\n주문이름이 이상합니다.\n",
 		},
 		{
 			name:     "actor does not know spell",
-			class:    legacyClassCleric,
+			class:    model.ClassCleric,
 			roomTags: []string{"rcast"},
 			args:     []string{"Bob", "회복"},
 			want:     "\n당신은 아직 그런 주문을 터득하지 못했습니다.\n",
 		},
 		{
 			name:       "target already knows spell",
-			class:      legacyClassCleric,
+			class:      model.ClassCleric,
 			roomTags:   []string{"rcast"},
 			args:       []string{"Bob", "회복"},
 			actorTags:  []string{"SVIGOR"},
@@ -241,7 +241,7 @@ func TestTeachHandlerRejectsInvalidStates(t *testing.T) {
 		},
 		{
 			name:      "cleric cannot teach level 2 spell",
-			class:     legacyClassCleric,
+			class:     model.ClassCleric,
 			roomTags:  []string{"rcast"},
 			args:      []string{"Bob", "삭풍"}, // level 2
 			actorTags: []string{"SHURTS"},
@@ -249,7 +249,7 @@ func TestTeachHandlerRejectsInvalidStates(t *testing.T) {
 		},
 		{
 			name:      "mage cannot teach level 1 spell",
-			class:     legacyClassMage,
+			class:     model.ClassMage,
 			roomTags:  []string{"rcast"},
 			args:      []string{"Bob", "회복"}, // level 1
 			actorTags: []string{"SVIGOR"},
@@ -257,7 +257,7 @@ func TestTeachHandlerRejectsInvalidStates(t *testing.T) {
 		},
 		{
 			name:      "cleric cannot teach level 3 spell",
-			class:     legacyClassCleric,
+			class:     model.ClassCleric,
 			roomTags:  []string{"rcast"},
 			args:      []string{"Bob", "화궁"}, // level 3
 			actorTags: []string{"SFIREB"},
@@ -265,7 +265,7 @@ func TestTeachHandlerRejectsInvalidStates(t *testing.T) {
 		},
 		{
 			name:      "mage cannot teach level 3 spell",
-			class:     legacyClassMage,
+			class:     model.ClassMage,
 			roomTags:  []string{"rcast"},
 			args:      []string{"Bob", "화궁"}, // level 3
 			actorTags: []string{"SFIREB"},
@@ -273,7 +273,7 @@ func TestTeachHandlerRejectsInvalidStates(t *testing.T) {
 		},
 		{
 			name:      "invincible cannot teach level 4 spell",
-			class:     legacyClassInvincible,
+			class:     model.ClassInvincible,
 			roomTags:  []string{"rcast"},
 			args:      []string{"Bob", "도력반"}, // level 4
 			actorTags: []string{"SRESTO"},
@@ -281,7 +281,7 @@ func TestTeachHandlerRejectsInvalidStates(t *testing.T) {
 		},
 		{
 			name:      "caretaker cannot teach level 5 spell",
-			class:     legacyClassCaretaker,
+			class:     model.ClassCaretaker,
 			roomTags:  []string{"rcast"},
 			args:      []string{"Bob", "완치"}, // level 5
 			actorTags: []string{"SFHEAL"},
@@ -289,7 +289,7 @@ func TestTeachHandlerRejectsInvalidStates(t *testing.T) {
 		},
 		{
 			name:      "level 6 spell not teachable",
-			class:     legacyClassDM,
+			class:     model.ClassDM,
 			roomTags:  []string{"rcast"},
 			args:      []string{"Bob", "천지진동"}, // level 6
 			actorTags: []string{"SISIX1"},
@@ -297,7 +297,7 @@ func TestTeachHandlerRejectsInvalidStates(t *testing.T) {
 		},
 		{
 			name:      "level 7 spell not teachable",
-			class:     legacyClassDM,
+			class:     model.ClassDM,
 			roomTags:  []string{"rcast"},
 			args:      []string{"Bob", "혈사천"}, // level 7
 			actorTags: []string{"XIXIX1"},
@@ -352,7 +352,7 @@ func TestTeachHandlerDispatchesKoreanAndEnglishAliases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loaded := teachWorld(t, legacyClassCleric, []string{"RCAST"})
+			loaded := teachWorld(t, model.ClassCleric, []string{"RCAST"})
 			alice := loaded.Creatures["creature:alice"]
 			alice.Metadata.Tags = []string{"SVIGOR"}
 			loaded.Creatures[alice.ID] = alice
@@ -421,7 +421,7 @@ func teachWorld(t *testing.T, class int, roomTags []string) *worldload.World {
 		DisplayName: "Bob",
 		PlayerID:    "player:bob",
 		RoomID:      "room:teach",
-		Stats:       map[string]int{"class": legacyClassFighter, "level": 1},
+		Stats:       map[string]int{"class": model.ClassFighter, "level": 1},
 	})
 	return loaded
 }

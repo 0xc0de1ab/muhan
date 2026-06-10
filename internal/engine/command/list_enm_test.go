@@ -86,7 +86,7 @@ func TestListEnm(t *testing.T) {
 			ID:          "creature:caretaker",
 			DisplayName: "관리자",
 			RoomID:      "room:1",
-			Stats:       map[string]int{"class": legacyClassSubDM}, // SUB_DM
+			Stats:       map[string]int{"class": model.ClassSubDM}, // SUB_DM
 		}
 
 		w.creatures["creature:monster"] = model.Creature{

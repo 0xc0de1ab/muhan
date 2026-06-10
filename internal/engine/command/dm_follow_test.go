@@ -466,7 +466,7 @@ func TestDMFollowClearsStatBackedMDMFOLLikeC(t *testing.T) {
 		creatures: map[model.CreatureID]model.Creature{
 			"creature:alice": {
 				ID:          "creature:alice",
-				Stats:       map[string]int{"class": legacyClassDM},
+				Stats:       map[string]int{"class": model.ClassDM},
 				DisplayName: "Alice",
 				RoomID:      "room:1",
 			},
@@ -604,7 +604,7 @@ func TestDMFollowUsesParsedTargetSlotAndOrdinalLikeCWhenArgsMissing(t *testing.T
 			"player:alice": {ID: "player:alice", CreatureID: "creature:alice", RoomID: "room:1"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:alice":   {ID: "creature:alice", Stats: map[string]int{"class": legacyClassDM}, DisplayName: "Alice", RoomID: "room:1"},
+			"creature:alice":   {ID: "creature:alice", Stats: map[string]int{"class": model.ClassDM}, DisplayName: "Alice", RoomID: "room:1"},
 			"creature:goblin1": {ID: "creature:goblin1", DisplayName: "Goblin", RoomID: "room:1"},
 			"creature:goblin2": {ID: "creature:goblin2", DisplayName: "Goblin", RoomID: "room:1"},
 		},

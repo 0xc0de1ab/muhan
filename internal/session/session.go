@@ -15,7 +15,7 @@ import (
 
 const (
 	DefaultReadBufferSize = 128
-	MaxInputLineBytes    = 512
+	MaxInputLineBytes     = 512
 )
 
 type Option func(*Session)

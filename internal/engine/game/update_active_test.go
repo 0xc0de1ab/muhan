@@ -1406,7 +1406,7 @@ func newActiveSkillOutputFixture(playerHP int, monsterPDice int) (*mockUpdateAct
 		Stats: map[string]int{
 			"hpCurrent": playerHP,
 			"hpMax":     playerHP,
-			"class":     legacyClassFighter,
+			"class":     model.ClassFighter,
 		},
 	}
 	world.creatures[playerPC.ID] = playerPC
@@ -1841,7 +1841,7 @@ func TestMonsterCastSpell_HealingFailureMatchesLegacyNoVisibleOutput(t *testing.
 }
 
 func TestMonsterCastSpell_BlindSpellUsesLegacyTargetAndRoomOutputs(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SBLIND", legacyClassSubDM, 15)
+	world, player, monster := newMonsterStatusSpellFixture("SBLIND", model.ClassSubDM, 15)
 
 	if got := monsterCastSpell(world, monster, player, 1000); got != 1 {
 		t.Fatalf("monsterCastSpell result = %d, want 1", got)
@@ -1863,7 +1863,7 @@ func TestMonsterCastSpell_BlindSpellUsesLegacyTargetAndRoomOutputs(t *testing.T)
 }
 
 func TestMonsterCastSpell_BlindSpellPermissionFailureIsSilent(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SBLIND", legacyClassCleric, 15)
+	world, player, monster := newMonsterStatusSpellFixture("SBLIND", model.ClassCleric, 15)
 
 	if got := monsterCastSpell(world, monster, player, 1000); got != 0 {
 		t.Fatalf("monsterCastSpell result = %d, want 0", got)
@@ -1880,7 +1880,7 @@ func TestMonsterCastSpell_BlindSpellPermissionFailureIsSilent(t *testing.T) {
 }
 
 func TestMonsterCastSpell_SilenceSpellUsesLegacyTargetAndRoomOutputs(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SSILNC", legacyClassSubDM, 12)
+	world, player, monster := newMonsterStatusSpellFixture("SSILNC", model.ClassSubDM, 12)
 
 	if got := monsterCastSpell(world, monster, player, 1000); got != 1 {
 		t.Fatalf("monsterCastSpell result = %d, want 1", got)
@@ -1905,7 +1905,7 @@ func TestMonsterCastSpell_SilenceSpellUsesLegacyTargetAndRoomOutputs(t *testing.
 }
 
 func TestMonsterCastSpell_FearSpellUsesLegacyTargetAndRoomOutputs(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SFEARS", legacyClassSubDM, 15)
+	world, player, monster := newMonsterStatusSpellFixture("SFEARS", model.ClassSubDM, 15)
 
 	if got := monsterCastSpell(world, monster, player, 1000); got != 1 {
 		t.Fatalf("monsterCastSpell result = %d, want 1", got)
@@ -1930,7 +1930,7 @@ func TestMonsterCastSpell_FearSpellUsesLegacyTargetAndRoomOutputs(t *testing.T) 
 }
 
 func TestMonsterCastSpell_FearSpellFailureMatchesLegacyNoVisibleOutput(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SFEARS", legacyClassSubDM, 14)
+	world, player, monster := newMonsterStatusSpellFixture("SFEARS", model.ClassSubDM, 14)
 
 	if got := monsterCastSpell(world, monster, player, 1000); got != 0 {
 		t.Fatalf("monsterCastSpell result = %d, want 0", got)
@@ -1947,7 +1947,7 @@ func TestMonsterCastSpell_FearSpellFailureMatchesLegacyNoVisibleOutput(t *testin
 }
 
 func TestMonsterCastSpell_FearSpellRespectsResistMagicDuration(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SFEARS", legacyClassSubDM, 15)
+	world, player, monster := newMonsterStatusSpellFixture("SFEARS", model.ClassSubDM, 15)
 	playerPC := world.creatures[player.CreatureID]
 	playerPC.Metadata.Tags = []string{"PRMAGI"}
 	world.creatures[playerPC.ID] = playerPC
@@ -1961,7 +1961,7 @@ func TestMonsterCastSpell_FearSpellRespectsResistMagicDuration(t *testing.T) {
 }
 
 func TestMonsterCastSpell_BefuddleSpellUsesLegacyTargetAndRoomOutputs(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SBEFUD", legacyClassSubDM, 10)
+	world, player, monster := newMonsterStatusSpellFixture("SBEFUD", model.ClassSubDM, 10)
 
 	if got := monsterCastSpell(world, monster, player, 1000); got != 1 {
 		t.Fatalf("monsterCastSpell result = %d, want 1", got)
@@ -1991,7 +1991,7 @@ func TestMonsterCastSpell_BefuddleSpellUsesLegacyTargetAndRoomOutputs(t *testing
 }
 
 func TestMonsterCastSpell_BefuddleSpellRespectsResistMagicDuration(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SBEFUD", legacyClassSubDM, 10)
+	world, player, monster := newMonsterStatusSpellFixture("SBEFUD", model.ClassSubDM, 10)
 	playerPC := world.creatures[player.CreatureID]
 	playerPC.Metadata.Tags = []string{"PRMAGI"}
 	world.creatures[playerPC.ID] = playerPC
@@ -2007,7 +2007,7 @@ func TestMonsterCastSpell_BefuddleSpellRespectsResistMagicDuration(t *testing.T)
 }
 
 func TestMonsterCastSpell_BefuddleSpellFailureMatchesLegacyNoVisibleOutput(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SBEFUD", legacyClassSubDM, 9)
+	world, player, monster := newMonsterStatusSpellFixture("SBEFUD", model.ClassSubDM, 9)
 
 	if got := monsterCastSpell(world, monster, player, 1000); got != 0 {
 		t.Fatalf("monsterCastSpell result = %d, want 0", got)
@@ -2024,7 +2024,7 @@ func TestMonsterCastSpell_BefuddleSpellFailureMatchesLegacyNoVisibleOutput(t *te
 }
 
 func TestMonsterCastSpell_DrainExpUsesLegacyTargetAndRoomOutputs(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SDREXP", legacyClassDM, 0)
+	world, player, monster := newMonsterStatusSpellFixture("SDREXP", model.ClassDM, 0)
 	playerPC := world.creatures[player.CreatureID]
 	playerPC.Stats["experience"] = 500
 	playerPC.Stats["proficiencySharp"] = 2000
@@ -2099,7 +2099,7 @@ func TestLegacyMonsterLowerProficiencyReducesWeaponAndRealmSlotsLikeLegacy(t *te
 }
 
 func TestMonsterCastSpell_DrainExpPermissionFailureIsSilent(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SDREXP", legacyClassSubDM, 0)
+	world, player, monster := newMonsterStatusSpellFixture("SDREXP", model.ClassSubDM, 0)
 	playerPC := world.creatures[player.CreatureID]
 	playerPC.Stats["experience"] = 500
 	world.creatures[playerPC.ID] = playerPC
@@ -2120,7 +2120,7 @@ func TestMonsterCastSpell_DrainExpPermissionFailureIsSilent(t *testing.T) {
 }
 
 func TestLegacyMonsterDissolveItemDestroysEquippedItemLikeLegacy(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("MDISIT", legacyClassFighter, 0)
+	world, player, monster := newMonsterStatusSpellFixture("MDISIT", model.ClassFighter, 0)
 	playerPC := world.creatures[player.CreatureID]
 	playerPC.Equipment = map[string]model.ObjectInstanceID{"wield": "object:sword"}
 	world.creatures[playerPC.ID] = playerPC
@@ -2148,7 +2148,7 @@ func TestLegacyMonsterDissolveItemDestroysEquippedItemLikeLegacy(t *testing.T) {
 }
 
 func TestLegacyMonsterDissolveItemSkipsEventEquipmentLikeLegacy(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("MDISIT", legacyClassFighter, 0)
+	world, player, monster := newMonsterStatusSpellFixture("MDISIT", model.ClassFighter, 0)
 	playerPC := world.creatures[player.CreatureID]
 	playerPC.Equipment = map[string]model.ObjectInstanceID{"wield": "object:event"}
 	world.creatures[playerPC.ID] = playerPC
@@ -2180,7 +2180,7 @@ func TestLegacyMonsterDissolveItemSkipsEventEquipmentLikeLegacy(t *testing.T) {
 }
 
 func TestMonsterCastSpell_RemoveDiseaseUsesLegacyTargetAndRoomOutputs(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SRMDIS", legacyClassSubDM, 12)
+	world, player, monster := newMonsterStatusSpellFixture("SRMDIS", model.ClassSubDM, 12)
 	monster.Metadata.Tags = append(monster.Metadata.Tags, "SCLERIC")
 	world.creatures[monster.ID] = monster
 	player.Metadata.Tags = []string{"PDISEA", "diseased"}
@@ -2212,7 +2212,7 @@ func TestMonsterCastSpell_RemoveDiseaseUsesLegacyTargetAndRoomOutputs(t *testing
 }
 
 func TestMonsterCastSpell_RemoveDiseasePermissionFailureIsSilent(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SRMDIS", legacyClassPaladin, 12)
+	world, player, monster := newMonsterStatusSpellFixture("SRMDIS", model.ClassPaladin, 12)
 	player.Metadata.Tags = []string{"PDISEA"}
 	world.players[player.ID] = player
 
@@ -2235,7 +2235,7 @@ func TestMonsterCastSpell_RemoveDiseasePermissionFailureIsSilent(t *testing.T) {
 }
 
 func TestMonsterCastSpell_RemoveBlindnessUsesLegacyTargetAndRoomOutputs(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SRMBLD", legacyClassSubDM, 12)
+	world, player, monster := newMonsterStatusSpellFixture("SRMBLD", model.ClassSubDM, 12)
 	monster.Metadata.Tags = append(monster.Metadata.Tags, "SPALADIN")
 	world.creatures[monster.ID] = monster
 	player.Metadata.Tags = []string{"PBLIND", "blinded"}
@@ -2267,7 +2267,7 @@ func TestMonsterCastSpell_RemoveBlindnessUsesLegacyTargetAndRoomOutputs(t *testi
 }
 
 func TestMonsterCastSpell_RemoveBlindnessTrainingFailureIsSilent(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SRMBLD", legacyClassInvincible, 12)
+	world, player, monster := newMonsterStatusSpellFixture("SRMBLD", model.ClassInvincible, 12)
 	player.Metadata.Tags = []string{"PBLIND"}
 	world.players[player.ID] = player
 
@@ -2290,7 +2290,7 @@ func TestMonsterCastSpell_RemoveBlindnessTrainingFailureIsSilent(t *testing.T) {
 }
 
 func TestMonsterCastSpell_CharmUsesLegacyTargetAndRoomOutputs(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SCHARM", legacyClassSubDM, 15)
+	world, player, monster := newMonsterStatusSpellFixture("SCHARM", model.ClassSubDM, 15)
 
 	if got := monsterCastSpell(world, monster, player, 1000); got != 1 {
 		t.Fatalf("monsterCastSpell result = %d, want 1", got)
@@ -2318,7 +2318,7 @@ func TestMonsterCastSpell_CharmUsesLegacyTargetAndRoomOutputs(t *testing.T) {
 }
 
 func TestMonsterCastSpell_CharmLevelReboundMatchesLegacyReturnZero(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SCHARM", legacyClassSubDM, 15)
+	world, player, monster := newMonsterStatusSpellFixture("SCHARM", model.ClassSubDM, 15)
 	playerPC := world.creatures[player.CreatureID]
 	playerPC.Level = 5
 	world.creatures[playerPC.ID] = playerPC
@@ -2342,7 +2342,7 @@ func TestMonsterCastSpell_CharmLevelReboundMatchesLegacyReturnZero(t *testing.T)
 }
 
 func TestMonsterCastSpell_CurseUsesLegacyTargetAndRoomOutputs(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SCURSE", legacyClassSubDM, 25)
+	world, player, monster := newMonsterStatusSpellFixture("SCURSE", model.ClassSubDM, 25)
 	playerPC := world.creatures[player.CreatureID]
 	playerPC.Equipment = map[string]model.ObjectInstanceID{
 		"held":  "object:sword",
@@ -2374,7 +2374,7 @@ func TestMonsterCastSpell_CurseUsesLegacyTargetAndRoomOutputs(t *testing.T) {
 }
 
 func TestMonsterCastSpell_CurseInsufficientMPFailureIsSilent(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SCURSE", legacyClassSubDM, 24)
+	world, player, monster := newMonsterStatusSpellFixture("SCURSE", model.ClassSubDM, 24)
 	playerPC := world.creatures[player.CreatureID]
 	playerPC.Equipment = map[string]model.ObjectInstanceID{"held": "object:sword"}
 	world.creatures[playerPC.ID] = playerPC
@@ -2399,7 +2399,7 @@ func TestMonsterCastSpell_CurseInsufficientMPFailureIsSilent(t *testing.T) {
 }
 
 func TestMonsterCastSpell_RoomVigorHealsRoomPlayersWithLegacyOutputs(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SRVIGO", legacyClassSubDM, 12)
+	world, player, monster := newMonsterStatusSpellFixture("SRVIGO", model.ClassSubDM, 12)
 	monster.Metadata.Tags = append(monster.Metadata.Tags, "SCLERIC")
 	monster.Stats["piety"] = 10
 	world.creatures[monster.ID] = monster
@@ -2441,7 +2441,7 @@ func TestMonsterCastSpell_RoomVigorHealsRoomPlayersWithLegacyOutputs(t *testing.
 }
 
 func TestMonsterCastSpell_RemoveFearUsesLegacyTargetAndRoomOutputs(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SRMGONG", legacyClassBulsa, 100)
+	world, player, monster := newMonsterStatusSpellFixture("SRMGONG", model.ClassBulsa, 100)
 	player.Metadata.Tags = []string{"PFEARS", "fearful"}
 	world.players[player.ID] = player
 	playerPC := world.creatures[player.CreatureID]
@@ -2471,7 +2471,7 @@ func TestMonsterCastSpell_RemoveFearUsesLegacyTargetAndRoomOutputs(t *testing.T)
 }
 
 func TestMonsterCastSpell_RemoveFearClassFailureIsSilent(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SRMGONG", legacyClassInvincible, 100)
+	world, player, monster := newMonsterStatusSpellFixture("SRMGONG", model.ClassInvincible, 100)
 	player.Metadata.Tags = []string{"PFEARS"}
 	world.players[player.ID] = player
 
@@ -2494,7 +2494,7 @@ func TestMonsterCastSpell_RemoveFearClassFailureIsSilent(t *testing.T) {
 }
 
 func TestMonsterCastSpell_CurePoisonUsesLegacyTargetAndRoomOutputs(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SCUREP", legacyClassSubDM, 6)
+	world, player, monster := newMonsterStatusSpellFixture("SCUREP", model.ClassSubDM, 6)
 	player.Metadata.Tags = []string{"PPOISN", "poisoned"}
 	world.players[player.ID] = player
 	playerPC := world.creatures[player.CreatureID]
@@ -2524,7 +2524,7 @@ func TestMonsterCastSpell_CurePoisonUsesLegacyTargetAndRoomOutputs(t *testing.T)
 }
 
 func TestMonsterCastSpell_CurePoisonInsufficientMPFailureIsSilent(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SCUREP", legacyClassSubDM, 5)
+	world, player, monster := newMonsterStatusSpellFixture("SCUREP", model.ClassSubDM, 5)
 	player.Metadata.Tags = []string{"PPOISN"}
 	world.players[player.ID] = player
 
@@ -2547,7 +2547,7 @@ func TestMonsterCastSpell_CurePoisonInsufficientMPFailureIsSilent(t *testing.T) 
 }
 
 func TestMonsterCastSpell_RemoveCurseUsesLegacyTargetAndRoomOutputs(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SREMOV", legacyClassSubDM, 18)
+	world, player, monster := newMonsterStatusSpellFixture("SREMOV", model.ClassSubDM, 18)
 	playerPC := world.creatures[player.CreatureID]
 	playerPC.Equipment = map[string]model.ObjectInstanceID{
 		"held":  "object:sword",
@@ -2579,7 +2579,7 @@ func TestMonsterCastSpell_RemoveCurseUsesLegacyTargetAndRoomOutputs(t *testing.T
 }
 
 func TestMonsterCastSpell_RemoveCurseInsufficientMPFailureIsSilent(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SREMOV", legacyClassSubDM, 17)
+	world, player, monster := newMonsterStatusSpellFixture("SREMOV", model.ClassSubDM, 17)
 	playerPC := world.creatures[player.CreatureID]
 	playerPC.Equipment = map[string]model.ObjectInstanceID{"held": "object:sword"}
 	world.creatures[playerPC.ID] = playerPC
@@ -2604,7 +2604,7 @@ func TestMonsterCastSpell_RemoveCurseInsufficientMPFailureIsSilent(t *testing.T)
 }
 
 func TestMonsterCastSpell_LightUsesLegacyRoomOutput(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SLIGHT", legacyClassSubDM, 5)
+	world, player, monster := newMonsterStatusSpellFixture("SLIGHT", model.ClassSubDM, 5)
 
 	if got := monsterCastSpell(world, monster, player, 1000); got != 1 {
 		t.Fatalf("monsterCastSpell result = %d, want 1", got)
@@ -2625,7 +2625,7 @@ func TestMonsterCastSpell_LightUsesLegacyRoomOutput(t *testing.T) {
 }
 
 func TestMonsterCastSpell_LightInsufficientMPFailureIsSilent(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SLIGHT", legacyClassSubDM, 4)
+	world, player, monster := newMonsterStatusSpellFixture("SLIGHT", model.ClassSubDM, 4)
 
 	if got := monsterCastSpell(world, monster, player, 1000); got != 0 {
 		t.Fatalf("monsterCastSpell result = %d, want 0", got)
@@ -2675,7 +2675,7 @@ func TestMonsterCastSpell_BlessProtectionUseLegacyTargetAndRoomOutputs(t *testin
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			world, player, monster := newMonsterStatusSpellFixture(tt.tag, legacyClassSubDM, 10)
+			world, player, monster := newMonsterStatusSpellFixture(tt.tag, model.ClassSubDM, 10)
 
 			if got := monsterCastSpell(world, monster, player, 1000); got != 1 {
 				t.Fatalf("monsterCastSpell result = %d, want 1", got)
@@ -2710,7 +2710,7 @@ func TestMonsterCastSpell_BlessProtectionUseLegacyTargetAndRoomOutputs(t *testin
 func TestMonsterCastSpell_BlessProtectionInsufficientMPFailureIsSilent(t *testing.T) {
 	for _, tag := range []string{"SBLESS", "SPROTE"} {
 		t.Run(tag, func(t *testing.T) {
-			world, player, monster := newMonsterStatusSpellFixture(tag, legacyClassSubDM, 9)
+			world, player, monster := newMonsterStatusSpellFixture(tag, model.ClassSubDM, 9)
 
 			if got := monsterCastSpell(world, monster, player, 1000); got != 0 {
 				t.Fatalf("monsterCastSpell result = %d, want 0", got)
@@ -2769,7 +2769,7 @@ func TestMonsterCastSpell_InvisibilityDetectBuffsUseLegacyTargetOutputs(t *testi
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			world, player, monster := newMonsterStatusSpellFixture(tt.tag, legacyClassSubDM, tt.mpCost)
+			world, player, monster := newMonsterStatusSpellFixture(tt.tag, model.ClassSubDM, tt.mpCost)
 
 			if got := monsterCastSpell(world, monster, player, 1000); got != 1 {
 				t.Fatalf("monsterCastSpell result = %d, want 1", got)
@@ -2799,7 +2799,7 @@ func TestMonsterCastSpell_InvisibilityDetectBuffsUseLegacyTargetOutputs(t *testi
 }
 
 func TestMonsterCastSpell_InvisibilityRoomEnemyFailureIsSilent(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SINVIS", legacyClassSubDM, 15)
+	world, player, monster := newMonsterStatusSpellFixture("SINVIS", model.ClassSubDM, 15)
 	observer := model.Creature{
 		ID:          "monster:observer",
 		RoomID:      "room:1",
@@ -2837,7 +2837,7 @@ func TestMonsterLegacyMageSightDurationMatchesLegacyFormula(t *testing.T) {
 		RoomID: "room:duration",
 		Level:  5,
 		Stats: map[string]int{
-			"class":        legacyClassMage,
+			"class":        model.ClassMage,
 			"intelligence": 14,
 		},
 	}
@@ -2925,7 +2925,7 @@ func TestMonsterCastSpell_MovementResistanceBuffsUseLegacyTargetOutputs(t *testi
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			world, player, monster := newMonsterStatusSpellFixture(tt.tag, legacyClassSubDM, tt.mpCost)
+			world, player, monster := newMonsterStatusSpellFixture(tt.tag, model.ClassSubDM, tt.mpCost)
 
 			if got := monsterCastSpell(world, monster, player, 1000); got != 1 {
 				t.Fatalf("monsterCastSpell result = %d, want 1", got)
@@ -2971,7 +2971,7 @@ func TestMonsterCastSpell_MovementResistanceBuffsInsufficientMPFailureIsSilent(t
 
 	for _, tt := range tests {
 		t.Run(tt.tag, func(t *testing.T) {
-			world, player, monster := newMonsterStatusSpellFixture(tt.tag, legacyClassSubDM, tt.mpCost-1)
+			world, player, monster := newMonsterStatusSpellFixture(tt.tag, model.ClassSubDM, tt.mpCost-1)
 
 			if got := monsterCastSpell(world, monster, player, 1000); got != 0 {
 				t.Fatalf("monsterCastSpell result = %d, want 0", got)
@@ -2998,7 +2998,7 @@ func TestMonsterCastSpell_MovementResistanceBuffsInsufficientMPFailureIsSilent(t
 
 func TestMonsterCastSpell_KnowAlignmentSkipsSpellFailAndUsesLegacyOutput(t *testing.T) {
 	for attempt := 0; attempt < 20; attempt++ {
-		world, player, monster := newMonsterStatusSpellFixture("SKNOWA", legacyClassMage, 6)
+		world, player, monster := newMonsterStatusSpellFixture("SKNOWA", model.ClassMage, 6)
 		monster.Stats["intelligence"] = 0
 		world.creatures[monster.ID] = monster
 
@@ -3029,7 +3029,7 @@ func TestMonsterCastSpell_KnowAlignmentSkipsSpellFailAndUsesLegacyOutput(t *test
 }
 
 func TestMonsterCastSpell_KnowAlignmentInsufficientMPFailureIsSilent(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SKNOWA", legacyClassMage, 5)
+	world, player, monster := newMonsterStatusSpellFixture("SKNOWA", model.ClassMage, 5)
 
 	if got := monsterCastSpell(world, monster, player, 1000); got != 0 {
 		t.Fatalf("monsterCastSpell result = %d, want 0", got)
@@ -3054,7 +3054,7 @@ func TestMonsterCastSpell_RestoreUsesLegacyRandomBranchesAndNoMPCost(t *testing.
 	seenFailure := false
 
 	for attempt := 0; attempt < 300 && (!seenSuccess || !seenFailure); attempt++ {
-		world, player, monster := newMonsterStatusSpellFixture("SRESTO", legacyClassInvincible, 0)
+		world, player, monster := newMonsterStatusSpellFixture("SRESTO", model.ClassInvincible, 0)
 		playerPC := world.creatures[player.CreatureID]
 		playerPC.Stats["hpCurrent"] = 50
 		playerPC.Stats["hpMax"] = 100
@@ -3109,7 +3109,7 @@ func TestMonsterCastSpell_RestoreUsesLegacyRandomBranchesAndNoMPCost(t *testing.
 }
 
 func TestMonsterCastSpell_RestoreClassFailureIsSilent(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SRESTO", legacyClassCleric, 100)
+	world, player, monster := newMonsterStatusSpellFixture("SRESTO", model.ClassCleric, 100)
 	playerPC := world.creatures[player.CreatureID]
 	playerPC.Stats["hpCurrent"] = 50
 	playerPC.Stats["hpMax"] = 100
@@ -3136,7 +3136,7 @@ func TestMonsterCastSpell_RestoreClassFailureIsSilent(t *testing.T) {
 }
 
 func TestMonsterCastSpell_RecallMovesTargetWithLegacyOutputs(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SRECAL", legacyClassCleric, 30)
+	world, player, monster := newMonsterStatusSpellFixture("SRECAL", model.ClassCleric, 30)
 	world.rooms[monsterRecallTargetRoomID] = model.Room{ID: monsterRecallTargetRoomID}
 
 	if got := monsterCastSpell(world, monster, player, 1000); got != 1 {
@@ -3172,9 +3172,9 @@ func TestMonsterCastSpell_RecallPermissionAndMPFailuresAreSilent(t *testing.T) {
 		mp    int
 		tags  []string
 	}{
-		{name: "low mp", class: legacyClassCleric, mp: 29},
-		{name: "invincible without cleric training", class: legacyClassInvincible, mp: 30},
-		{name: "non cleric", class: legacyClassFighter, mp: 30},
+		{name: "low mp", class: model.ClassCleric, mp: 29},
+		{name: "invincible without cleric training", class: model.ClassInvincible, mp: 30},
+		{name: "non cleric", class: model.ClassFighter, mp: 30},
 	}
 
 	for _, tt := range tests {
@@ -3205,7 +3205,7 @@ func TestMonsterCastSpell_RecallPermissionAndMPFailuresAreSilent(t *testing.T) {
 }
 
 func TestMonsterCastSpell_TeleportMovesTargetWithLegacyOutputs(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("STELEP", legacyClassSubDM, 20)
+	world, player, monster := newMonsterStatusSpellFixture("STELEP", model.ClassSubDM, 20)
 	room := world.rooms["room:1"]
 	room.Metadata.Tags = []string{"RNOTEL"}
 	world.rooms["room:1"] = room
@@ -3234,7 +3234,7 @@ func TestMonsterCastSpell_TeleportMovesTargetWithLegacyOutputs(t *testing.T) {
 }
 
 func TestMonsterCastSpell_TeleportResistMagicReboundCostsMPAndOnlyWritesTarget(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("STELEP", legacyClassSubDM, 20)
+	world, player, monster := newMonsterStatusSpellFixture("STELEP", model.ClassSubDM, 20)
 	world.rooms["room:teleport"] = model.Room{ID: "room:teleport"}
 	playerPC := world.creatures[player.CreatureID]
 	playerPC.Metadata.Tags = []string{"PRMAGI"}
@@ -3259,7 +3259,7 @@ func TestMonsterCastSpell_TeleportResistMagicReboundCostsMPAndOnlyWritesTarget(t
 }
 
 func TestMonsterCastSpell_TeleportInsufficientMPFailureIsSilent(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("STELEP", legacyClassSubDM, 19)
+	world, player, monster := newMonsterStatusSpellFixture("STELEP", model.ClassSubDM, 19)
 	world.rooms["room:teleport"] = model.Room{ID: "room:teleport"}
 
 	if got := monsterCastSpell(world, monster, player, 1000); got != 0 {
@@ -3281,7 +3281,7 @@ func TestMonsterCastSpell_TeleportInsufficientMPFailureIsSilent(t *testing.T) {
 }
 
 func TestMonsterCastSpell_EnchantInventoryObjectNamedLikeTarget(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SENCHA", legacyClassMage, 25)
+	world, player, monster := newMonsterStatusSpellFixture("SENCHA", model.ClassMage, 25)
 	monster.Inventory.ObjectIDs = []model.ObjectInstanceID{"object:sword"}
 	world.creatures[monster.ID] = monster
 	world.objectPrototypes["proto:sword"] = model.ObjectPrototype{
@@ -3377,7 +3377,7 @@ func TestMonsterCastSpell_EnchantAlreadyEnchantedObjectReturnsOneWithoutCostOrOu
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			world, player, monster := newMonsterStatusSpellFixture("SENCHA", legacyClassMage, 25)
+			world, player, monster := newMonsterStatusSpellFixture("SENCHA", model.ClassMage, 25)
 			monster.Inventory.ObjectIDs = []model.ObjectInstanceID{"object:sword"}
 			world.creatures[monster.ID] = monster
 			proto := model.ObjectPrototype{ID: "proto:sword", Kind: model.ObjectKindWeapon, DisplayName: "홍길동"}
@@ -3405,7 +3405,7 @@ func TestMonsterCastSpell_EnchantAlreadyEnchantedObjectReturnsOneWithoutCostOrOu
 }
 
 func TestMonsterCastSpell_EnchantPermissionFailureIsSilent(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SENCHA", legacyClassInvincible, 25)
+	world, player, monster := newMonsterStatusSpellFixture("SENCHA", model.ClassInvincible, 25)
 	monster.Inventory.ObjectIDs = []model.ObjectInstanceID{"object:sword"}
 	world.creatures[monster.ID] = monster
 	world.objectPrototypes["proto:sword"] = model.ObjectPrototype{ID: "proto:sword", Kind: model.ObjectKindWeapon, DisplayName: "홍길동"}
@@ -3429,7 +3429,7 @@ func TestMonsterCastSpell_EnchantPermissionFailureIsSilent(t *testing.T) {
 func TestMonsterCastSpell_LocateAndObjectSendAreLegacyNoOpsForActiveMonster(t *testing.T) {
 	for _, tag := range []string{"SLOCAT", "STRANO"} {
 		t.Run(tag, func(t *testing.T) {
-			world, player, monster := newMonsterStatusSpellFixture(tag, legacyClassSubDM, 100)
+			world, player, monster := newMonsterStatusSpellFixture(tag, model.ClassSubDM, 100)
 
 			if got := monsterCastSpell(world, monster, player, 1000); got != 0 {
 				t.Fatalf("monsterCastSpell result = %d, want 0", got)
@@ -3453,7 +3453,7 @@ func TestMonsterCastSpell_SummonUsesLegacyRandomBranches(t *testing.T) {
 	seenFailure := false
 
 	for attempt := 0; attempt < 300 && (!seenSuccess || !seenFailure); attempt++ {
-		world, player, monster := newMonsterStatusSpellFixture("SSUMMO", legacyClassSubDM, 50)
+		world, player, monster := newMonsterStatusSpellFixture("SSUMMO", model.ClassSubDM, 50)
 
 		got := monsterCastSpell(world, monster, player, 1000)
 		updatedMonster, _ := world.Creature(monster.ID)
@@ -3494,7 +3494,7 @@ func TestMonsterCastSpell_SummonUsesLegacyRandomBranches(t *testing.T) {
 }
 
 func TestMonsterCastSpell_SummonInvincibleRequires100MP(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("SSUMMO", legacyClassInvincible, 99)
+	world, player, monster := newMonsterStatusSpellFixture("SSUMMO", model.ClassInvincible, 99)
 
 	if got := monsterCastSpell(world, monster, player, 1000); got != 0 {
 		t.Fatalf("monsterCastSpell result = %d, want 0", got)
@@ -3517,7 +3517,7 @@ func TestMonsterCastSpell_SummonInvincibleRequires100MP(t *testing.T) {
 func TestMonsterCastSpell_SummonRoomLimitIgnoresPDMINVOccupantsLikeCountVisPly(t *testing.T) {
 	seenSuccess := false
 	for attempt := 0; attempt < 300 && !seenSuccess; attempt++ {
-		world, player, monster := newMonsterStatusSpellFixture("SSUMMO", legacyClassSubDM, 50)
+		world, player, monster := newMonsterStatusSpellFixture("SSUMMO", model.ClassSubDM, 50)
 		targetPC := world.creatures[player.CreatureID]
 		targetPC.RoomID = "room:2"
 		world.creatures[targetPC.ID] = targetPC
@@ -3563,7 +3563,7 @@ func TestMonsterCastSpell_SummonRoomLimitIgnoresPDMINVOccupantsLikeCountVisPly(t
 }
 
 func TestMonsterCastSpell_TrackUsesLegacyTargetOutputs(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("STRACK", legacyClassRanger, 13)
+	world, player, monster := newMonsterStatusSpellFixture("STRACK", model.ClassRanger, 13)
 
 	if got := monsterCastSpell(world, monster, player, 1000); got != 1 {
 		t.Fatalf("monsterCastSpell result = %d, want 1", got)
@@ -3584,7 +3584,7 @@ func TestMonsterCastSpell_TrackUsesLegacyTargetOutputs(t *testing.T) {
 }
 
 func TestMonsterCastSpell_TrackRoomLimitIgnoresPDMINVOccupantsLikeCountVisPly(t *testing.T) {
-	world, player, monster := newMonsterStatusSpellFixture("STRACK", legacyClassRanger, 13)
+	world, player, monster := newMonsterStatusSpellFixture("STRACK", model.ClassRanger, 13)
 	room := world.rooms["room:1"]
 	room.Metadata.Tags = []string{"RTWOPL"}
 	room.PlayerIDs = append(room.PlayerIDs, "player:invis")
@@ -3622,10 +3622,10 @@ func TestMonsterCastSpell_TrackPermissionAndRoomFailuresAreSilent(t *testing.T) 
 		mp       int
 		roomTags []string
 	}{
-		{name: "non ranger", class: legacyClassFighter, mp: 13},
-		{name: "invincible without ranger training", class: legacyClassInvincible, mp: 13},
-		{name: "low mp", class: legacyClassRanger, mp: 12},
-		{name: "blocked target room", class: legacyClassRanger, mp: 13, roomTags: []string{"RNOTEL"}},
+		{name: "non ranger", class: model.ClassFighter, mp: 13},
+		{name: "invincible without ranger training", class: model.ClassInvincible, mp: 13},
+		{name: "low mp", class: model.ClassRanger, mp: 12},
+		{name: "blocked target room", class: model.ClassRanger, mp: 13, roomTags: []string{"RNOTEL"}},
 	}
 
 	for _, tt := range tests {
@@ -3667,7 +3667,7 @@ func newMonsterHealingSpellFixture(tag string, hpCurrent, hpMax int) (*mockUpdat
 			"hpCurrent":    hpCurrent,
 			"hpMax":        hpMax,
 			"mpCurrent":    100,
-			"class":        legacyClassCleric,
+			"class":        model.ClassCleric,
 			"intelligence": 10,
 			"piety":        10,
 		},

@@ -45,7 +45,7 @@ func notepad(ctx *Context, resolved ResolvedCommand, world DMNotepadWorld, root 
 	}
 
 	class := creatureClass(creature)
-	if class < legacyClassCaretaker {
+	if class < model.ClassCaretaker {
 		return StatusPrompt, nil
 	}
 

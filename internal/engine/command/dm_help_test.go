@@ -174,7 +174,7 @@ func TestDMHelpHandlerTopicFromParsedSlotWithoutSyntheticArgs(t *testing.T) {
 			"player:dm": {ID: "player:dm", CreatureID: "creature:dm"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": legacyClassDM}},
+			"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": model.ClassDM}},
 		},
 	}
 
@@ -209,7 +209,7 @@ func TestDMHelpPaginatesLongHelpLikeLegacyViewFile(t *testing.T) {
 			"player:dm": {ID: "player:dm", CreatureID: "creature:dm"},
 		},
 		creatures: map[model.CreatureID]model.Creature{
-			"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": legacyClassDM}},
+			"creature:dm": {ID: "creature:dm", Stats: map[string]int{"class": model.ClassDM}},
 		},
 	}
 	root := t.TempDir()

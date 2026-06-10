@@ -94,10 +94,10 @@ func NewUpDamageHandler(world UpDamageWorld, rng SearchRollFunc) Handler {
 func upDamageClassRejection(actor model.Creature) string {
 	class := creatureClass(actor)
 	level := attackCreatureLevel(actor)
-	if class < legacyClassInvincible && !(class == legacyClassBarbarian && level >= 50) {
+	if class < model.ClassInvincible && !(class == model.ClassBarbarian && level >= 50) {
 		return "권법가 레벨 50이상만 쓸수 있는 기술입니다.\n"
 	}
-	if class >= legacyClassInvincible && !upDamageHasBarbarianTraining(actor) {
+	if class >= model.ClassInvincible && !upDamageHasBarbarianTraining(actor) {
 		return "아직 권법가를 무적수련하지 않았습니다.\n"
 	}
 	return ""
@@ -151,7 +151,7 @@ func upDamageApplySuccess(world UpDamageWorld, player model.Player, actor model.
 }
 
 func upDamageBonuses(actor model.Creature) (pDice int, hp int, mp int) {
-	if creatureClass(actor) < legacyClassInvincible {
+	if creatureClass(actor) < model.ClassInvincible {
 		return 2, 50, 20
 	}
 	return 3, 100, 100

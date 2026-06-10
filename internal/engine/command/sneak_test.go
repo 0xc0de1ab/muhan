@@ -14,7 +14,7 @@ func TestSneakHandlerSuccessMovesPlayer(t *testing.T) {
 	loaded := lookWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats = map[string]int{
-		"class":     legacyClassThief,
+		"class":     model.ClassThief,
 		"level":     50,
 		"dexterity": 40,
 	}
@@ -61,7 +61,7 @@ func TestSneakHandlerSuccessChecksDestinationTrapLikeLegacy(t *testing.T) {
 	loaded := moveTrapWorld(t, "2", "")
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats = map[string]int{
-		"class":     legacyClassThief,
+		"class":     model.ClassThief,
 		"level":     50,
 		"dexterity": 0,
 		"hpCurrent": 20,
@@ -109,7 +109,7 @@ func TestSneakHandlerFailureBlocksEnemyMonsterOnlyWithoutPINVISLikeLegacy(t *tes
 	loaded := lookWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats = map[string]int{
-		"class":     legacyClassThief,
+		"class":     model.ClassThief,
 		"level":     10,
 		"dexterity": 15,
 		"PHIDDN":    1,
@@ -176,7 +176,7 @@ func TestSneakHandlerFailureIgnoresEnemyBlockerWithPINVISLikeLegacy(t *testing.T
 	loaded := lookWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats = map[string]int{
-		"class":     legacyClassThief,
+		"class":     model.ClassThief,
 		"level":     10,
 		"dexterity": 15,
 		"PHIDDN":    1,
@@ -223,7 +223,7 @@ func TestSneakHandlerFailureIgnoresNonEnemyBlockingMonsterLikeLegacy(t *testing.
 	loaded := lookWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats = map[string]int{
-		"class":     legacyClassThief,
+		"class":     model.ClassThief,
 		"level":     10,
 		"dexterity": 15,
 		"PHIDDN":    1,
@@ -271,7 +271,7 @@ func TestSneakHandlerFailureIgnoresInternalIDEnemyNamesLikeLegacy(t *testing.T) 
 	loaded := lookWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats = map[string]int{
-		"class":     legacyClassThief,
+		"class":     model.ClassThief,
 		"level":     10,
 		"dexterity": 15,
 	}
@@ -329,7 +329,7 @@ func TestSneakHandlerAttackCooldownBlocksBeforeHiddenClearLikeLegacy(t *testing.
 	loaded := lookWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats = map[string]int{
-		"class":     legacyClassThief,
+		"class":     model.ClassThief,
 		"level":     10,
 		"dexterity": 15,
 		"PHIDDN":    1,
@@ -401,7 +401,7 @@ func TestSneakHandlerUsesLegacyExitBlockMessages(t *testing.T) {
 			loaded := moveWorldWithEastExit(t, tt.flags, "room:east")
 			alice := loaded.Creatures["creature:alice"]
 			alice.Stats = map[string]int{
-				"class":     legacyClassThief,
+				"class":     model.ClassThief,
 				"level":     10,
 				"dexterity": 15,
 			}
@@ -471,7 +471,7 @@ func TestSneakHandlerUsesLegacySpecialExitBlockMessages(t *testing.T) {
 			loaded := moveWorldWithEastExit(t, []string{tt.flag}, "room:east")
 			alice := loaded.Creatures["creature:alice"]
 			alice.Stats = map[string]int{
-				"class":     legacyClassThief,
+				"class":     model.ClassThief,
 				"level":     10,
 				"dexterity": 15,
 			}
@@ -536,7 +536,7 @@ func TestSneakHandlerUsesLegacyTimeRestrictedExitMessages(t *testing.T) {
 			loaded := moveWorldWithEastExit(t, []string{tt.flag}, "room:east")
 			alice := loaded.Creatures["creature:alice"]
 			alice.Stats = map[string]int{
-				"class":     legacyClassThief,
+				"class":     model.ClassThief,
 				"level":     10,
 				"dexterity": 15,
 			}
@@ -568,7 +568,7 @@ func TestSneakHandlerAllowsLegacyTimeRestrictedExitAtValidHour(t *testing.T) {
 	loaded := moveWorldWithEastExit(t, []string{"XNGHTO"}, "room:east")
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats = map[string]int{
-		"class":     legacyClassThief,
+		"class":     model.ClassThief,
 		"level":     50,
 		"dexterity": 40,
 	}
@@ -602,7 +602,7 @@ func TestSneakHandlerClimbFallDamagesAndStopsBeforeAttackCooldownLikeLegacy(t *t
 	loaded := moveWorldWithEastExit(t, []string{"XCLIMB"}, "room:east")
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats = map[string]int{
-		"class":     legacyClassThief,
+		"class":     model.ClassThief,
 		"level":     50,
 		"dexterity": 0,
 		"hpCurrent": 20,
@@ -646,7 +646,7 @@ func TestSneakHandlerRepelFallDamagesAndContinuesLikeLegacy(t *testing.T) {
 	loaded := moveWorldWithEastExit(t, []string{"XREPEL"}, "room:east")
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats = map[string]int{
-		"class":     legacyClassThief,
+		"class":     model.ClassThief,
 		"level":     50,
 		"dexterity": 0,
 		"hpCurrent": 20,
@@ -685,7 +685,7 @@ func TestSneakHandlerClimbFallSkippedWithLevitate(t *testing.T) {
 	loaded := moveWorldWithEastExit(t, []string{"XCLIMB"}, "room:east")
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats = map[string]int{
-		"class":     legacyClassThief,
+		"class":     model.ClassThief,
 		"level":     50,
 		"dexterity": 0,
 		"hpCurrent": 20,

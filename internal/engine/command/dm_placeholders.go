@@ -70,7 +70,7 @@ func dmPlaceholderAuthorized(ctx *Context, world DMPlaceholderWorld) bool {
 	if !ok {
 		return false
 	}
-	return class == legacyClassZoneMaker || class >= legacyClassCaretaker
+	return class == legacyClassZoneMaker || class >= model.ClassCaretaker
 }
 
 func dmPlaceholderActor(world DMPlaceholderWorld, actorID string) (model.Player, model.Creature, bool) {

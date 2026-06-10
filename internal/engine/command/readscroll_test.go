@@ -258,20 +258,20 @@ func TestReadScrollHandlerAppliesMagicItemRestrictions(t *testing.T) {
 	}{
 		{
 			name:          "good only rejects evil actor and drops scroll",
-			creatureStats: map[string]int{"alignment": -101, "level": 20, "class": legacyClassFighter},
+			creatureStats: map[string]int{"alignment": -101, "level": 20, "class": model.ClassFighter},
 			objectTags:    []string{"goodOnly"},
 			want:          "\n모든 것을 읽고 나자 귀환 주문서의 형체가 먼지로 변하면서 바람과 함께 사라져 버렸습니다.\n",
 			wantDropped:   true,
 		},
 		{
 			name:          "class selective rejects unlisted class",
-			creatureStats: map[string]int{"level": 20, "class": legacyClassFighter},
+			creatureStats: map[string]int{"level": 20, "class": model.ClassFighter},
 			protoProps:    map[string]string{"classSelective": "1", "classMage": "1"},
 			want:          "\n이것은 당신의 직업에서 금하는 금서이기 때문에 내용을 읽을 수 없습니다.\n",
 		},
 		{
 			name:          "ndice above actor level rejects scroll",
-			creatureStats: map[string]int{"level": 4, "class": legacyClassFighter},
+			creatureStats: map[string]int{"level": 4, "class": model.ClassFighter},
 			objectProps:   map[string]string{"nDice": "5"},
 			want:          "\n당신의 능력으로는 귀환 주문서의 내용을 파악하지 못해 연마할 수 없습니다.",
 		},
@@ -753,7 +753,7 @@ func readScrollWorld(t *testing.T, roomID model.RoomID, shots string, magicPower
 	creature.RoomID = roomID
 	creature.Inventory = model.ObjectRefList{ObjectIDs: []model.ObjectInstanceID{"object:scroll", "object:stone"}}
 	creature.Stats = map[string]int{
-		"class":     legacyClassCleric,
+		"class":     model.ClassCleric,
 		"hpCurrent": 50,
 		"hpMax":     100,
 		"mpCurrent": 100,

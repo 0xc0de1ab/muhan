@@ -11,7 +11,7 @@ import (
 )
 
 func TestHasteHandlerSuccessSetsStatusDexterityCooldownAndExpiration(t *testing.T) {
-	world := state.NewWorld(hasteWorld(t, legacyClassRanger))
+	world := state.NewWorld(hasteWorld(t, model.ClassRanger))
 	handler := NewHasteHandler(world, fixedHasteRoll(1))
 
 	var broadcasts []roomBroadcastRecord
@@ -60,17 +60,17 @@ func TestHasteHandlerRejectsInvalidStates(t *testing.T) {
 	}{
 		{
 			name:  "wrong class",
-			class: legacyClassFighter,
+			class: model.ClassFighter,
 			want:  "포졸만 사용할 수 있는 기술입니다.",
 		},
 		{
 			name:  "invincible without ranger training",
-			class: legacyClassInvincible,
+			class: model.ClassInvincible,
 			want:  "포졸을 무적수련하지 않았습니다..",
 		},
 		{
 			name:  "already hasted creature",
-			class: legacyClassRanger,
+			class: model.ClassRanger,
 			mutate: func(loaded *worldload.World) {
 				alice := loaded.Creatures["creature:alice"]
 				alice.Metadata.Tags = []string{"PHASTE"}
@@ -80,7 +80,7 @@ func TestHasteHandlerRejectsInvalidStates(t *testing.T) {
 		},
 		{
 			name:  "cooldown active",
-			class: legacyClassRanger,
+			class: model.ClassRanger,
 			setup: func(world *state.World) {
 				if err := world.SetCreatureCooldown("creature:alice", hasteCooldownKey, time.Now().Unix(), hasteCooldownSeconds); err != nil {
 					t.Fatalf("SetCreatureCooldown() error = %v", err)
@@ -115,7 +115,7 @@ func TestHasteHandlerRejectsInvalidStates(t *testing.T) {
 }
 
 func TestHasteHandlerInvincibleWithRangerTrainingCanUse(t *testing.T) {
-	loaded := hasteWorld(t, legacyClassInvincible)
+	loaded := hasteWorld(t, model.ClassInvincible)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"SRANGER"}
 	loaded.Creatures[alice.ID] = alice
@@ -133,7 +133,7 @@ func TestHasteHandlerInvincibleWithRangerTrainingCanUse(t *testing.T) {
 }
 
 func TestHasteHandlerFailureStartsShortCooldownWithoutStatus(t *testing.T) {
-	world := state.NewWorld(hasteWorld(t, legacyClassRanger))
+	world := state.NewWorld(hasteWorld(t, model.ClassRanger))
 	handler := NewHasteHandler(world, fixedHasteRoll(100))
 
 	var broadcasts []roomBroadcastRecord

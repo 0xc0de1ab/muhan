@@ -138,7 +138,7 @@ func TestDMGroup(t *testing.T) {
 					ID:     "creature:caster",
 					RoomID: "room:1",
 					Stats: map[string]int{
-						"class": legacyClassSubDM,
+						"class": model.ClassSubDM,
 					},
 				},
 			},
@@ -181,7 +181,7 @@ func TestDMGroup(t *testing.T) {
 					ID:     "creature:caster",
 					RoomID: "room:1",
 					Stats: map[string]int{
-						"class": legacyClassSubDM,
+						"class": model.ClassSubDM,
 					},
 				},
 			},
@@ -224,7 +224,7 @@ func TestDMGroup(t *testing.T) {
 				"creature:caster": {
 					ID:     "creature:caster",
 					RoomID: "room:1",
-					Stats:  map[string]int{"class": legacyClassSubDM},
+					Stats:  map[string]int{"class": model.ClassSubDM},
 				},
 				"creature:target": {
 					ID:          "creature:target",
@@ -283,7 +283,7 @@ func TestDMGroup(t *testing.T) {
 					ID:     "creature:caster",
 					RoomID: "room:1",
 					Stats: map[string]int{
-						"class": legacyClassSubDM,
+						"class": model.ClassSubDM,
 					},
 				},
 				"creature:target": {
@@ -341,7 +341,7 @@ func TestDMGroup(t *testing.T) {
 				"creature:caster": {
 					ID:     "creature:caster",
 					RoomID: "room:1",
-					Stats:  map[string]int{"class": legacyClassSubDM},
+					Stats:  map[string]int{"class": model.ClassSubDM},
 				},
 				"creature:wolf1": {
 					ID:          "creature:wolf1",
@@ -404,7 +404,7 @@ func TestDMGroup(t *testing.T) {
 					ID:     "creature:caster",
 					RoomID: "room:1",
 					Stats: map[string]int{
-						"class": legacyClassSubDM,
+						"class": model.ClassSubDM,
 					},
 				},
 				"creature:leader": {
@@ -482,7 +482,7 @@ func TestDMGroup(t *testing.T) {
 				"creature:caster": {
 					ID:     "creature:caster",
 					RoomID: "room:1",
-					Stats:  map[string]int{"class": legacyClassSubDM},
+					Stats:  map[string]int{"class": model.ClassSubDM},
 				},
 				"creature:target": {
 					ID:          "creature:target",
@@ -535,7 +535,7 @@ func TestDMGroup(t *testing.T) {
 				"creature:caster": {
 					ID:     "creature:caster",
 					RoomID: "room:1",
-					Stats:  map[string]int{"class": legacyClassSubDM},
+					Stats:  map[string]int{"class": model.ClassSubDM},
 				},
 				"creature:goblin1": {
 					ID:          "creature:goblin1",

@@ -14,14 +14,14 @@ func (w *World) TickWorld(t int64) error {
 
 	// 1. Every 1 second: call UpdateActiveMonsters(t)
 	var lastActive int64
-	w.mu.RLock()
+	w.rLockDomains(true, true, true, true, true, true, true)
 	lastActive = w.lastActiveUpdate
-	w.mu.RUnlock()
+	w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	if t != lastActive {
-		w.mu.Lock()
+		w.lockDomains(true, true, true, true, true, true, true)
 		w.lastActiveUpdate = t
-		w.mu.Unlock()
+		w.unlockDomains(true, true, true, true, true, true, true)
 		if err := w.UpdateActiveMonsters(t); err != nil {
 			// handle/log error if needed
 		}
@@ -29,14 +29,14 @@ func (w *World) TickWorld(t int64) error {
 
 	// 2. Every 20 seconds: call UpdatePlayerStatuses(t)
 	var lastPlayer int64
-	w.mu.RLock()
+	w.rLockDomains(true, true, true, true, true, true, true)
 	lastPlayer = w.lastPlayerUpdate
-	w.mu.RUnlock()
+	w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	if t-lastPlayer >= 20 {
-		w.mu.Lock()
+		w.lockDomains(true, true, true, true, true, true, true)
 		w.lastPlayerUpdate = t
-		w.mu.Unlock()
+		w.unlockDomains(true, true, true, true, true, true, true)
 		if err := w.UpdatePlayerStatuses(t); err != nil {
 			// handle/log error if needed
 		}
@@ -44,18 +44,18 @@ func (w *World) TickWorld(t int64) error {
 
 	// 3. Every Random_update_interval: call UpdateRandomSpawns(t)
 	var lastRandom, randomInt int64
-	w.mu.RLock()
+	w.rLockDomains(true, true, true, true, true, true, true)
 	lastRandom = w.lastRandomUpdate
 	randomInt = w.randomUpdateInterval
 	if randomInt == 0 {
 		randomInt = 20
 	}
-	w.mu.RUnlock()
+	w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	if t-lastRandom >= randomInt {
-		w.mu.Lock()
+		w.lockDomains(true, true, true, true, true, true, true)
 		w.lastRandomUpdate = t
-		w.mu.Unlock()
+		w.unlockDomains(true, true, true, true, true, true, true)
 		if err := w.UpdateRandomSpawns(t); err != nil {
 			// handle/log error if needed
 		}
@@ -63,14 +63,14 @@ func (w *World) TickWorld(t int64) error {
 
 	// 4. Every 150 seconds: call UpdateTimeClock(t)
 	var lastTime int64
-	w.mu.RLock()
+	w.rLockDomains(true, true, true, true, true, true, true)
 	lastTime = w.lastTimeUpdate
-	w.mu.RUnlock()
+	w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	if t-lastTime >= 150 {
-		w.mu.Lock()
+		w.lockDomains(true, true, true, true, true, true, true)
 		w.lastTimeUpdate = t
-		w.mu.Unlock()
+		w.unlockDomains(true, true, true, true, true, true, true)
 		if err := w.UpdateTimeClock(t); err != nil {
 			// handle/log error if needed
 		}
@@ -78,18 +78,18 @@ func (w *World) TickWorld(t int64) error {
 
 	// 5. Every TX_interval: call UpdateTimedExits(t)
 	var lastExit, txInt int64
-	w.mu.RLock()
+	w.rLockDomains(true, true, true, true, true, true, true)
 	lastExit = w.lastExitUpdate
 	txInt = w.txInterval
 	if txInt == 0 {
 		txInt = 3600
 	}
-	w.mu.RUnlock()
+	w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	if t-lastExit >= txInt {
-		w.mu.Lock()
+		w.lockDomains(true, true, true, true, true, true, true)
 		w.lastExitUpdate = t
-		w.mu.Unlock()
+		w.unlockDomains(true, true, true, true, true, true, true)
 		if err := w.UpdateTimedExits(t); err != nil {
 			// handle/log error if needed
 		}
@@ -97,15 +97,15 @@ func (w *World) TickWorld(t int64) error {
 
 	// 6. Every 30 seconds: call UpdateShutdown(t) if shutdown is scheduled
 	var lastShutdown, shutdownLTime int64
-	w.mu.RLock()
+	w.rLockDomains(true, true, true, true, true, true, true)
 	lastShutdown = w.lastShutdownUpdate
 	shutdownLTime = w.shutdownLTime
-	w.mu.RUnlock()
+	w.rUnlockDomains(true, true, true, true, true, true, true)
 
 	if shutdownLTime != 0 && t-lastShutdown >= 30 {
-		w.mu.Lock()
+		w.lockDomains(true, true, true, true, true, true, true)
 		w.lastShutdownUpdate = t
-		w.mu.Unlock()
+		w.unlockDomains(true, true, true, true, true, true, true)
 		if err := w.UpdateShutdown(t); err != nil {
 			// handle/log error if needed
 		}
@@ -115,9 +115,9 @@ func (w *World) TickWorld(t int64) error {
 }
 
 func (w *World) UpdateActiveMonsters(t int64) error {
-	w.mu.RLock()
+	w.rLockDomains(true, true, true, true, true, true, true)
 	fn := w.UpdateActiveMonstersFunc
-	w.mu.RUnlock()
+	w.rUnlockDomains(true, true, true, true, true, true, true)
 	if fn != nil {
 		return fn(t)
 	}
@@ -125,9 +125,9 @@ func (w *World) UpdateActiveMonsters(t int64) error {
 }
 
 func (w *World) UpdatePlayerStatuses(t int64) error {
-	w.mu.RLock()
+	w.rLockDomains(true, true, true, true, true, true, true)
 	fn := w.UpdatePlayerStatusesFunc
-	w.mu.RUnlock()
+	w.rUnlockDomains(true, true, true, true, true, true, true)
 	if fn != nil {
 		return fn(t)
 	}
@@ -135,9 +135,9 @@ func (w *World) UpdatePlayerStatuses(t int64) error {
 }
 
 func (w *World) UpdateRandomSpawns(t int64) error {
-	w.mu.RLock()
+	w.rLockDomains(true, true, true, true, true, true, true)
 	fn := w.UpdateRandomSpawnsFunc
-	w.mu.RUnlock()
+	w.rUnlockDomains(true, true, true, true, true, true, true)
 	if fn != nil {
 		return fn(t)
 	}
@@ -145,9 +145,9 @@ func (w *World) UpdateRandomSpawns(t int64) error {
 }
 
 func (w *World) UpdateTimeClock(t int64) error {
-	w.mu.RLock()
+	w.rLockDomains(true, true, true, true, true, true, true)
 	fn := w.UpdateTimeClockFunc
-	w.mu.RUnlock()
+	w.rUnlockDomains(true, true, true, true, true, true, true)
 	if fn != nil {
 		return fn(t)
 	}
@@ -155,9 +155,9 @@ func (w *World) UpdateTimeClock(t int64) error {
 }
 
 func (w *World) UpdateTimedExits(t int64) error {
-	w.mu.RLock()
+	w.rLockDomains(true, true, true, true, true, true, true)
 	fn := w.UpdateTimedExitsFunc
-	w.mu.RUnlock()
+	w.rUnlockDomains(true, true, true, true, true, true, true)
 	if fn != nil {
 		return fn(t)
 	}
@@ -165,15 +165,15 @@ func (w *World) UpdateTimedExits(t int64) error {
 }
 
 func (w *World) UpdateShutdown(t int64) error {
-	w.mu.RLock()
+	w.rLockDomains(true, true, true, true, true, true, true)
 	fn := w.UpdateShutdownFunc
-	w.mu.RUnlock()
+	w.rUnlockDomains(true, true, true, true, true, true, true)
 	if fn != nil {
 		return fn(t)
 	}
 
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 
 	if w.shutdownLTime == 0 {
 		return nil
@@ -184,19 +184,19 @@ func (w *World) UpdateShutdown(t int64) error {
 		diff := target - t
 		if diff > 60 {
 			msg := fmt.Sprintf("\n### %d분 %02d초 후에 머드를 종료합니다.", diff/60, diff%60)
-			w.mu.Unlock()
+			w.unlockDomains(true, true, true, true, true, true, true)
 			_ = w.BroadcastAll(msg)
-			w.mu.Lock()
+			w.lockDomains(true, true, true, true, true, true, true)
 		} else {
 			msg := fmt.Sprintf("\n### %d초 후에 머드를 종료합니다. 모두 나가 주십시요.", diff)
-			w.mu.Unlock()
+			w.unlockDomains(true, true, true, true, true, true, true)
 			_ = w.BroadcastAll(msg)
-			w.mu.Lock()
+			w.lockDomains(true, true, true, true, true, true, true)
 		}
 	} else {
-		w.mu.Unlock()
+		w.unlockDomains(true, true, true, true, true, true, true)
 		_ = w.BroadcastAll("\n### 머드를 종료합니다.")
-		w.mu.Lock()
+		w.lockDomains(true, true, true, true, true, true, true)
 		exitFunc(0)
 	}
 	return nil
@@ -205,87 +205,87 @@ func (w *World) UpdateShutdown(t int64) error {
 // Getters and Setters for scheduling fields
 
 func (w *World) LastActiveUpdate() int64 {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 	return w.lastActiveUpdate
 }
 
 func (w *World) SetLastActiveUpdate(val int64) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 	w.lastActiveUpdate = val
 }
 
 func (w *World) LastPlayerUpdate() int64 {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 	return w.lastPlayerUpdate
 }
 
 func (w *World) SetLastPlayerUpdate(val int64) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 	w.lastPlayerUpdate = val
 }
 
 func (w *World) LastRandomUpdate() int64 {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 	return w.lastRandomUpdate
 }
 
 func (w *World) SetLastRandomUpdate(val int64) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 	w.lastRandomUpdate = val
 }
 
 func (w *World) LastTimeUpdate() int64 {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 	return w.lastTimeUpdate
 }
 
 func (w *World) SetLastTimeUpdate(val int64) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 	w.lastTimeUpdate = val
 }
 
 func (w *World) LegacyTime() int64 {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 	return w.legacyTime
 }
 
 func (w *World) SetLegacyTime(val int64) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 	w.legacyTime = val
 }
 
 func (w *World) IncrementTime() int64 {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 	w.legacyTime++
 	return w.legacyTime
 }
 
 func (w *World) LastExitUpdate() int64 {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 	return w.lastExitUpdate
 }
 
 func (w *World) SetLastExitUpdate(val int64) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 	w.lastExitUpdate = val
 }
 
 func (w *World) RandomUpdateInterval() int64 {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 	if w.randomUpdateInterval == 0 {
 		return 20
 	}
@@ -293,14 +293,14 @@ func (w *World) RandomUpdateInterval() int64 {
 }
 
 func (w *World) SetRandomUpdateInterval(val int64) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 	w.randomUpdateInterval = val
 }
 
 func (w *World) TXInterval() int64 {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.rLockDomains(true, true, true, true, true, true, true)
+	defer w.rUnlockDomains(true, true, true, true, true, true, true)
 	if w.txInterval == 0 {
 		return 3600
 	}
@@ -308,7 +308,7 @@ func (w *World) TXInterval() int64 {
 }
 
 func (w *World) SetTXInterval(val int64) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 	w.txInterval = val
 }

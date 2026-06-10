@@ -96,7 +96,7 @@ func TestQuitHandlerAllowsCombatAfterAttackCooldownPlusTwentyLikeLegacy(t *testi
 func TestQuitHandlerCleansUpLowLevelNonInvinciblePlayerLikeLegacy(t *testing.T) {
 	loaded := lookWorld(t)
 	alice := loaded.Creatures["creature:alice"]
-	alice.Stats = map[string]int{"class": legacyClassFighter, "level": 5}
+	alice.Stats = map[string]int{"class": model.ClassFighter, "level": 5}
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
 	sink := &recordingQuitLowLevelSink{}
@@ -123,8 +123,8 @@ func TestQuitHandlerKeepsHighLevelOrInvinciblePlayerLikeLegacy(t *testing.T) {
 		class int
 		level int
 	}{
-		{name: "level six regular class", class: legacyClassFighter, level: 6},
-		{name: "low level invincible", class: legacyClassInvincible, level: 1},
+		{name: "level six regular class", class: model.ClassFighter, level: 6},
+		{name: "low level invincible", class: model.ClassInvincible, level: 1},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

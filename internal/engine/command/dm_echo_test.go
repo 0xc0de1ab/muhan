@@ -48,7 +48,7 @@ func TestDMEcho(t *testing.T) {
 				"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassBulsa}, RoomID: "room:1"},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassBulsa}, RoomID: "room:1"},
 			},
 			wantStatus: StatusPrompt,
 			wantOutput: "",
@@ -61,7 +61,7 @@ func TestDMEcho(t *testing.T) {
 				"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}, RoomID: "room:1"},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}, RoomID: "room:1"},
 			},
 			wantStatus: StatusDefault,
 			wantOutput: "무슨말을 방의 사람들에게 알리죠?",
@@ -74,7 +74,7 @@ func TestDMEcho(t *testing.T) {
 				"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}, RoomID: "room:1"},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}, RoomID: "room:1"},
 			},
 			wantStatus:        StatusDefault,
 			wantBroadcast:     "\nhello world",
@@ -88,7 +88,7 @@ func TestDMEcho(t *testing.T) {
 				"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}, RoomID: "room:1"},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}, RoomID: "room:1"},
 			},
 			wantStatus:        StatusDefault,
 			wantBroadcast:     "\nhello room",
@@ -102,7 +102,7 @@ func TestDMEcho(t *testing.T) {
 				"player:alice": {ID: "player:alice", CreatureID: "creature:alice"},
 			},
 			creatures: map[model.CreatureID]model.Creature{
-				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": legacyClassSubDM}, RoomID: "room:1"},
+				"creature:alice": {ID: "creature:alice", Stats: map[string]int{"class": model.ClassSubDM}, RoomID: "room:1"},
 			},
 			wantStatus:        StatusDefault,
 			wantBroadcast:     "\nhello room  ",
