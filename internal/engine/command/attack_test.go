@@ -12,6 +12,7 @@ import (
 
 func TestAttackHandlerAttacksMonsterByPrefixAndOrdinal(t *testing.T) {
 	world := state.NewWorld(attackTestWorld(t))
+	defer world.Close()
 	dispatcher := attackTestDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -41,6 +42,7 @@ func TestAttackHandlerRejectsZeroClassLikeLegacy(t *testing.T) {
 	alice.Stats["class"] = 0
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := attackTestDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -63,6 +65,7 @@ func TestAttackHandlerRespectsAttackCooldownBeforeLookupLikeLegacy(t *testing.T)
 	alice.Metadata.Tags = append(alice.Metadata.Tags, "hidden")
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if err := world.SetCreatureCooldown("creature:alice", "attack", 1000, 5); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
 	}
@@ -91,6 +94,7 @@ func TestAttackHandlerBlindActorUsesLegacyMissingTargetMessage(t *testing.T) {
 	alice.Stats["PBLIND"] = 1
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := attackTestDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -112,6 +116,7 @@ func TestAttackHandlerPaladinAlreadyFightingUsesEnemyListLikeLegacy(t *testing.T
 	alice.Stats["class"] = model.ClassPaladin
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if _, err := world.AddEnemy("creature:goblin-1", "creature:alice"); err != nil {
 		t.Fatalf("AddEnemy() error = %v", err)
 	}
@@ -136,6 +141,7 @@ func TestAttackHandlerPaladinAlreadyFightingUsesEnemyListLikeLegacy(t *testing.T
 
 func TestAttackHandlerSupportsCommandFirstFallback(t *testing.T) {
 	world := state.NewWorld(attackTestWorld(t))
+	defer world.Close()
 	dispatcher := attackTestDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -154,6 +160,7 @@ func TestAttackHandlerSupportsCommandFirstFallback(t *testing.T) {
 
 func TestAttackHandlerFinishingBlowFinalizesMonsterDeath(t *testing.T) {
 	world := state.NewWorld(attackTestWorld(t))
+	defer world.Close()
 	dispatcher := attackTestDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -200,6 +207,7 @@ func TestAttackHandlerFinishingBlowFinalizesMonsterDeath(t *testing.T) {
 
 func TestAttackHandlerUsesCustomDeathFinalizer(t *testing.T) {
 	world := state.NewWorld(attackTestWorld(t))
+	defer world.Close()
 	called := false
 	dispatcher := attackTestDispatcherWithHandler(t, NewAttackHandlerWithDeathFinalizer(world, func(_ *Context, attacker model.Creature, victim model.Creature) error {
 		called = true
@@ -236,6 +244,7 @@ func TestAttackHandlerReportsMissWithoutDamage(t *testing.T) {
 	goblin.Stats["armor"] = 100
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := attackTestDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -284,6 +293,7 @@ func TestAttackHandlerAppliesPaladinAlignmentDamageMessages(t *testing.T) {
 			alice.Stats["alignment"] = tt.alignment
 			loaded.Creatures[alice.ID] = alice
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			dispatcher := attackTestDispatcher(t, world)
 
 			ctx := &Context{ActorID: "player:alice"}
@@ -311,6 +321,7 @@ func TestAttackHandlerAppliesAngelExtraDamage(t *testing.T) {
 	alice.Metadata.Tags = append(alice.Metadata.Tags, "PANGEL")
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := attackTestDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -335,6 +346,7 @@ func TestAttackHandlerUpDamageCanAttackTwice(t *testing.T) {
 	alice.Metadata.Tags = append(alice.Metadata.Tags, "PUPDMG")
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := attackTestDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -457,6 +469,7 @@ func TestAttackHandlerPlayerGateMatchesLegacyPvPConditions(t *testing.T) {
 				tt.setupLoad(loaded)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			if tt.setupWorld != nil {
 				tt.setupWorld(t, world)
 			}
@@ -492,6 +505,7 @@ func TestAttackHandlerRejectsCharmedPlayerBeforeRevealLikeLegacy(t *testing.T) {
 	bob.Metadata.Tags = []string{"PCHAOS", "charm:Alice"}
 	loaded.Creatures[bob.ID] = bob
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := attackTestDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -528,6 +542,7 @@ func TestAttackHandlerRemovesStaleTargetCharmReferenceLikeLegacy(t *testing.T) {
 	bobPlayer.Metadata.Tags = []string{"charm:Alice", "charmID:creature:alice"}
 	loaded.Players[bobPlayer.ID] = bobPlayer
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := attackTestDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -560,6 +575,7 @@ func TestAttackHandlerPlayerTargetDeathClampsHPWithoutMonsterFinalize(t *testing
 	bob.Stats["hpCurrent"] = 3
 	loaded.Creatures[bob.ID] = bob
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := attackTestDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -596,6 +612,7 @@ func TestAttackHandlerRevealsHiddenInvisibleActor(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS", "dmInvisible", "PDMINV"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := attackTestDispatcher(t, world)
 
 	var broadcasts []roomBroadcastRecord
@@ -644,6 +661,7 @@ func TestAttackHandlerDoesNotRevealDMInvisibleActorLikeLegacy(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "dmInvisible", "PDMINV"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := attackTestDispatcher(t, world)
 
 	var broadcasts []roomBroadcastRecord
@@ -681,6 +699,7 @@ func TestAttackHandlerSpentWieldStopsAttackAndUnequips(t *testing.T) {
 	sword.Properties = map[string]string{"shotsCurrent": "0"}
 	loaded.Objects[sword.ID] = sword
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := attackTestDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -716,6 +735,7 @@ func TestAttackHandlerSpentWieldCanStopSecondUpDamageAttack(t *testing.T) {
 	sword.Properties = map[string]string{"shotsCurrent": "1"}
 	loaded.Objects[sword.ID] = sword
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := attackTestDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -747,6 +767,7 @@ func TestAttackHandlerWieldChargeCanDecreaseAfterHit(t *testing.T) {
 	sword.Properties = map[string]string{"shotsCurrent": "2"}
 	loaded.Objects[sword.ID] = sword
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := attackTestDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -805,6 +826,7 @@ func TestAttackHandlerDeflectsMagicOnlyAndEnchantOnlyTargets(t *testing.T) {
 				loaded.Objects[sword.ID] = sword
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			dispatcher := attackTestDispatcher(t, world)
 
 			ctx := &Context{ActorID: "player:alice"}
@@ -837,6 +859,7 @@ func TestAttackDamageUsesHitRollArmorDiceStrengthAndProficiency(t *testing.T) {
 	swordProto.Properties = map[string]string{"type": "1", "nDice": "2", "sDice": "6", "pDice": "1"}
 	loaded.ObjectPrototypes[swordProto.ID] = swordProto
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	attacker, _ := world.Creature("creature:alice")
 	victim, _ := world.Creature("creature:goblin-1")
@@ -861,6 +884,7 @@ func TestAttackDamageAppliesFearAndBlindHitPenalty(t *testing.T) {
 	goblin.Stats["armor"] = 100
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	attacker, _ := world.Creature("creature:alice")
 	victim, _ := world.Creature("creature:goblin-1")
@@ -891,6 +915,7 @@ func TestAttackDamageAddsHeldWeaponTenthDamage(t *testing.T) {
 		Location:    model.ObjectLocation{CreatureID: "creature:alice", Slot: "held"},
 	})
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	attacker, _ := world.Creature("creature:alice")
 	victim, _ := world.Creature("creature:goblin-1")
@@ -923,6 +948,7 @@ func TestAttackDamageAddsUnarmedLevelBonusForBarbarianAndAboveInvincible(t *test
 			alice.Stats["pDice"] = 4
 			loaded.Creatures[alice.ID] = alice
 			world := state.NewWorld(loaded)
+	defer world.Close()
 
 			attacker, _ := world.Creature("creature:alice")
 			victim, _ := world.Creature("creature:goblin-1")
@@ -959,6 +985,7 @@ func TestAttackDamageOmitsWeaponProficiencyForMageAndCleric(t *testing.T) {
 			swordProto.Properties = map[string]string{"type": "1", "pDice": "4"}
 			loaded.ObjectPrototypes[swordProto.ID] = swordProto
 			world := state.NewWorld(loaded)
+	defer world.Close()
 
 			attacker, _ := world.Creature("creature:alice")
 			victim, _ := world.Creature("creature:goblin-1")
@@ -1036,6 +1063,7 @@ func TestAttackHandlerRejectsMissingSelfPlayerAndProtectedTargets(t *testing.T) 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			world := state.NewWorld(attackTestWorld(t))
+	defer world.Close()
 			dispatcher := attackTestDispatcher(t, world)
 
 			ctx := &Context{ActorID: tt.actorID}

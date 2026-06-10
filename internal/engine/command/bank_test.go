@@ -13,6 +13,7 @@ import (
 
 func TestBankBalanceHandler(t *testing.T) {
 	world := state.NewWorld(bankTestWorld(t, true, true))
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankBalanceHandler(world)(ctx, ResolvedCommand{})
@@ -36,6 +37,7 @@ func TestBankInventoryHandler(t *testing.T) {
 		Location:    model.ObjectLocation{RoomID: "room:bank"},
 	})
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankInventoryHandler(world)(ctx, ResolvedCommand{})
@@ -66,6 +68,7 @@ func TestBankInventoryHandlerListRequiresDetectInvisible(t *testing.T) {
 	loaded := bankTestWorld(t, true, true)
 	bankTestAddStoredObject(t, loaded, "object:invisible-sword", "proto:invisible-sword", "은신검", []string{"OINVIS"})
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankInventoryHandler(world)(ctx, ResolvedCommand{})
@@ -85,6 +88,7 @@ func TestBankInventoryHandlerListRequiresDetectInvisible(t *testing.T) {
 	creature.Metadata.Tags = append(creature.Metadata.Tags, "PDINVI")
 	loaded.Creatures[creature.ID] = creature
 	world = state.NewWorld(loaded)
+	defer world.Close()
 	ctx = &Context{ActorID: "Alice"}
 
 	status, err = NewBankInventoryHandler(world)(ctx, ResolvedCommand{})
@@ -105,6 +109,7 @@ func TestBankInventoryHandlerListUsesDetectMagicGrouping(t *testing.T) {
 	bankTestAddStoredObjectWithProperties(t, loaded, "object:sword-plus-one", "proto:magic-sword-one", "청동검", nil, map[string]string{"adjustment": "1"})
 	bankTestAddStoredObjectWithProperties(t, loaded, "object:sword-plus-two", "proto:magic-sword-two", "청동검", nil, map[string]string{"adjustment": "2"})
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankInventoryHandler(world)(ctx, ResolvedCommand{})
@@ -126,6 +131,7 @@ func TestBankInventoryHandlerListUsesDetectMagicGrouping(t *testing.T) {
 	creature.Metadata.Tags = append(creature.Metadata.Tags, "PDMAGI")
 	loaded.Creatures[creature.ID] = creature
 	world = state.NewWorld(loaded)
+	defer world.Close()
 	ctx = &Context{ActorID: "Alice"}
 
 	status, err = NewBankInventoryHandler(world)(ctx, ResolvedCommand{})
@@ -145,6 +151,7 @@ func TestBankInventoryHandlerListUsesDetectMagicGrouping(t *testing.T) {
 
 func TestBankInventoryHandlerStoresObjectWithArg(t *testing.T) {
 	world := state.NewWorld(bankTestWorld(t, true, true))
+	defer world.Close()
 	var broadcasts []roomBroadcastRecord
 	ctx := contextWithRoomBroadcast("Alice", "s1", &broadcasts)
 
@@ -173,6 +180,7 @@ func TestBankInventoryHandlerStoresObjectWithMissingAccount(t *testing.T) {
 	delete(loaded.Banks, "bank:player:Alice")
 	delete(loaded.Objects, "object:bank-root")
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankInventoryHandler(world)(ctx, ResolvedCommand{Args: []string{"기념패"}})
@@ -203,6 +211,7 @@ func TestBankInventoryHandlerRequiresDetectInvisibleForSingleStore(t *testing.T)
 	loaded := bankTestWorld(t, true, true)
 	bankTestAddInventoryObject(t, loaded, "object:invisible-keepsake", "proto:invisible-keepsake", "은신패", []string{"OINVIS"})
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankInventoryHandler(world)(ctx, ResolvedCommand{Args: []string{"은신"}})
@@ -223,6 +232,7 @@ func TestBankInventoryHandlerRequiresDetectInvisibleForSingleStore(t *testing.T)
 	creatureLoaded.Metadata.Tags = append(creatureLoaded.Metadata.Tags, "PDINVI")
 	loaded.Creatures[creatureLoaded.ID] = creatureLoaded
 	world = state.NewWorld(loaded)
+	defer world.Close()
 	ctx = &Context{ActorID: "Alice"}
 
 	status, err = NewBankInventoryHandler(world)(ctx, ResolvedCommand{Args: []string{"은신"}})
@@ -245,6 +255,7 @@ func TestBankInventoryHandlerRequiresDetectInvisibleForSingleStore(t *testing.T)
 func TestBankInventoryHandlerQueuesSaveAfterObjectStore(t *testing.T) {
 	rootDir := t.TempDir()
 	world := state.NewWorld(bankTestWorld(t, true, true))
+	defer world.Close()
 	world.SetDBRoot(rootDir)
 	ctx := &Context{ActorID: "Alice"}
 
@@ -276,6 +287,7 @@ func TestBankInventoryHandlerQueuesSaveAfterObjectStore(t *testing.T) {
 
 func TestBankInventoryHandlerStoresAllMatchingObjects(t *testing.T) {
 	world := state.NewWorld(bankTestWorld(t, true, true))
+	defer world.Close()
 	var broadcasts []roomBroadcastRecord
 	ctx := contextWithRoomBroadcast("Alice", "s1", &broadcasts)
 
@@ -300,6 +312,7 @@ func TestBankInventoryHandlerStoresAllMatchingObjects(t *testing.T) {
 
 func TestBankInventoryHandlerStoreAllRejectsObjectIDFilterLikeLegacyFindObj(t *testing.T) {
 	world := state.NewWorld(bankTestWorld(t, true, true))
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankInventoryHandler(world)(ctx, ResolvedCommand{Args: []string{"모든object:keepsake"}})
@@ -323,6 +336,7 @@ func TestBankInventoryHandlerStoresAllWithMissingAccount(t *testing.T) {
 	delete(loaded.Banks, "bank:player:Alice")
 	delete(loaded.Objects, "object:bank-root")
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankInventoryHandler(world)(ctx, ResolvedCommand{Args: []string{"모든기념"}})
@@ -349,6 +363,7 @@ func TestBankInventoryHandlerStoresAllGroupsMatchingObjects(t *testing.T) {
 	loaded := bankTestWorld(t, true, true)
 	bankTestAddInventoryObject(t, loaded, "object:keepsake-two", "proto:keepsake-two", "기념패", nil)
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankInventoryHandler(world)(ctx, ResolvedCommand{Args: []string{"모든기념"}})
@@ -397,6 +412,7 @@ func TestBankInventoryHandlerStoreAllQuestItemsRequireDMLikeLegacy(t *testing.T)
 			creature.Stats["class"] = tt.class
 			loaded.Creatures[creature.ID] = creature
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			ctx := &Context{ActorID: "Alice"}
 
 			status, err := NewBankInventoryHandler(world)(ctx, ResolvedCommand{Args: []string{"모든성물"}})
@@ -424,6 +440,7 @@ func TestBankInventoryHandlerStoreAllRequiresDetectInvisible(t *testing.T) {
 	loaded := bankTestWorld(t, true, true)
 	bankTestAddInventoryObject(t, loaded, "object:invisible-keepsake", "proto:invisible-keepsake", "은신패", []string{"OINVIS"})
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankInventoryHandler(world)(ctx, ResolvedCommand{Args: []string{"모든은신"}})
@@ -444,6 +461,7 @@ func TestBankInventoryHandlerStoreAllRequiresDetectInvisible(t *testing.T) {
 	creature.Metadata.Tags = append(creature.Metadata.Tags, "PDINVI")
 	loaded.Creatures[creature.ID] = creature
 	world = state.NewWorld(loaded)
+	defer world.Close()
 	ctx = &Context{ActorID: "Alice"}
 
 	status, err = NewBankInventoryHandler(world)(ctx, ResolvedCommand{Args: []string{"모든은신"}})
@@ -467,6 +485,7 @@ func TestBankInventoryHandlerStoreAllDevouringRootConsumesMatchingObjects(t *tes
 	root.Properties["shotsMax"] = "200"
 	loaded.Objects[root.ID] = root
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankInventoryHandler(world)(ctx, ResolvedCommand{Args: []string{"모든기념"}})
@@ -490,6 +509,7 @@ func TestBankInventoryHandlerStoreAllDevouringRootConsumesMatchingObjects(t *tes
 
 func TestBankInventoryHandlerStoreAllSkipsContainers(t *testing.T) {
 	world := state.NewWorld(bankTestWorld(t, true, true))
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankInventoryHandler(world)(ctx, ResolvedCommand{Args: []string{"모두"}})
@@ -510,6 +530,7 @@ func TestBankInventoryHandlerStoreAllSkipsContainers(t *testing.T) {
 
 func TestBankInventoryHandlerStoreAllRejectsNoMatches(t *testing.T) {
 	world := state.NewWorld(bankTestWorld(t, true, true))
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankInventoryHandler(world)(ctx, ResolvedCommand{Args: []string{"모든없는"}})
@@ -523,6 +544,7 @@ func TestBankInventoryHandlerStoreAllRejectsNoMatches(t *testing.T) {
 
 func TestBankInventoryHandlerRejectsContainerStore(t *testing.T) {
 	world := state.NewWorld(bankTestWorld(t, true, true))
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankInventoryHandler(world)(ctx, ResolvedCommand{Args: []string{"가방"}})
@@ -548,6 +570,7 @@ func TestBankInventoryHandlerRejectsFullBank(t *testing.T) {
 	root.Properties["shotsMax"] = "3"
 	loaded.Objects[root.ID] = root
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankInventoryHandler(world)(ctx, ResolvedCommand{Args: []string{"기념패"}})
@@ -568,6 +591,7 @@ func TestBankInventoryHandlerRejectsFullBank(t *testing.T) {
 
 func TestBankDepositHandler(t *testing.T) {
 	world := state.NewWorld(bankTestWorld(t, true, true))
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankDepositHandler(world)(ctx, ResolvedCommand{Args: []string{"5,000냥"}})
@@ -589,6 +613,7 @@ func TestBankDepositHandler(t *testing.T) {
 
 func TestBankDepositHandlerCreatesMissingAccount(t *testing.T) {
 	world := state.NewWorld(bankTestWorld(t, true, false))
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankDepositHandler(world)(ctx, ResolvedCommand{Args: []string{"5000냥"}})
@@ -634,6 +659,7 @@ func TestBankDepositHandlerSavesResolvedAccountID(t *testing.T) {
 
 	rootDir := t.TempDir()
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	world.SetDBRoot(rootDir)
 	ctx := &Context{ActorID: "Alice"}
 
@@ -661,6 +687,7 @@ func TestBankDepositAllAllowsZero(t *testing.T) {
 	creature.Stats["gold"] = 0
 	loaded.Creatures[creature.ID] = creature
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankDepositHandler(world)(ctx, ResolvedCommand{Args: []string{"모두"}})
@@ -674,6 +701,7 @@ func TestBankDepositAllAllowsZero(t *testing.T) {
 
 func TestBankDepositRejectsInsufficientGold(t *testing.T) {
 	world := state.NewWorld(bankTestWorld(t, true, true))
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankDepositHandler(world)(ctx, ResolvedCommand{Args: []string{"30000냥"}})
@@ -704,6 +732,7 @@ func TestBankDepositRejectsUsageAndNegativeAmountLikeLegacy(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			world := state.NewWorld(bankTestWorld(t, true, true))
+	defer world.Close()
 			ctx := &Context{ActorID: "Alice"}
 
 			status, err := NewBankDepositHandler(world)(ctx, ResolvedCommand{Args: tt.args})
@@ -719,6 +748,7 @@ func TestBankDepositRejectsUsageAndNegativeAmountLikeLegacy(t *testing.T) {
 
 func TestBankDepositHandlerUsesLegacyAtolPrefix(t *testing.T) {
 	world := state.NewWorld(bankTestWorld(t, true, true))
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankDepositHandler(world)(ctx, ResolvedCommand{Args: []string{"12abc냥"}})
@@ -732,6 +762,7 @@ func TestBankDepositHandlerUsesLegacyAtolPrefix(t *testing.T) {
 
 func TestBankWithdrawHandler(t *testing.T) {
 	world := state.NewWorld(bankTestWorld(t, true, true))
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankWithdrawHandler(world)(ctx, ResolvedCommand{Args: []string{"2,345냥"}})
@@ -753,6 +784,7 @@ func TestBankWithdrawHandler(t *testing.T) {
 
 func TestBankWithdrawHandlerUsesLegacyAtolPrefix(t *testing.T) {
 	world := state.NewWorld(bankTestWorld(t, true, true))
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankWithdrawHandler(world)(ctx, ResolvedCommand{Args: []string{"12abc냥"}})
@@ -766,6 +798,7 @@ func TestBankWithdrawHandlerUsesLegacyAtolPrefix(t *testing.T) {
 
 func TestBankWithdrawAllCreatesMissingAccount(t *testing.T) {
 	world := state.NewWorld(bankTestWorld(t, true, false))
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankWithdrawHandler(world)(ctx, ResolvedCommand{Args: []string{"모두"}})
@@ -793,6 +826,7 @@ func TestBankWithdrawAllCreatesMissingAccount(t *testing.T) {
 
 func TestBankWithdrawRejectsInsufficientBalance(t *testing.T) {
 	world := state.NewWorld(bankTestWorld(t, true, true))
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankWithdrawHandler(world)(ctx, ResolvedCommand{Args: []string{"30000냥"}})
@@ -823,6 +857,7 @@ func TestBankWithdrawRejectsUsageAndNegativeAmountLikeLegacy(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			world := state.NewWorld(bankTestWorld(t, true, true))
+	defer world.Close()
 			ctx := &Context{ActorID: "Alice"}
 
 			status, err := NewBankWithdrawHandler(world)(ctx, ResolvedCommand{Args: tt.args})
@@ -838,6 +873,7 @@ func TestBankWithdrawRejectsUsageAndNegativeAmountLikeLegacy(t *testing.T) {
 
 func TestBankOutputHandler(t *testing.T) {
 	world := state.NewWorld(bankTestWorld(t, true, true))
+	defer world.Close()
 	var broadcasts []roomBroadcastRecord
 	ctx := contextWithRoomBroadcast("Alice", "s1", &broadcasts)
 
@@ -868,6 +904,7 @@ func TestBankOutputHandlerRequiresDetectInvisibleForSingleObject(t *testing.T) {
 	loaded := bankTestWorld(t, true, true)
 	bankTestAddStoredObject(t, loaded, "object:invisible-sword", "proto:invisible-sword", "은신검", []string{"OINVIS"})
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankOutputHandler(world)(ctx, ResolvedCommand{Args: []string{"은신"}})
@@ -888,6 +925,7 @@ func TestBankOutputHandlerRequiresDetectInvisibleForSingleObject(t *testing.T) {
 	creature.Metadata.Tags = append(creature.Metadata.Tags, "PDINVI")
 	loaded.Creatures[creature.ID] = creature
 	world = state.NewWorld(loaded)
+	defer world.Close()
 	ctx = &Context{ActorID: "Alice"}
 
 	status, err = NewBankOutputHandler(world)(ctx, ResolvedCommand{Args: []string{"은신"}})
@@ -911,6 +949,7 @@ func TestBankOutputHandlerSingleConvertsRoomPermanentObject(t *testing.T) {
 	loaded := bankTestWorld(t, true, true)
 	bankTestAddStoredObjectWithProperties(t, loaded, "object:permanent-sword", "proto:permanent-sword", "영구검", []string{"OPERMT"}, map[string]string{"OPERMT": "1"})
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankOutputHandler(world)(ctx, ResolvedCommand{Args: []string{"영구"}})
@@ -936,6 +975,7 @@ func TestBankOutputHandlerRejectsWhenInventoryTooFull(t *testing.T) {
 	loaded := bankTestWorld(t, true, true)
 	bankTestAddInventoryFillers(t, loaded, 150)
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankOutputHandler(world)(ctx, ResolvedCommand{Args: []string{"청동검"}})
@@ -958,6 +998,7 @@ func TestBankOutputHandlerCountsInventoryContainerContents(t *testing.T) {
 	bag.Properties = map[string]string{"shotsCurrent": "151"}
 	loaded.Objects[bag.ID] = bag
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankOutputHandler(world)(ctx, ResolvedCommand{Args: []string{"청동검"}})
@@ -980,6 +1021,7 @@ func TestBankOutputHandlerTakeAllSkipsTooHeavyObjects(t *testing.T) {
 	sword.Properties = map[string]string{"weight": "25"}
 	loaded.Objects[sword.ID] = sword
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankOutputHandler(world)(ctx, ResolvedCommand{Args: []string{"모두"}})
@@ -1019,6 +1061,7 @@ func TestBankOutputHandlerTakeAllMoneyCreditsGold(t *testing.T) {
 		Properties:          map[string]string{"value": "777", "type": "10"},
 	})
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankOutputHandler(world)(ctx, ResolvedCommand{Args: []string{"모두"}})
@@ -1046,6 +1089,7 @@ func TestBankOutputHandlerTakeAllRequiresDetectInvisible(t *testing.T) {
 	loaded := bankTestWorld(t, true, true)
 	bankTestAddStoredObject(t, loaded, "object:invisible-sword", "proto:invisible-sword", "은신검", []string{"OINVIS"})
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankOutputHandler(world)(ctx, ResolvedCommand{Args: []string{"모든은신"}})
@@ -1066,6 +1110,7 @@ func TestBankOutputHandlerTakeAllRequiresDetectInvisible(t *testing.T) {
 	creature.Metadata.Tags = append(creature.Metadata.Tags, "PDINVI")
 	loaded.Creatures[creature.ID] = creature
 	world = state.NewWorld(loaded)
+	defer world.Close()
 	ctx = &Context{ActorID: "Alice"}
 
 	status, err = NewBankOutputHandler(world)(ctx, ResolvedCommand{Args: []string{"모든은신"}})
@@ -1085,6 +1130,7 @@ func TestBankOutputHandlerTakeAllClearsTemporaryPermanentObject(t *testing.T) {
 	loaded := bankTestWorld(t, true, true)
 	bankTestAddStoredObjectWithProperties(t, loaded, "object:temporary-sword", "proto:temporary-sword", "임시검", []string{"OTEMPP", "OPERM2"}, map[string]string{"OTEMPP": "1", "OPERM2": "1"})
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankOutputHandler(world)(ctx, ResolvedCommand{Args: []string{"모든임시"}})
@@ -1107,6 +1153,7 @@ func TestBankOutputHandlerTakeAllClearsTemporaryPermanentObject(t *testing.T) {
 func TestBankOutputHandlerQueuesSaveAfterObjectTake(t *testing.T) {
 	rootDir := t.TempDir()
 	world := state.NewWorld(bankTestWorld(t, true, true))
+	defer world.Close()
 	world.SetDBRoot(rootDir)
 	ctx := &Context{ActorID: "Alice"}
 
@@ -1138,6 +1185,7 @@ func TestBankOutputHandlerQueuesSaveAfterObjectTake(t *testing.T) {
 
 func TestBankOutputHandlerTakesAllMatchingObjects(t *testing.T) {
 	world := state.NewWorld(bankTestWorld(t, true, true))
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankOutputHandler(world)(ctx, ResolvedCommand{Args: []string{"모든치"}})
@@ -1158,6 +1206,7 @@ func TestBankOutputHandlerTakesAllMatchingObjects(t *testing.T) {
 
 func TestBankOutputHandlerTakeAllRejectsObjectIDFilterLikeLegacyFindObj(t *testing.T) {
 	world := state.NewWorld(bankTestWorld(t, true, true))
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankOutputHandler(world)(ctx, ResolvedCommand{Args: []string{"모든object:potion"}})
@@ -1180,6 +1229,7 @@ func TestBankOutputHandlerTakesAllGroupsMatchingObjects(t *testing.T) {
 	loaded := bankTestWorld(t, true, true)
 	bankTestAddStoredObject(t, loaded, "object:sword-two", "proto:sword-two", "청동검", nil)
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankOutputHandler(world)(ctx, ResolvedCommand{Args: []string{"모든청동"}})
@@ -1201,6 +1251,7 @@ func TestBankOutputHandlerTakesAllGroupsMatchingObjects(t *testing.T) {
 
 func TestBankOutputHandlerTakesAllVisibleObjects(t *testing.T) {
 	world := state.NewWorld(bankTestWorld(t, true, true))
+	defer world.Close()
 	var broadcasts []roomBroadcastRecord
 	ctx := contextWithRoomBroadcast("Alice", "s1", &broadcasts)
 
@@ -1226,6 +1277,7 @@ func TestBankOutputHandlerTakesAllVisibleObjects(t *testing.T) {
 
 func TestBankOutputHandlerTakeAllRejectsNoMatches(t *testing.T) {
 	world := state.NewWorld(bankTestWorld(t, true, true))
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankOutputHandler(world)(ctx, ResolvedCommand{Args: []string{"모든없는"}})
@@ -1239,6 +1291,7 @@ func TestBankOutputHandlerTakeAllRejectsNoMatches(t *testing.T) {
 
 func TestBankOutputHandlerRejectsMissingObject(t *testing.T) {
 	world := state.NewWorld(bankTestWorld(t, true, true))
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewBankOutputHandler(world)(ctx, ResolvedCommand{Args: []string{"없는물건"}})
@@ -1252,6 +1305,7 @@ func TestBankOutputHandlerRejectsMissingObject(t *testing.T) {
 
 func TestBankHandlersRequireBankRoom(t *testing.T) {
 	world := state.NewWorld(bankTestWorld(t, false, true))
+	defer world.Close()
 
 	ctx := &Context{ActorID: "Alice"}
 	if _, err := NewBankBalanceHandler(world)(ctx, ResolvedCommand{}); err != nil {
@@ -1296,6 +1350,7 @@ func TestBankHandlersRequireBankRoom(t *testing.T) {
 
 func TestBankHandlersHandleMissingAccount(t *testing.T) {
 	world := state.NewWorld(bankTestWorld(t, true, false))
+	defer world.Close()
 
 	ctx := &Context{ActorID: "Alice"}
 	if _, err := NewBankBalanceHandler(world)(ctx, ResolvedCommand{}); err != nil {

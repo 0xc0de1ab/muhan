@@ -823,6 +823,7 @@ func TestOffensiveSpellResolvesMonsterBeforePlayerLikeLegacy(t *testing.T) {
 		},
 	}
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	_ = world.SetCreatureStat("creature:alice", "class", model.ClassDM)
 	_ = world.SetCreatureStat("creature:bob", "hpCurrent", 80)
 	_, _ = world.UpdateCreatureTags("creature:alice", []string{"PCHAOS"}, nil)
@@ -860,6 +861,7 @@ func TestOffensiveSpellRejectsProtectedMonsterBeforeCostLikeLegacy(t *testing.T)
 		},
 	}
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	_ = world.SetCreatureStat("creature:alice", "class", model.ClassDM)
 	_ = world.SetCreatureStat("creature:alice", "mpCurrent", 50)
 
@@ -898,6 +900,7 @@ func TestOffensiveSpellAwardsRealmProficiencyAgainstMonstersLikeLegacy(t *testin
 		},
 	}
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	_ = world.SetCreatureStat("creature:alice", "class", model.ClassDM)
 	_ = world.SetCreatureStat("creature:alice", "mpCurrent", 50)
 	_ = world.SetCreatureStat("creature:alice", "realmFire", 100)

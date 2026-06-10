@@ -22,6 +22,7 @@ func TestMagicStopHandlerBlocksSpellDamageAndStartsCooldowns(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewMagicStopHandler(world, magicStopRolls(t, 1, 20, 5, 1, 1))
 
 	var broadcasts []roomBroadcastRecord
@@ -148,6 +149,7 @@ func TestMagicStopHandlerRejectsInvalidStates(t *testing.T) {
 				tt.mutate(loaded)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			handler := NewMagicStopHandler(world, fixedRoll(1))
 
 			ctx := &Context{ActorID: "player:alice"}
@@ -169,6 +171,7 @@ func TestMagicStopHandlerAllowsStatBasedRangerTraining(t *testing.T) {
 	alice.Stats["SRANGER"] = 1
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewMagicStopHandler(world, magicStopRolls(t, 1, 100, 1, 1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -187,6 +190,7 @@ func TestMagicStopHandlerUsesCustomDeathFinalizer(t *testing.T) {
 	goblin.Stats["hpCurrent"] = 25
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	called := false
 	handler := NewMagicStopHandlerWithDeathFinalizer(world, magicStopRolls(t, 1, 20, 25, 1, 1), func(_ *Context, attacker model.Creature, victim model.Creature) error {
 		called = true
@@ -211,6 +215,7 @@ func TestMagicStopHandlerUsesCustomDeathFinalizer(t *testing.T) {
 
 func TestMagicStopHandlerFailureUsesCooldownWithoutDamage(t *testing.T) {
 	world := state.NewWorld(magicStopWorld(t, model.ClassInvincible))
+	defer world.Close()
 	handler := NewMagicStopHandler(world, fixedRoll(100))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -266,6 +271,7 @@ func TestMagicStopHandlerCanBeRegisteredByDispatcher(t *testing.T) {
 	for _, line := range []string{"고블린 혈도봉쇄", "magic_stop 고블린"} {
 		t.Run(line, func(t *testing.T) {
 			world := state.NewWorld(magicStopWorld(t, model.ClassInvincible))
+	defer world.Close()
 			dispatcher := magicStopDispatcher(t, world, magicStopRolls(t, 1, 100, 1, 1))
 
 			ctx := &Context{ActorID: "player:alice"}

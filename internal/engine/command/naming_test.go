@@ -67,6 +67,7 @@ func TestChangeNameHandlerPrototypeBackedCustomNameCanRenameOnlyOnce(t *testing.
 	proto.Properties["OCNAME"] = "1"
 	loaded.ObjectPrototypes[proto.ID] = proto
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewChangeNameHandler(world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -134,6 +135,7 @@ func TestChangeNameHandlerRecordsPrototypeBackedEventOwner(t *testing.T) {
 	proto.Properties = map[string]string{"OEVENT": "1", "key[2]": "이벤트"}
 	loaded.ObjectPrototypes[proto.ID] = proto
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "player:alice"}
 
 	status, err := NewChangeNameHandler(world)(ctx, ResolvedCommand{Args: []string{"이벤트패", "기록"}})
@@ -189,6 +191,7 @@ func TestChangeNameHandlerRejectsInvalidCases(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			world := state.NewWorld(changeNameWorld(t, tt.objects))
+	defer world.Close()
 			ctx := &Context{ActorID: "player:alice"}
 			status, err := NewChangeNameHandler(world)(ctx, ResolvedCommand{Args: tt.args})
 			if err != nil {

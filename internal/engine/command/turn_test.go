@@ -13,6 +13,7 @@ import (
 
 func TestTurnHandlerDamagesUndeadTargetAndStartsCooldown(t *testing.T) {
 	world := state.NewWorld(turnWorld(t, model.ClassCleric))
+	defer world.Close()
 	dispatcher := turnDispatcher(t, world, fixedRoll(1))
 	var broadcasts []roomBroadcastRecord
 
@@ -49,6 +50,7 @@ func TestTurnHandlerFinalizesMonsterDeath(t *testing.T) {
 	mouse.Metadata.Tags = []string{"turnable"}
 	loaded.Creatures[mouse.ID] = mouse
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewTurnHandler(world, fixedRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -74,6 +76,7 @@ func TestTurnHandlerUsesCustomDeathFinalizer(t *testing.T) {
 	mouse.Metadata.Tags = []string{"turnable"}
 	loaded.Creatures[mouse.ID] = mouse
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	called := false
 	handler := NewTurnHandlerWithDeathFinalizer(world, fixedRoll(1), func(_ *Context, attacker model.Creature, victim model.Creature) error {
 		called = true
@@ -153,6 +156,7 @@ func TestTurnHandlerRejectsInvalidStates(t *testing.T) {
 				tt.mutate(loaded)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			handler := NewTurnHandler(world, fixedRoll(1))
 
 			ctx := &Context{ActorID: "player:alice"}
@@ -169,6 +173,7 @@ func TestTurnHandlerRejectsInvalidStates(t *testing.T) {
 
 func TestTurnHandlerClericCanAffectLivingMonsterLikeLegacy(t *testing.T) {
 	world := state.NewWorld(turnWorld(t, model.ClassCleric))
+	defer world.Close()
 	handler := NewTurnHandler(world, fixedRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -196,6 +201,7 @@ func TestTurnHandlerRevealsPinvisBeforeCooldownAndKeepsHiddenLikeLegacy(t *testi
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if err := world.SetCreatureCooldown("creature:alice", turnCooldownKey, time.Now().Unix(), 5); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
 	}
@@ -232,6 +238,7 @@ func TestTurnHandlerRevealsPinvisBeforeCooldownAndKeepsHiddenLikeLegacy(t *testi
 
 func TestTurnHandlerInstantDisintegratesUndeadLikeLegacy(t *testing.T) {
 	world := state.NewWorld(turnWorld(t, model.ClassCleric))
+	defer world.Close()
 	handler := NewTurnHandler(world, turnRolls(t, 1, 100))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -257,6 +264,7 @@ func TestTurnHandlerInvincibleDamageUsesLegacyClassFormula(t *testing.T) {
 	goblin.Stats["hpCurrent"] = 90
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewTurnHandler(world, turnRolls(t, 1, 5))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -283,6 +291,7 @@ func TestTurnHandlerCaretakerDamageUsesLegacyClassFormula(t *testing.T) {
 	goblin.Stats["hpCurrent"] = 90
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewTurnHandler(world, turnRolls(t, 1, 3))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -309,6 +318,7 @@ func TestTurnHandlerBulsaDamageKeepsLegacyDanglingElseResult(t *testing.T) {
 	goblin.Stats["hpCurrent"] = 90
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewTurnHandler(world, turnRolls(t, 1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -334,6 +344,7 @@ func TestTurnHandlerAllowsTrainedInvincibleAndTurnableAlias(t *testing.T) {
 	skeleton.Metadata.Tags = []string{"turnable"}
 	loaded.Creatures[skeleton.ID] = skeleton
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewTurnHandler(world, fixedRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -348,6 +359,7 @@ func TestTurnHandlerAllowsTrainedInvincibleAndTurnableAlias(t *testing.T) {
 
 func TestTurnHandlerFailureUsesCooldownWithoutDamage(t *testing.T) {
 	world := state.NewWorld(turnWorld(t, model.ClassPaladin))
+	defer world.Close()
 	handler := NewTurnHandler(world, fixedRoll(100))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -377,6 +389,7 @@ func TestTurnHandlerCanBeRegisteredByDispatcher(t *testing.T) {
 	for _, line := range []string{"해골 방혼술", "turn 해골"} {
 		t.Run(line, func(t *testing.T) {
 			world := state.NewWorld(turnWorld(t, model.ClassCleric))
+	defer world.Close()
 			dispatcher := turnDispatcher(t, world, fixedRoll(1))
 
 			ctx := &Context{ActorID: "player:alice"}

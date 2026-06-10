@@ -13,6 +13,7 @@ import (
 
 func TestReturnSquareHandlerMovesActorToLifeTree(t *testing.T) {
 	world := state.NewWorld(recallWorld(t, "room:01001"))
+	defer world.Close()
 	dispatcher := Dispatcher{
 		Registry: mustRegistry(t, []commandspec.CommandSpec{
 			{Name: "귀환", Number: 81, Handler: "return_square"},
@@ -54,6 +55,7 @@ func TestReturnSquareHandlerMovesActorToLifeTree(t *testing.T) {
 
 func TestReturnSquareHandlerAlreadyAtLifeTree(t *testing.T) {
 	world := state.NewWorld(recallWorld(t, defaultReturnRoomID))
+	defer world.Close()
 	handler := NewReturnSquareHandler(world)
 	ctx := &Context{ActorID: "player:alice"}
 
@@ -114,6 +116,7 @@ func TestReturnSquareHandlerBlocksLegacyFailureBranches(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			world := state.NewWorld(recallWorld(t, tt.roomID))
+	defer world.Close()
 			ctx := &Context{ActorID: "player:alice"}
 			if tt.configure != nil {
 				ctx = tt.configure(t, world)
@@ -174,6 +177,7 @@ func (w *returnInternalIDEnemyWorld) CreatureEnemies(creatureID model.CreatureID
 
 func TestReturnSquareHandlerFamilyReturnUsesLegacyRoomAndSkipsLifeTreeBlock(t *testing.T) {
 	world := state.NewWorld(recallWorld(t, defaultReturnRoomID))
+	defer world.Close()
 	if err := world.SetCreatureStat("creature:alice", "dailyExpndMax", 7); err != nil {
 		t.Fatalf("SetCreatureStat(dailyExpndMax) error = %v", err)
 	}
@@ -198,6 +202,7 @@ func TestReturnSquareHandlerFamilyReturnUsesLegacyRoomAndSkipsLifeTreeBlock(t *t
 
 func TestReturnSquareHandlerHighLevelMortalLosesMP(t *testing.T) {
 	world := state.NewWorld(recallWorld(t, "room:01001"))
+	defer world.Close()
 	if err := world.SetCreatureStat("creature:alice", "level", 21); err != nil {
 		t.Fatalf("SetCreatureStat(level) error = %v", err)
 	}
@@ -223,6 +228,7 @@ func TestReturnSquareHandlerHighLevelMortalLosesMP(t *testing.T) {
 
 func TestReturnSquareHandlerDMInvisibleSuppressesLegacyBroadcasts(t *testing.T) {
 	world := state.NewWorld(recallWorld(t, "room:01001"))
+	defer world.Close()
 	if err := world.SetCreatureStat("creature:alice", "PDMINV", 1); err != nil {
 		t.Fatalf("SetCreatureStat(PDMINV) error = %v", err)
 	}

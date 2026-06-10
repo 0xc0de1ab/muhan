@@ -23,6 +23,7 @@ func TestEightHandlerDamagesRoomTargetsRevealsAndStartsCooldown(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	var broadcasts []roomBroadcastRecord
 	ctx := contextWithRoomBroadcast("player:alice", "session:alice", &broadcasts)
@@ -85,6 +86,7 @@ func TestEightHandlerFinalizesMonsterDeath(t *testing.T) {
 	goblin.Stats["hpMax"] = 10
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewEightHandler(world)(ctx, ResolvedCommand{})
@@ -102,6 +104,7 @@ func TestEightHandlerFinalizesMonsterDeath(t *testing.T) {
 func TestEightHandlerFailurePrimesTargetsAndStartsCooldown(t *testing.T) {
 	withAttackRolls(t, 22)
 	world := state.NewWorld(formationSkillsWorld(t))
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewEightHandler(world)(ctx, ResolvedCommand{})
@@ -151,6 +154,7 @@ func TestEightHandlerCooldownPrecedesWeaponTargetScanAndReveal(t *testing.T) {
 		loaded.Creatures[id] = creature
 	}
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if err := world.SetCreatureCooldown("creature:alice", eightCooldownKey, time.Now().Unix(), eightCooldownSeconds(alice)); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
 	}
@@ -204,6 +208,7 @@ func TestEightHandlerPreAttemptRejectionsDoNotStartCooldown(t *testing.T) {
 			loaded := formationSkillsWorld(t)
 			tt.mutate(loaded)
 			world := state.NewWorld(loaded)
+	defer world.Close()
 
 			ctx := &Context{ActorID: "player:alice"}
 			status, err := NewEightHandler(world)(ctx, ResolvedCommand{})
@@ -232,6 +237,7 @@ func TestEightHandlerWeaponBreakOnSuccessDoesNotStartCooldown(t *testing.T) {
 	sword.Properties["shotsCurrent"] = "1"
 	loaded.Objects[sword.ID] = sword
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewEightHandler(world)(ctx, ResolvedCommand{})
@@ -315,6 +321,7 @@ func TestEightHandlerRejectsInvalidInputs(t *testing.T) {
 				tt.mutate(loaded)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			ctx := &Context{ActorID: "player:alice"}
 			status, err := NewEightHandler(world)(ctx, ResolvedCommand{})
 			if err != nil {
@@ -339,6 +346,7 @@ func TestNahanHandlerDamagesTargetWithVisibleCompanionAndStartsCooldown(t *testi
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	var broadcasts []roomBroadcastRecord
 	ctx := contextWithRoomBroadcast("player:alice", "session:alice", &broadcasts)
@@ -383,6 +391,7 @@ func TestNahanHandlerCountsHiddenCompanionLikeLegacy(t *testing.T) {
 	bobPlayer.Metadata.Tags = []string{"hidden", "PHIDDN"}
 	loaded.Players[bobPlayer.ID] = bobPlayer
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewNahanHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}})
@@ -406,6 +415,7 @@ func TestNahanHandlerCountsHiddenCompanionLikeLegacy(t *testing.T) {
 func TestNahanHandlerFailureDrainsActorMP(t *testing.T) {
 	withAttackRolls(t, 22)
 	world := state.NewWorld(formationSkillsWorld(t))
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewNahanHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}})
@@ -448,6 +458,7 @@ func TestNahanHandlerFinalizesMonsterDeath(t *testing.T) {
 	goblin.Stats["hpMax"] = 20
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewNahanHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}})
@@ -531,6 +542,7 @@ func TestNahanHandlerRejectsInvalidInputs(t *testing.T) {
 				tt.mutate(loaded)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			ctx := &Context{ActorID: "player:alice"}
 			status, err := NewNahanHandler(world)(ctx, ResolvedCommand{Args: tt.args})
 			if err != nil {
@@ -559,6 +571,7 @@ func TestNahanHandlerCooldownPrecedesRevealAndFormationChecks(t *testing.T) {
 	room.PlayerIDs = []model.PlayerID{"player:alice"}
 	loaded.Rooms[room.ID] = room
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if err := world.SetCreatureCooldown("creature:alice", nahanCooldownKey, time.Now().Unix(), nahanCooldownSeconds(alice)); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
 	}
@@ -602,6 +615,7 @@ func TestNahanHandlerAloneRevealsPrimesTargetWithoutCooldown(t *testing.T) {
 	room.PlayerIDs = []model.PlayerID{"player:alice"}
 	loaded.Rooms[room.ID] = room
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewNahanHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}})
@@ -655,6 +669,7 @@ func TestFormationSkillsCanBeRegisteredByLegacyNames(t *testing.T) {
 				withAttackRolls(t, 1)
 			}
 			world := state.NewWorld(formationSkillsWorld(t))
+	defer world.Close()
 			dispatcher := formationSkillsDispatcher(t, world)
 			ctx := &Context{ActorID: "player:alice"}
 			status, err := dispatcher.DispatchLine(ctx, tt.line)

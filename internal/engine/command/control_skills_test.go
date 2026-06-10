@@ -23,6 +23,7 @@ func TestPobackHandlerDamagesAdjacentTargetSetsStatusAndCooldown(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewPobackHandler(world)
 
 	var broadcasts []roomBroadcastRecord
@@ -75,6 +76,7 @@ func TestPobackHandlerMagicResistantTargetReducesBefuddleStatus(t *testing.T) {
 	goblin.Metadata.Tags = []string{"MNOCHA"}
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewPobackHandler(world)(ctx, ResolvedCommand{Args: []string{"동", "고블린"}, Values: []int64{1, 1}})
@@ -96,6 +98,7 @@ func TestPobackHandlerMagicResistantTargetReducesBefuddleStatus(t *testing.T) {
 func TestPobackHandlerFailurePrimesAndMarksTarget(t *testing.T) {
 	withAttackRolls(t, 22)
 	world := state.NewWorld(pobackWorld(t))
+	defer world.Close()
 	handler := NewPobackHandler(world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -143,6 +146,7 @@ func TestPobackHandlerFinalizesAdjacentMonsterDeath(t *testing.T) {
 	goblin.Stats["hpMax"] = 10
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	var broadcasts []roomBroadcastRecord
 	ctx := contextWithRoomBroadcast("player:alice", "session:alice", &broadcasts)
@@ -179,6 +183,7 @@ func TestPobackHandlerUsesCustomDeathFinalizer(t *testing.T) {
 	goblin.Stats["hpMax"] = 10
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	called := false
 	finalizer := func(ctx *Context, attacker model.Creature, victim model.Creature) error {
@@ -288,6 +293,7 @@ func TestPobackHandlerRejectsInvalidStates(t *testing.T) {
 				tt.mutate(loaded)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			if tt.setup != nil {
 				tt.setup(world)
 			}
@@ -314,6 +320,7 @@ func TestPobackHandlerCooldownPrecedesExitAndTargetLookup(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if err := world.SetCreatureCooldown("creature:alice", pobackCooldownKey, time.Now().Unix(), pobackCooldownSeconds(alice)); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
 	}
@@ -345,6 +352,7 @@ func TestPobackHandlerWeaponBreakOnSuccessDoesNotStartCooldown(t *testing.T) {
 	staff.Properties["shotsCurrent"] = "1"
 	loaded.Objects[staff.ID] = staff
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewPobackHandler(world)(ctx, ResolvedCommand{Args: []string{"동", "고블린"}, Values: []int64{1, 1}})
@@ -371,6 +379,7 @@ func TestPobackHandlerCanBeRegisteredByDispatcherAliases(t *testing.T) {
 		t.Run(line, func(t *testing.T) {
 			withAttackRolls(t, 1, 1)
 			world := state.NewWorld(pobackWorld(t))
+	defer world.Close()
 			dispatcher := controlSkillDispatcher(t, world)
 
 			ctx := &Context{ActorID: "player:alice"}
@@ -397,6 +406,7 @@ func TestLionScreamHandlerDamagesRoomTargetsAndBroadcastsAdjacentRooms(t *testin
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewLionScreamHandler(world)
 
 	var broadcasts []roomBroadcastRecord
@@ -454,6 +464,7 @@ func TestLionScreamHandlerDamagesRoomTargetsAndBroadcastsAdjacentRooms(t *testin
 func TestLionScreamHandlerFailureFatiguesActor(t *testing.T) {
 	withAttackRolls(t, 22)
 	world := state.NewWorld(lionScreamWorld(t))
+	defer world.Close()
 	handler := NewLionScreamHandler(world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -498,6 +509,7 @@ func TestLionScreamHandlerFinalizesMonsterDeath(t *testing.T) {
 	goblin.Stats["hpMax"] = 10
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewLionScreamHandler(world)(ctx, ResolvedCommand{})
@@ -524,6 +536,7 @@ func TestLionScreamHandlerUsesCustomDeathFinalizer(t *testing.T) {
 	goblin.Stats["hpMax"] = 10
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	called := false
 	finalizer := func(ctx *Context, attacker model.Creature, victim model.Creature) error {
@@ -601,6 +614,7 @@ func TestLionScreamHandlerRejectsInvalidStates(t *testing.T) {
 			loaded := lionScreamWorld(t)
 			tt.mutate(loaded)
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			ctx := &Context{ActorID: "player:alice"}
 			status, err := NewLionScreamHandler(world)(ctx, ResolvedCommand{})
 			if err != nil {
@@ -631,6 +645,7 @@ func TestLionScreamHandlerCooldownPrecedesTargetScanAndReveal(t *testing.T) {
 		loaded.Creatures[id] = creature
 	}
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if err := world.SetCreatureCooldown("creature:alice", lionScreamCooldownKey, time.Now().Unix(), lionScreamCooldownSeconds(alice)); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
 	}
@@ -664,6 +679,7 @@ func TestLionScreamHandlerNoTargetsDoesNotStartCooldown(t *testing.T) {
 		loaded.Creatures[id] = creature
 	}
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewLionScreamHandler(world)(ctx, ResolvedCommand{})
@@ -685,6 +701,7 @@ func TestLionScreamHandlerCanBeRegisteredByDispatcherAliases(t *testing.T) {
 		t.Run(line, func(t *testing.T) {
 			withAttackRolls(t, 1, 5, 6)
 			world := state.NewWorld(lionScreamWorld(t))
+	defer world.Close()
 			dispatcher := controlSkillDispatcher(t, world)
 
 			ctx := &Context{ActorID: "player:alice"}

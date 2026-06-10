@@ -14,6 +14,7 @@ import (
 
 func TestMoveHandlerDispatchesLegacyGoAndRendersDestination(t *testing.T) {
 	world := state.NewWorld(lookWorld(t))
+	defer world.Close()
 	dispatcher := Dispatcher{
 		Registry: mustRegistry(t, []commandspec.CommandSpec{
 			{Name: "가", Number: 30, Handler: "go"},
@@ -56,6 +57,7 @@ func TestMoveHandlerDispatchesLegacyGoAndRendersDestination(t *testing.T) {
 
 func TestMoveHandlerRequiresDirection(t *testing.T) {
 	world := state.NewWorld(lookWorld(t))
+	defer world.Close()
 	dispatcher := Dispatcher{
 		Registry: mustRegistry(t, []commandspec.CommandSpec{
 			{Name: "가", Number: 30, Handler: "go"},
@@ -85,6 +87,7 @@ func TestMoveHandlerRequiresDirection(t *testing.T) {
 
 func TestMoveHandlerUsesGoPrefixAndOrdinal(t *testing.T) {
 	world := state.NewWorld(goOrdinalWorld(t))
+	defer world.Close()
 	handler := NewMoveHandler(world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -156,6 +159,7 @@ func TestMoveHandlerMovesOwnedDMFollowerMonsterLikeLegacy(t *testing.T) {
 				dmFollowLeaderCreatureProperty: "creature:alice",
 			})
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			var broadcasts []roomBroadcastRecord
 			ctx := contextWithRoomBroadcast("player:alice", "session:alice", &broadcasts)
 
@@ -186,6 +190,7 @@ func TestMoveHandlerSkipsOtherDMFollowerMonsterLikeLegacy(t *testing.T) {
 		dmFollowLeaderCreatureProperty: "creature:other",
 	})
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	var broadcasts []roomBroadcastRecord
 	ctx := contextWithRoomBroadcast("player:alice", "session:alice", &broadcasts)
 
@@ -224,6 +229,7 @@ func TestMoveHandlerPreservesPermanentTrackRoom(t *testing.T) {
 
 func TestMoveHandlerDispatchesDirectMoveAlias(t *testing.T) {
 	world := state.NewWorld(lookWorld(t))
+	defer world.Close()
 	dispatcher := Dispatcher{
 		Registry: mustRegistry(t, []commandspec.CommandSpec{
 			{Name: "6", Number: 1, Handler: "move"},
@@ -281,6 +287,7 @@ func TestMoveHandlerBlocksCombatBeforeExitValidationLikeLegacy(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			loaded := moveWorldWithEastExit(t, tt.flags, "room:missing")
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			if _, err := world.AddEnemy("creature:guard", "creature:alice"); err != nil {
 				t.Fatalf("AddEnemy() error = %v", err)
 			}
@@ -311,6 +318,7 @@ func TestMoveHandlerBlocksSilencedActorBeforeCombatLikeLegacy(t *testing.T) {
 			alice.Metadata.Tags = append(alice.Metadata.Tags, "PSILNC")
 			loaded.Creatures[alice.ID] = alice
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			if _, err := world.AddEnemy("creature:guard", "creature:alice"); err != nil {
 				t.Fatalf("AddEnemy() error = %v", err)
 			}
@@ -522,6 +530,7 @@ func TestMoveHandlerBlocksLegacyTimeRestrictedExits(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			loaded := moveWorldWithEastExit(t, []string{tt.flag}, "room:east")
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			world.SetLegacyTime(tt.legacyTime)
 
 			out := dispatchMoveLineWithMoveWorld(t, world, "동")
@@ -548,6 +557,7 @@ func TestMoveHandlerAllowsLegacyTimeRestrictedExitsAtValidHour(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			loaded := moveWorldWithEastExit(t, []string{tt.flag}, "room:east")
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			world.SetLegacyTime(tt.legacyTime)
 
 			out := dispatchMoveLineWithMoveWorld(t, world, "동")
@@ -685,6 +695,7 @@ func TestMoveHandlerGoWaitsForAttackCooldownAfterFallLikeLegacy(t *testing.T) {
 	alice.Metadata.Tags = []string{"hidden", "PHIDDN"}
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if err := world.SetCreatureCooldown("creature:alice", "attack", 1000, 5); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
 	}
@@ -705,6 +716,7 @@ func TestMoveHandlerDirectMoveIgnoresAttackCooldownLikeLegacyCommentedDelay(t *t
 	withFakeMagicEffectTime(t, 1000)
 	loaded := moveWorldWithEastExit(t, nil, "room:east")
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if err := world.SetCreatureCooldown("creature:alice", "attack", 1000, 5); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
 	}
@@ -850,6 +862,7 @@ func TestMoveHandlerFailedMovementSneakCanBeBlockedByEnemyMblockLikeLegacy(t *te
 				Metadata:    model.Metadata{Tags: []string{"MBLOCK"}},
 			})
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			if _, err := world.AddEnemy("creature:blocker", model.CreatureID("player:alice")); err != nil {
 				t.Fatalf("AddEnemy() error = %v", err)
 			}
@@ -889,6 +902,7 @@ func TestMoveHandlerFailedMovementSneakIgnoresEnemyMblockWithPINVISLikeLegacy(t 
 		Metadata:    model.Metadata{Tags: []string{"MBLOCK"}},
 	})
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if _, err := world.AddEnemy("creature:blocker", model.CreatureID("player:alice")); err != nil {
 		t.Fatalf("AddEnemy() error = %v", err)
 	}
@@ -1048,6 +1062,7 @@ func TestMoveHandlerUsesObjectWeightForNakedExit(t *testing.T) {
 			}
 			if tt.weightless {
 				world := state.NewWorld(loaded)
+	defer world.Close()
 				object, ok := world.Object(tt.root.ID)
 				if !ok {
 					t.Fatalf("root object %q missing", tt.root.ID)
@@ -1507,6 +1522,7 @@ func TestMoveHandlerHandlesOnlyMarriedInviteException(t *testing.T) {
 
 func TestMoveHandlerUserFacingFailuresDoNotError(t *testing.T) {
 	world := state.NewWorld(lookWorld(t))
+	defer world.Close()
 	handler := NewMoveHandler(world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -1537,6 +1553,7 @@ func TestMoveHandlerUserFacingFailuresDoNotError(t *testing.T) {
 
 func TestMoveHandlerRequiresActor(t *testing.T) {
 	world := state.NewWorld(lookWorld(t))
+	defer world.Close()
 	handler := NewMoveHandler(world)
 
 	_, err := handler(&Context{}, ResolvedCommand{Args: []string{"동"}})
@@ -1566,6 +1583,7 @@ func dispatchMoveLine(t *testing.T, loaded *worldload.World, line string) (*stat
 	t.Helper()
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	out := dispatchMoveLineWithMoveWorld(t, world, line)
 	return world, out
 }

@@ -111,6 +111,7 @@ func TestStatusHandlersRenderPlayerBasics(t *testing.T) {
 		},
 	})
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	registry := mustRegistry(t, []commandspec.CommandSpec{
 		{Name: "장비", Number: 11, Handler: "equipment"},
 		{Name: "점수", Number: 15, Handler: "health"},
@@ -244,6 +245,7 @@ func TestInfoHandlerRegistersPendingAndRendersSpellPage(t *testing.T) {
 	loaded.Creatures[creature.ID] = creature
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	var pending PendingLineHandler
 	ctx := &Context{
 		ActorID: "player:alice",
@@ -293,6 +295,7 @@ func TestInfoHandlerRegistersPendingAndRendersSpellPage(t *testing.T) {
 func TestInfoHandlerPendingCancel(t *testing.T) {
 	loaded := inventoryWorld(t)
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	var pending PendingLineHandler
 	ctx := &Context{
 		ActorID: "player:alice",
@@ -474,6 +477,7 @@ func TestTimeHandlerRendersKSTClock(t *testing.T) {
 
 func TestTimeHandlerUsesLegacyWorldClockForCurrentTime(t *testing.T) {
 	world := state.NewWorld(inventoryWorld(t))
+	defer world.Close()
 	world.SetLegacyTime(23)
 	handler := NewTimeHandlerWithWorld(world, func() time.Time {
 		return time.Date(2026, 5, 21, 15, 4, 5, 0, time.FixedZone("KST", 9*60*60))

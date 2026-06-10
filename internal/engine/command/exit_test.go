@@ -13,6 +13,7 @@ import (
 
 func TestOpenExitHandlerOpensClosedExit(t *testing.T) {
 	world := state.NewWorld(exitControlWorld(t))
+	defer world.Close()
 	dispatcher := exitControlDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -37,6 +38,7 @@ func TestOpenExitHandlerOpensClosedExit(t *testing.T) {
 
 func TestOpenExitHandlerSupportsCommandFirstFallback(t *testing.T) {
 	world := state.NewWorld(exitControlWorld(t))
+	defer world.Close()
 	dispatcher := exitControlDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -50,6 +52,7 @@ func TestOpenExitHandlerSupportsCommandFirstFallback(t *testing.T) {
 
 func TestCloseExitHandlerClosesClosableExit(t *testing.T) {
 	world := state.NewWorld(exitControlWorld(t))
+	defer world.Close()
 	dispatcher := exitControlDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -67,6 +70,7 @@ func TestCloseExitHandlerClosesClosableExit(t *testing.T) {
 
 func TestUnlockExitHandlerUnlocksAndConsumesKeyCharge(t *testing.T) {
 	world := state.NewWorld(exitControlWorld(t))
+	defer world.Close()
 	dispatcher := exitControlDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -94,6 +98,7 @@ func TestUnlockExitHandlerUnlocksAndConsumesKeyCharge(t *testing.T) {
 
 func TestLockExitHandlerLocksClosedLockableExitWithoutConsumingKey(t *testing.T) {
 	world := state.NewWorld(exitControlWorld(t))
+	defer world.Close()
 	dispatcher := exitControlDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -115,6 +120,7 @@ func TestLockExitHandlerLocksClosedLockableExitWithoutConsumingKey(t *testing.T)
 
 func TestPicklockHandlerUnlocksLockedExitOnSuccessfulRoll(t *testing.T) {
 	world := state.NewWorld(exitControlWorld(t))
+	defer world.Close()
 	dispatcher := exitControlDispatcherWithPicklock(t, world, func(int, int) int { return 1 })
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -138,6 +144,7 @@ func TestPicklockHandlerUnlocksLockedExitOnSuccessfulRoll(t *testing.T) {
 
 func TestPicklockHandlerLeavesExitLockedOnFailedRoll(t *testing.T) {
 	world := state.NewWorld(exitControlWorld(t))
+	defer world.Close()
 	dispatcher := exitControlDispatcherWithPicklock(t, world, func(int, int) int { return 100 })
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -155,6 +162,7 @@ func TestPicklockHandlerLeavesExitLockedOnFailedRoll(t *testing.T) {
 
 func TestPicklockHandlerCannotPickUnpickableExit(t *testing.T) {
 	world := state.NewWorld(exitControlWorld(t))
+	defer world.Close()
 	dispatcher := exitControlDispatcherWithPicklock(t, world, func(int, int) int { return 1 })
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -206,6 +214,7 @@ func TestPicklockHandlerRejectsInvalidAttemptsWithoutMutation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			world := state.NewWorld(exitControlWorld(t))
+	defer world.Close()
 			if tt.setup != nil {
 				tt.setup(t, world)
 			}
@@ -240,6 +249,7 @@ func TestExitControlHandlerRejectsInvalidActionsWithoutMutation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			world := state.NewWorld(exitControlWorld(t))
+	defer world.Close()
 			dispatcher := exitControlDispatcher(t, world)
 			ctx := &Context{ActorID: "player:alice"}
 			if _, err := dispatcher.DispatchLine(ctx, tt.line); err != nil {
@@ -306,6 +316,7 @@ func TestExitControlHandlersBroadcastLikeLegacy(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			world := state.NewWorld(exitControlWorld(t))
+	defer world.Close()
 			roll := tt.roll
 			if roll == nil {
 				roll = func(int, int) int { return 1 }
@@ -360,6 +371,7 @@ func TestExitControlSuccessRevealsHiddenActorLikeLegacy(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := exitControlDispatcher(t, world)
 	ctx := &Context{ActorID: "player:alice"}
 

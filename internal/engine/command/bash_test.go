@@ -23,6 +23,7 @@ func TestBashHandlerBashesMonsterAndRevealsInvisibleActorOnlyLikeLegacy(t *testi
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := bashDispatcher(t, world)
 
 	var broadcasts []roomBroadcastRecord
@@ -73,6 +74,7 @@ func TestBashHandlerBashesMonsterAndRevealsInvisibleActorOnlyLikeLegacy(t *testi
 func TestBashHandlerSupportsCommandFirstFallback(t *testing.T) {
 	withAttackRolls(t, 1, 20, 5)
 	world := state.NewWorld(bashWorld(t, model.ClassFighter))
+	defer world.Close()
 	dispatcher := bashDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -92,6 +94,7 @@ func TestBashHandlerSupportsCommandFirstFallback(t *testing.T) {
 func TestBashHandlerReportsFailureWithoutDamage(t *testing.T) {
 	withAttackRolls(t, 100)
 	world := state.NewWorld(bashWorld(t, model.ClassFighter))
+	defer world.Close()
 	handler := NewBashHandler(world)
 
 	var broadcasts []roomBroadcastRecord
@@ -133,6 +136,7 @@ func TestBashHandlerIgnoresSkillProficiencyLikeLegacy(t *testing.T) {
 	goblin.Stats["dexterity"] = 20
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewBashHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}})
@@ -161,6 +165,7 @@ func TestBashHandlerMonsterHitAddsLegacyWeaponProficiency(t *testing.T) {
 	goblin.Stats["experience"] = 120
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewBashHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}})
@@ -190,6 +195,7 @@ func TestBashHandlerHighClassTargetUsesRawDamageForLegacyProficiency(t *testing.
 	goblin.Stats["experience"] = 120
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewBashHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}})
@@ -219,6 +225,7 @@ func TestBashHandlerRespectsCooldownBeforeReveal(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if err := world.SetCreatureCooldown("creature:alice", bashCooldownKey, time.Now().Unix(), 2); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
 	}
@@ -304,6 +311,7 @@ func TestBashHandlerRejectsInvalidInputs(t *testing.T) {
 				tt.mutate(loaded)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			handler := NewBashHandler(world)
 
 			ctx := &Context{ActorID: "player:alice"}
@@ -321,6 +329,7 @@ func TestBashHandlerRejectsInvalidInputs(t *testing.T) {
 func TestBashHandlerSkipsPlayerPKGateLikeLegacyElseIf(t *testing.T) {
 	withAttackRolls(t, 1, 20, 5)
 	world := state.NewWorld(bashWorld(t, model.ClassFighter))
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewBashHandler(world)(ctx, ResolvedCommand{Args: []string{"Bob"}})
@@ -348,6 +357,7 @@ func TestBashHandlerUsesLegacyByteLengthForPlayerTarget(t *testing.T) {
 	bob.DisplayName = "보브"
 	loaded.Creatures[bob.ID] = bob
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewBashHandler(world)(ctx, ResolvedCommand{Args: []string{"보브"}})
@@ -369,6 +379,7 @@ func TestBashHandlerEnchantOnlyMonsterRequiresEnchantedWeaponForCaretakerLikeLeg
 	goblin.Metadata.Tags = []string{"MENONL"}
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewBashHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}})
@@ -394,6 +405,7 @@ func TestBashHandlerInvincibleWithFighterTrainingCanBash(t *testing.T) {
 	alice.Metadata.Tags = []string{"SFIGHTER"}
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewBashHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}})
@@ -413,6 +425,7 @@ func TestBashHandlerPreservesLegacyZeroDamageForVeryLowHPTarget(t *testing.T) {
 	goblin.Stats["hpMax"] = 2
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewBashHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}})
@@ -437,6 +450,7 @@ func TestBashHandlerFinalizesMonsterDeathWhenDamageKillsTarget(t *testing.T) {
 	goblin.Stats["hpMax"] = 1
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewBashHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}})

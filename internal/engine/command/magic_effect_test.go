@@ -54,6 +54,7 @@ func TestMagicObjectWeightlessReadsFlagsContainerLikeLegacy(t *testing.T) {
 		t.Fatal(err)
 	}
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	if !magicObjectWeightless(world, model.ObjectInstance{PrototypeID: protoID}) {
 		t.Fatal("magicObjectWeightless did not match prototype flags container as OWTLES")

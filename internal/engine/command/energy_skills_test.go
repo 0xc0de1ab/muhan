@@ -13,6 +13,7 @@ import (
 
 func TestPowerHandlerSuccessAddsStrengthTagsCooldownAndExpiration(t *testing.T) {
 	world := state.NewWorld(energySkillWorld(t, model.ClassFighter, nil, false))
+	defer world.Close()
 	handler := NewPowerHandler(world, fixedRoll(1))
 	var broadcasts []roomBroadcastRecord
 
@@ -74,6 +75,7 @@ func TestPowerHandlerRejectsInvalidStates(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			world := state.NewWorld(energySkillWorld(t, tt.class, tt.tags, false))
+	defer world.Close()
 			if tt.setup != nil {
 				tt.setup(world)
 			}
@@ -93,6 +95,7 @@ func TestPowerHandlerRejectsInvalidStates(t *testing.T) {
 
 func TestPowerHandlerFailureSetsShortCooldownWithoutStatus(t *testing.T) {
 	world := state.NewWorld(energySkillWorld(t, model.ClassFighter, nil, false))
+	defer world.Close()
 	handler := NewPowerHandler(world, fixedRoll(100))
 	var broadcasts []roomBroadcastRecord
 
@@ -120,6 +123,7 @@ func TestPowerHandlerFailureSetsShortCooldownWithoutStatus(t *testing.T) {
 
 func TestAccurateHandlerSuccessAddsThacoTagsCooldownAndExpiration(t *testing.T) {
 	world := state.NewWorld(energySkillWorld(t, model.ClassThief, nil, true))
+	defer world.Close()
 	world.RecalculateTHACOFunc = func(creatureID model.CreatureID) error {
 		c, _ := world.Creature(creatureID)
 		baseThaco := 10
@@ -197,6 +201,7 @@ func TestAccurateHandlerRejectsInvalidStates(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			world := state.NewWorld(energySkillWorld(t, tt.class, tt.tags, tt.wield))
+	defer world.Close()
 			if tt.setup != nil {
 				tt.setup(world)
 			}
@@ -216,6 +221,7 @@ func TestAccurateHandlerRejectsInvalidStates(t *testing.T) {
 
 func TestAccurateHandlerFailureSetsShortCooldownWithoutStatus(t *testing.T) {
 	world := state.NewWorld(energySkillWorld(t, model.ClassThief, nil, true))
+	defer world.Close()
 	handler := NewAccurateHandler(world, fixedRoll(100))
 	var broadcasts []roomBroadcastRecord
 
@@ -250,6 +256,7 @@ func TestAbsorbHandlerSuccessRevealsDrainsHealsAndStartsCooldown(t *testing.T) {
 	player.Metadata.Tags = []string{"invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewAbsorbHandler(world, energyRolls(t, 1, 3))
 	var broadcasts []roomBroadcastRecord
 
@@ -296,6 +303,7 @@ func TestAbsorbHandlerSuccessRevealsDrainsHealsAndStartsCooldown(t *testing.T) {
 
 func TestAbsorbHandlerFailureStartsCooldownWithoutDamage(t *testing.T) {
 	world := state.NewWorld(energySkillWorld(t, model.ClassInvincible, []string{"SMAGE"}, false))
+	defer world.Close()
 	handler := NewAbsorbHandler(world, fixedRoll(100))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -374,6 +382,7 @@ func TestAbsorbHandlerRejectsInvalidStates(t *testing.T) {
 				tt.mutate(loaded)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			handler := NewAbsorbHandler(world, fixedRoll(1))
 
 			ctx := &Context{ActorID: "player:alice"}
@@ -394,6 +403,7 @@ func TestAbsorbHandlerWaitsBeforeProtectedTargetLikeLegacy(t *testing.T) {
 	goblin.Metadata.Tags = []string{"MUNKIL", "MMALES"}
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if err := world.SetCreatureCooldown("creature:alice", absorbCooldownKey, time.Now().Unix(), 5); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
 	}
@@ -419,6 +429,7 @@ func TestAbsorbHandlerUndeadSuccessDrainsCasterManaOnly(t *testing.T) {
 	goblin.Metadata.Tags = []string{"MUNDED"}
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewAbsorbHandler(world, fixedRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -445,6 +456,7 @@ func TestAbsorbHandlerKillingDrainFinalizesMonster(t *testing.T) {
 	goblin.Stats["hpCurrent"] = 20
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewAbsorbHandler(world, energyRolls(t, 1, 3))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -473,6 +485,7 @@ func TestAbsorbHandlerUsesCustomDeathFinalizer(t *testing.T) {
 	goblin.Stats["hpCurrent"] = 20
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	called := false
 	handler := NewAbsorbHandlerWithDeathFinalizer(world, energyRolls(t, 1, 3), func(_ *Context, attacker model.Creature, victim model.Creature) error {
 		called = true

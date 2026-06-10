@@ -14,6 +14,7 @@ import (
 
 func TestInventoryHandlerRendersLegacyInventory(t *testing.T) {
 	world := state.NewWorld(inventoryWorld(t))
+	defer world.Close()
 	dispatcher := Dispatcher{
 		Registry: mustRegistry(t, []commandspec.CommandSpec{
 			{Name: "소지품", Number: 40, Handler: "inventory"},
@@ -62,6 +63,7 @@ func TestInventoryHandlerRendersLegacyInventory(t *testing.T) {
 
 func TestInventoryHandlerRendersEmptyInventory(t *testing.T) {
 	world := state.NewWorld(emptyInventoryWorld(t))
+	defer world.Close()
 	handler := NewInventoryHandler(world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -89,6 +91,7 @@ func TestObjectIsContainerReadsPropertyBackedLegacyFlags(t *testing.T) {
 		t.Fatal(err)
 	}
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	tests := []struct {
 		name string
@@ -166,6 +169,7 @@ func TestInventoryHandlerUsesLegacyBlindMessage(t *testing.T) {
 				loaded.Creatures[creature.ID] = tt.creature(creature)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			handler := NewInventoryHandler(world)
 
 			ctx := &Context{ActorID: "player:alice"}
@@ -186,6 +190,7 @@ func TestInventoryHandlerUsesLegacyBlindANSIColor(t *testing.T) {
 	creature.Metadata.Tags = []string{"PBLIND"}
 	loaded.Creatures[creature.ID] = creature
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewInventoryHandler(world)
 
 	ctx := &Context{
@@ -251,6 +256,7 @@ func TestInventoryHandlerRendersMagicNamesOnlyForDetector(t *testing.T) {
 				loaded.Creatures[creature.ID] = creature
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			handler := NewInventoryHandler(world)
 
 			ctx := &Context{ActorID: "player:alice"}
@@ -333,6 +339,7 @@ func TestInventoryHandlerHidesInvisibleObjectsUnlessDetector(t *testing.T) {
 			})
 
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			handler := NewInventoryHandler(world)
 			ctx := &Context{ActorID: "player:alice"}
 
@@ -369,6 +376,7 @@ func TestInventoryHandlerMatchesLegacyAllInvisibleOutput(t *testing.T) {
 	})
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewInventoryHandler(world)
 	ctx := &Context{ActorID: "player:alice"}
 
@@ -386,6 +394,7 @@ func TestInventoryHandlerMatchesLegacyAllInvisibleOutput(t *testing.T) {
 
 func TestInventoryHandlerIgnoresTargetsLikeLegacy(t *testing.T) {
 	world := state.NewWorld(inventoryWorld(t))
+	defer world.Close()
 	handler := NewInventoryHandler(world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -411,6 +420,7 @@ func TestInventoryHandlerRequiresWorldActorAndCreature(t *testing.T) {
 	}
 
 	world := state.NewWorld(emptyInventoryWorld(t))
+	defer world.Close()
 	handler = NewInventoryHandler(world)
 	_, err = handler(&Context{}, ResolvedCommand{})
 	if !errors.Is(err, ErrInventoryActorRequired) {

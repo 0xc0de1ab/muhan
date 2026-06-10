@@ -21,6 +21,7 @@ func TestRedEyeHandlerDamagesRemoteMonster(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := perceptionDispatcher(t, world, fixedPerceptionRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -71,6 +72,7 @@ func TestRedEyeHandlerUsesCustomDeathFinalizer(t *testing.T) {
 	goblin.Stats["hpCurrent"] = 1
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	called := false
 	handler := NewRedEyeHandlerWithDeathFinalizer(world, fixedPerceptionRoll(1), func(_ *Context, attacker model.Creature, victim model.Creature) error {
 		called = true
@@ -136,6 +138,7 @@ func TestRedEyeHandlerRejectsInvalidUse(t *testing.T) {
 				tt.mutate(loaded)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			ctx := &Context{ActorID: "player:alice"}
 			status, err := NewRedEyeHandler(world, fixedPerceptionRoll(1))(ctx, ResolvedCommand{Args: tt.args})
 			if err != nil {
@@ -151,6 +154,7 @@ func TestRedEyeHandlerRejectsInvalidUse(t *testing.T) {
 func TestRedEyeHandlerFailurePrimesEnemyAndStartsCooldown(t *testing.T) {
 	loaded := perceptionWorld(t, model.ClassInvincible, []string{"SPALADIN", "STHIEF"})
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewRedEyeHandler(world, fixedPerceptionRoll(22))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -193,6 +197,7 @@ func TestRedEyeHandlerRejectsActorGroupBeforeRevealAndCooldown(t *testing.T) {
 	alice.Stats["PINVIS"] = 1
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{
 		ActorID: "player:alice",
 		Values: map[string]any{
@@ -228,6 +233,7 @@ func TestRedEyeHandlerRejectsTargetGroupBeforeRevealAndCooldown(t *testing.T) {
 	alice.Stats["PINVIS"] = 1
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{
 		ActorID: "player:alice",
 		Values: map[string]any{
@@ -266,6 +272,7 @@ func TestRedEyeHandlerCooldownPrecedesTargetLookupAndReveal(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if err := world.SetCreatureCooldown("creature:alice", redEyeCooldownKey, time.Now().Unix(), redEyeCooldownSeconds(loaded.Creatures["creature:alice"])); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
 	}
@@ -297,6 +304,7 @@ func TestRedEyeHandlerInvalidEnemyRevealsWithoutStartingCooldown(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewRedEyeHandler(world, fixedPerceptionRoll(1))(ctx, ResolvedCommand{Args: []string{"player:bob", "없는"}})
@@ -329,6 +337,7 @@ func TestThiefStatHandlerRendersObjectDetails(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := perceptionDispatcher(t, world, fixedPerceptionRoll(20))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -370,6 +379,7 @@ func TestThiefStatHandlerRendersObjectDetails(t *testing.T) {
 
 func TestThiefStatHandlerRendersCreatureDetailsAndStatus(t *testing.T) {
 	world := state.NewWorld(perceptionWorld(t, model.ClassInvincible, []string{"SPALADIN", "STHIEF"}))
+	defer world.Close()
 	handler := NewThiefStatHandler(world, fixedPerceptionRoll(20))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -406,6 +416,7 @@ func TestThiefStatHandlerCooldownPrecedesBlindAndReveal(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if err := world.SetCreatureCooldown("creature:alice", thiefStatCooldownKey, time.Now().Unix(), thiefStatCooldownSeconds(loaded.Creatures["creature:alice"])); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
 	}
@@ -429,6 +440,7 @@ func TestThiefStatHandlerCooldownPrecedesBlindAndReveal(t *testing.T) {
 
 func TestThiefStatHandlerBlindDoesNotStartCooldown(t *testing.T) {
 	world := state.NewWorld(perceptionWorld(t, model.ClassInvincible, []string{"STHIEF", "PBLIND"}))
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewThiefStatHandler(world, fixedPerceptionRoll(20))(ctx, ResolvedCommand{Args: []string{"상인"}})
@@ -452,6 +464,7 @@ func TestThiefStatHandlerBlocksCombatBeforeRevealLikeLegacy(t *testing.T) {
 	alice.Stats["PINVIS"] = 1
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if _, err := world.AddEnemy("creature:merchant", "creature:alice"); err != nil {
 		t.Fatalf("AddEnemy() error = %v", err)
 	}
@@ -484,6 +497,7 @@ func TestThiefStatHandlerFailedMonsterObjectPeekPrimesEnemy(t *testing.T) {
 	alice.Stats["level"] = 1
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewThiefStatHandler(world, fixedPerceptionRoll(100))(ctx, ResolvedCommand{Args: []string{"목검", "상인"}, Values: []int64{1, 1}})
@@ -512,6 +526,7 @@ func TestThiefStatHandlerFailedMonsterCreaturePeekPrimesEnemy(t *testing.T) {
 	merchant.Stats["class"] = model.ClassCaretaker
 	loaded.Creatures[merchant.ID] = merchant
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewThiefStatHandler(world, fixedPerceptionRoll(100))(ctx, ResolvedCommand{Args: []string{"상인"}, Values: []int64{1}})
@@ -552,6 +567,7 @@ func TestThiefStatHandlerPDMINVOwnerFallsBackToSelfLikeLegacy(t *testing.T) {
 	start.CreatureIDs = append(start.CreatureIDs, bob.ID)
 	loaded.Rooms[start.ID] = start
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewThiefStatHandler(world, fixedPerceptionRoll(20))(ctx, ResolvedCommand{
@@ -584,6 +600,7 @@ func TestThiefStatHandlerRejectsClassTrainingBlindAndMissingTarget(t *testing.T)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			world := state.NewWorld(perceptionWorld(t, tt.class, tt.tags))
+	defer world.Close()
 			ctx := &Context{ActorID: "player:alice"}
 			status, err := NewThiefStatHandler(world, fixedPerceptionRoll(20))(ctx, ResolvedCommand{Args: tt.args})
 			if err != nil {

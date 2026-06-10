@@ -30,6 +30,7 @@ func TestApplyMagicTeleportSelf(t *testing.T) {
 	loaded.Creatures[creature.ID] = creature
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "player:alice"}
 
 	// Test teleport on self
@@ -92,6 +93,7 @@ func TestApplyMagicTeleportOther(t *testing.T) {
 	})
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "player:alice"}
 
 	// Teleport Bob
@@ -159,6 +161,7 @@ func TestApplyMagicTeleportReadsStatAndPropertyBackedResistMagic(t *testing.T) {
 			})
 
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			ctx := &Context{ActorID: "player:alice"}
 			success, err := ApplyMagicTeleport(ctx, world, creatureA, model.ObjectInstance{}, ResolvedCommand{
 				Args: []string{"공간이동", "밥"},
@@ -220,6 +223,7 @@ func TestApplyMagicTeleportResistMagicAllowsStrongCasterLikeLegacy(t *testing.T)
 	})
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "player:alice"}
 	success, err := ApplyMagicTeleport(ctx, world, creatureA, model.ObjectInstance{}, ResolvedCommand{
 		Args: []string{"공간이동", "밥"},
@@ -257,6 +261,7 @@ func TestApplyMagicTeleportExplicitSelfAliasIsMissingTargetLikeLegacy(t *testing
 	loaded.Creatures[creature.ID] = creature
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "player:alice"}
 	success, err := ApplyMagicTeleport(ctx, world, creature, model.ObjectInstance{}, ResolvedCommand{
 		Args: []string{"공간이동", "나"},
@@ -288,6 +293,7 @@ func TestApplyMagicTeleportPotionRejectsMissingTargetBeforeLookup(t *testing.T) 
 	actor.RoomID = "room:source"
 	loaded.Creatures[actor.ID] = actor
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	potion := model.ObjectInstance{ID: "object:teleport-potion", Properties: map[string]string{"type": "6"}}
 	ctx := &Context{ActorID: "player:alice"}
 
@@ -352,6 +358,7 @@ func TestApplyMagicSummon(t *testing.T) {
 	})
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	activeFunc := func() []mockActiveSession {
 		return []mockActiveSession{
@@ -431,6 +438,7 @@ func TestApplyMagicSummonRejectsActivePlayerIDAliasLikeLegacy(t *testing.T) {
 	})
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{
 		ActorID: "player:alice",
 		Values: map[string]any{
@@ -476,6 +484,7 @@ func TestApplyMagicSummonPotionRejectsMissingTargetBeforeLookup(t *testing.T) {
 	actor.Stats = map[string]int{"mpCurrent": 100}
 	loaded.Creatures[actor.ID] = actor
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	previousRoll := attackRoll
 	attackRoll = func(min, max int) int { return max }
 	t.Cleanup(func() { attackRoll = previousRoll })
@@ -532,6 +541,7 @@ func TestApplyMagicSummonScrollBypassesCastGatesAndAvoidsTargetBroadcastDuplicat
 	})
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	sent := map[string][]string{}
 	ctx := &Context{
 		ActorID:   "player:alice",
@@ -609,6 +619,7 @@ func TestApplyMagicSummonReadsStatAndPropertyBackedNoSummonFlag(t *testing.T) {
 				Properties:  tc.targetProp,
 			})
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			previousRoll := attackRoll
 			attackRoll = func(min, max int) int { return max }
 			t.Cleanup(func() { attackRoll = previousRoll })
@@ -645,6 +656,7 @@ func TestApplyMagicSummonLegacyFailureOutputs(t *testing.T) {
 		actor.Stats = map[string]int{"mpCurrent": 100}
 		loaded.Creatures[actor.ID] = actor
 		world := state.NewWorld(loaded)
+	defer world.Close()
 		previousRoll := attackRoll
 		attackRoll = func(min, max int) int { return max }
 		t.Cleanup(func() { attackRoll = previousRoll })
@@ -665,6 +677,7 @@ func TestApplyMagicSummonLegacyFailureOutputs(t *testing.T) {
 		actor.Stats = map[string]int{"mpCurrent": 100}
 		loaded.Creatures[actor.ID] = actor
 		world := state.NewWorld(loaded)
+	defer world.Close()
 		previousRoll := attackRoll
 		attackRoll = func(min, max int) int { return min }
 		t.Cleanup(func() { attackRoll = previousRoll })
@@ -692,6 +705,7 @@ func TestApplyMagicSummonLegacyFailureOutputs(t *testing.T) {
 		actor.Stats = map[string]int{"mpCurrent": 100}
 		loaded.Creatures[actor.ID] = actor
 		world := state.NewWorld(loaded)
+	defer world.Close()
 		previousRoll := attackRoll
 		attackRoll = func(min, max int) int { return min }
 		t.Cleanup(func() { attackRoll = previousRoll })
@@ -737,6 +751,7 @@ func TestApplyMagicSummonLegacyFailureOutputs(t *testing.T) {
 			Metadata:    model.Metadata{Tags: []string{"PNOSUM"}},
 		})
 		world := state.NewWorld(loaded)
+	defer world.Close()
 		previousRoll := attackRoll
 		attackRoll = func(min, max int) int { return max }
 		t.Cleanup(func() { attackRoll = previousRoll })
@@ -790,6 +805,7 @@ func TestApplyMagicSummonLegacyFailureOutputs(t *testing.T) {
 			PlayerID:    "player:bob",
 		})
 		world := state.NewWorld(loaded)
+	defer world.Close()
 		previousRoll := attackRoll
 		attackRoll = func(min, max int) int { return max }
 		t.Cleanup(func() { attackRoll = previousRoll })
@@ -841,6 +857,7 @@ func TestApplyMagicSummonLegacyFailureOutputs(t *testing.T) {
 			PlayerID:    "player:bob",
 		})
 		world := state.NewWorld(loaded)
+	defer world.Close()
 		previousRoll := attackRoll
 		attackRoll = func(min, max int) int { return max }
 		t.Cleanup(func() { attackRoll = previousRoll })
@@ -893,6 +910,7 @@ func TestApplyMagicSummonLegacyFailureOutputs(t *testing.T) {
 			PlayerID:    "player:bob",
 		})
 		world := state.NewWorld(loaded)
+	defer world.Close()
 		previousRoll := attackRoll
 		attackRoll = func(min, max int) int { return max }
 		t.Cleanup(func() { attackRoll = previousRoll })
@@ -947,6 +965,7 @@ func TestApplyMagicSummonLegacyFailureOutputs(t *testing.T) {
 			Stats:       map[string]int{"class": model.ClassDM, "dailyExpndMax": 8},
 		})
 		world := state.NewWorld(loaded)
+	defer world.Close()
 		previousRoll := attackRoll
 		attackRoll = func(min, max int) int { return max }
 		t.Cleanup(func() { attackRoll = previousRoll })

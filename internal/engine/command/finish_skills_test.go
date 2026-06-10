@@ -44,6 +44,7 @@ func TestScratchHandlerScratchesLotteryAndStartsCooldown(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	var broadcasts []roomBroadcastRecord
 	ctx := contextWithRoomBroadcast("player:alice", "session:alice", &broadcasts)
@@ -110,6 +111,7 @@ func TestScratchHandlerRespectsCooldownBeforeRoomAndReveal(t *testing.T) {
 	player.Metadata.Tags = append(player.Metadata.Tags, "hidden")
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if err := world.SetCreatureCooldown("creature:alice", scratchCooldownKey, time.Now().Unix(), 10); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
 	}
@@ -221,6 +223,7 @@ func TestScratchHandlerRejectsInvalidInputs(t *testing.T) {
 				tt.mutate(loaded)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 
 			ctx := &Context{ActorID: "player:alice"}
 			status, err := NewScratchHandler(world)(ctx, ResolvedCommand{Args: tt.args, Values: []int64{1}})
@@ -239,6 +242,7 @@ func TestScratchHandlerCanBeRegisteredByDispatcherAliases(t *testing.T) {
 		t.Run(line, func(t *testing.T) {
 			withAttackRolls(t, 2, 2, 2, 2, 2)
 			world := state.NewWorld(finishSkillsWorld(t))
+	defer world.Close()
 			dispatcher := finishSkillsDispatcher(t, world)
 
 			ctx := &Context{ActorID: "player:alice"}
@@ -265,6 +269,7 @@ func TestSasalHandlerPerfectlyKillsWeakMonsterAndStartsCooldown(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := finishSkillsDispatcher(t, world)
 
 	var broadcasts []roomBroadcastRecord
@@ -307,6 +312,7 @@ func TestSasalHandlerAwkwardHitDamagesStrongMonster(t *testing.T) {
 	alice.Metadata.Tags = []string{"YELLOWI"}
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewSasalHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}, Values: []int64{1}})
@@ -333,6 +339,7 @@ func TestSasalHandlerMagicOnlyUsesLegacyPietyAndRoll(t *testing.T) {
 	wraith.Stats["piety"] = 99
 	loaded.Creatures[wraith.ID] = wraith
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewSasalHandler(world)(ctx, ResolvedCommand{Args: []string{"망령"}, Values: []int64{1}})
@@ -358,6 +365,7 @@ func TestSasalHandlerEnchantOnlyUsesLegacyRoll(t *testing.T) {
 	goblin.Metadata.Tags = []string{"MENONL"}
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewSasalHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}, Values: []int64{1}})
@@ -387,6 +395,7 @@ func TestSasalHandlerRejectsCharmedPlayerLikeLegacy(t *testing.T) {
 	bob.Metadata.Tags = []string{"PCHAOS", "PCHARM", "charm:Alice"}
 	loaded.Creatures[bob.ID] = bob
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewSasalHandler(world)(ctx, ResolvedCommand{Args: []string{"Bob"}, Values: []int64{1}})
@@ -416,6 +425,7 @@ func TestSasalHandlerRespectsCooldownBeforeTargetWeaponAndReveal(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "invisible"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if err := world.SetCreatureCooldown("creature:alice", sasalCooldownKey, time.Now().Unix(), 10); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
 	}
@@ -444,6 +454,7 @@ func TestSasalHandlerInvalidTargetDoesNotConsumeCooldown(t *testing.T) {
 	loaded := finishSkillsWorld(t)
 	finishSkillsGiveAliceYellow(loaded)
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewSasalHandler(world)(ctx, ResolvedCommand{Args: []string{"없는"}, Values: []int64{1}})
@@ -467,6 +478,7 @@ func TestSasalHandlerFailureStartsCooldownWithoutDamage(t *testing.T) {
 	alice.Metadata.Tags = []string{"YELLOWI"}
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewSasalHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}, Values: []int64{1}})
@@ -600,6 +612,7 @@ func TestSasalHandlerRejectsInvalidInputs(t *testing.T) {
 				tt.mutate(loaded)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 
 			ctx := &Context{ActorID: "player:alice"}
 			status, err := NewSasalHandler(world)(ctx, ResolvedCommand{Args: tt.args, Values: []int64{1}})

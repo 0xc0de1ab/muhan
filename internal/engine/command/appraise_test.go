@@ -12,6 +12,7 @@ import (
 
 func TestAppraiseHandlerRendersLegacyObjectDetails(t *testing.T) {
 	world := state.NewWorld(appraiseWorld(t, 8))
+	defer world.Close()
 	dispatcher := appraiseDispatcher(t, world)
 
 	out := dispatchAppraiseLine(t, dispatcher, "목검 감정")
@@ -31,6 +32,7 @@ func TestAppraiseHandlerRendersLegacyObjectDetails(t *testing.T) {
 
 func TestAppraiseHandlerSupportsArmorNoTraitsAndCommandFirst(t *testing.T) {
 	world := state.NewWorld(appraiseWorld(t, 9))
+	defer world.Close()
 	dispatcher := appraiseDispatcher(t, world)
 
 	out := dispatchAppraiseLine(t, dispatcher, "감정 갑옷")
@@ -48,6 +50,7 @@ func TestAppraiseHandlerSupportsArmorNoTraitsAndCommandFirst(t *testing.T) {
 
 func TestAppraiseHandlerReportsPermissionAndMissingTarget(t *testing.T) {
 	world := state.NewWorld(appraiseWorld(t, 4))
+	defer world.Close()
 	dispatcher := appraiseDispatcher(t, world)
 
 	if out := dispatchAppraiseLine(t, dispatcher, "목검 감정"); out != "도둑만 물건을 감정할수 있습니다." {
@@ -55,6 +58,7 @@ func TestAppraiseHandlerReportsPermissionAndMissingTarget(t *testing.T) {
 	}
 
 	world = state.NewWorld(appraiseWorld(t, 8))
+	defer world.Close()
 	dispatcher = appraiseDispatcher(t, world)
 	if out := dispatchAppraiseLine(t, dispatcher, "감정"); out != "무엇을 감정하실려구요?" {
 		t.Fatalf("missing appraise target output = %q", out)
@@ -66,6 +70,7 @@ func TestAppraiseHandlerReportsPermissionAndMissingTarget(t *testing.T) {
 
 func TestAppraiseHandlerShowsMagicDetailsOnlyWithDetectMagic(t *testing.T) {
 	world := state.NewWorld(appraiseWorld(t, 8))
+	defer world.Close()
 	dispatcher := appraiseDispatcher(t, world)
 
 	out := dispatchAppraiseLine(t, dispatcher, "부적 감정")
@@ -97,6 +102,7 @@ func TestAppraiseAndCompareFindObjVisibilityUsesPDINVI(t *testing.T) {
 	sword.Metadata.Tags = []string{"OINVIS"}
 	loaded.Objects[sword.ID] = sword
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := appraiseDispatcher(t, world)
 
 	if out := dispatchAppraiseLine(t, dispatcher, "목검 감정"); out != "당신은 그런것을 갖고 있지 않습니다." {
@@ -114,6 +120,7 @@ func TestAppraiseAndCompareFindObjVisibilityUsesPDINVI(t *testing.T) {
 	creature.Metadata.Tags = []string{"PDINVI"}
 	loaded.Creatures[creature.ID] = creature
 	world = state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher = appraiseDispatcher(t, world)
 
 	if out := dispatchAppraiseLine(t, dispatcher, "목검 감정"); !strings.Contains(out, "이름: 목검\n") {
@@ -126,6 +133,7 @@ func TestAppraiseAndCompareFindObjVisibilityUsesPDINVI(t *testing.T) {
 
 func TestObjectCompareHandlerRendersArmorAndWeaponLevel(t *testing.T) {
 	world := state.NewWorld(appraiseWorld(t, 4))
+	defer world.Close()
 	dispatcher := appraiseDispatcher(t, world)
 
 	if out := dispatchAppraiseLine(t, dispatcher, "갑옷 비교"); out != "갑옷은 누구나 입을 수 있습니다." {
@@ -141,6 +149,7 @@ func TestObjectCompareHandlerRendersArmorAndWeaponLevel(t *testing.T) {
 
 func TestObjectCompareHandlerRendersInvincibleBreakdownAndFailures(t *testing.T) {
 	world := state.NewWorld(appraiseWorld(t, 9))
+	defer world.Close()
 	dispatcher := appraiseDispatcher(t, world)
 
 	want := "대검은 검사는 54레벨, 자객 도둑은 66레벨, 무사 포졸은 69레벨,\n" +
@@ -161,6 +170,7 @@ func TestObjectCompareHandlerRendersInvincibleBreakdownAndFailures(t *testing.T)
 
 func TestAppraiseAndCompareUseOnlyFirstArgumentLikeLegacy(t *testing.T) {
 	world := state.NewWorld(appraiseWorld(t, 8))
+	defer world.Close()
 	dispatcher := appraiseDispatcher(t, world)
 
 	if out := dispatchAppraiseLine(t, dispatcher, "목검 무시 감정"); !strings.Contains(out, "이름: 목검\n") {

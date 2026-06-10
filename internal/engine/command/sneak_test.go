@@ -22,6 +22,7 @@ func TestSneakHandlerSuccessMovesPlayer(t *testing.T) {
 	loaded.Creatures[alice.ID] = alice
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	// Success roll (roll(1, 100) returns 50, which is <= sneakChance)
 	handler := NewSneakHandler(world, fixedRoll(50))
 
@@ -71,6 +72,7 @@ func TestSneakHandlerSuccessChecksDestinationTrapLikeLegacy(t *testing.T) {
 	loaded.Creatures[alice.ID] = alice
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewSneakHandler(world, fixedRoll(1))(ctx, ResolvedCommand{
 		Spec: commandspec.CommandSpec{Handler: "sneak"},
@@ -130,6 +132,7 @@ func TestSneakHandlerFailureBlocksEnemyMonsterOnlyWithoutPINVISLikeLegacy(t *tes
 	})
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if _, err := world.AddEnemy("creature:blocker", "creature:alice"); err != nil {
 		t.Fatalf("AddEnemy() error = %v", err)
 	}
@@ -193,6 +196,7 @@ func TestSneakHandlerFailureIgnoresEnemyBlockerWithPINVISLikeLegacy(t *testing.T
 	})
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if _, err := world.AddEnemy("creature:blocker", "creature:alice"); err != nil {
 		t.Fatalf("AddEnemy() error = %v", err)
 	}
@@ -240,6 +244,7 @@ func TestSneakHandlerFailureIgnoresNonEnemyBlockingMonsterLikeLegacy(t *testing.
 	})
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewSneakHandler(world, fixedRoll(90))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -338,6 +343,7 @@ func TestSneakHandlerAttackCooldownBlocksBeforeHiddenClearLikeLegacy(t *testing.
 	loaded.Creatures[alice.ID] = alice
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	now := time.Now().Unix()
 	if err := world.SetCreatureCooldown("creature:alice", "attack", now, 5); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
@@ -412,6 +418,7 @@ func TestSneakHandlerUsesLegacyExitBlockMessages(t *testing.T) {
 			}
 
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			ctx := &Context{ActorID: "player:alice"}
 			status, err := NewSneakHandler(world, fixedRoll(1))(ctx, ResolvedCommand{
 				Spec: commandspec.CommandSpec{Handler: "sneak"},
@@ -491,6 +498,7 @@ func TestSneakHandlerUsesLegacySpecialExitBlockMessages(t *testing.T) {
 			}
 
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			ctx := &Context{ActorID: "player:alice"}
 			status, err := NewSneakHandler(world, fixedRoll(1))(ctx, ResolvedCommand{
 				Spec: commandspec.CommandSpec{Handler: "sneak"},
@@ -544,6 +552,7 @@ func TestSneakHandlerUsesLegacyTimeRestrictedExitMessages(t *testing.T) {
 			loaded.Creatures[alice.ID] = alice
 
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			world.SetLegacyTime(tt.legacyTime)
 			ctx := &Context{ActorID: "player:alice"}
 			status, err := NewSneakHandler(world, fixedRoll(1))(ctx, ResolvedCommand{
@@ -576,6 +585,7 @@ func TestSneakHandlerAllowsLegacyTimeRestrictedExitAtValidHour(t *testing.T) {
 	loaded.Creatures[alice.ID] = alice
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	world.SetLegacyTime(22)
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewSneakHandler(world, fixedRoll(1))(ctx, ResolvedCommand{
@@ -612,6 +622,7 @@ func TestSneakHandlerClimbFallDamagesAndStopsBeforeAttackCooldownLikeLegacy(t *t
 	loaded.Creatures[alice.ID] = alice
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	now := time.Now().Unix()
 	if err := world.SetCreatureCooldown("creature:alice", "attack", now, 5); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
@@ -656,6 +667,7 @@ func TestSneakHandlerRepelFallDamagesAndContinuesLikeLegacy(t *testing.T) {
 	loaded.Creatures[alice.ID] = alice
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewSneakHandler(world, fixedRoll(1))(ctx, ResolvedCommand{
 		Spec: commandspec.CommandSpec{Handler: "sneak"},
@@ -695,6 +707,7 @@ func TestSneakHandlerClimbFallSkippedWithLevitate(t *testing.T) {
 	loaded.Creatures[alice.ID] = alice
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewSneakHandler(world, fixedRoll(1))(ctx, ResolvedCommand{
 		Spec: commandspec.CommandSpec{Handler: "sneak"},

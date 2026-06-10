@@ -12,6 +12,7 @@ import (
 
 func TestLookHandlerRendersCurrentRoom(t *testing.T) {
 	world := state.NewWorld(lookWorld(t))
+	defer world.Close()
 	registry := mustRegistry(t, []commandspec.CommandSpec{
 		{Name: "봐", Number: 2, Handler: "look"},
 	})
@@ -182,6 +183,7 @@ func TestLookHandlerRendersOnlyActivePlayersWhenContextProvidesFilter(t *testing
 
 func TestRenderCurrentRoomUsesActorLocation(t *testing.T) {
 	world := state.NewWorld(lookWorld(t))
+	defer world.Close()
 	got, err := RenderCurrentRoom(world, LookViewer{PlayerID: "player:alice"})
 	if err != nil {
 		t.Fatalf("RenderCurrentRoom() error = %v", err)
@@ -557,6 +559,7 @@ func TestLookRenderRoomSkipsStaleOccupantRefs(t *testing.T) {
 	})
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	room, ok := world.Room("room:plaza")
 	if !ok {
 		t.Fatal("missing room")
@@ -973,6 +976,7 @@ func TestLookHandlerTargetPropertyBackedInvisibleRoomObjectRequiresDetectInvisib
 
 func TestLookHandlerRendersExitTargetRoomWithoutMovingActor(t *testing.T) {
 	world := state.NewWorld(lookWorld(t))
+	defer world.Close()
 	registry := mustRegistry(t, []commandspec.CommandSpec{
 		{Name: "봐", Number: 2, Handler: "look"},
 	})
@@ -1914,6 +1918,7 @@ func dispatchLookLineWithRuntime(
 ) string {
 	t.Helper()
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if setup != nil {
 		setup(world)
 	}

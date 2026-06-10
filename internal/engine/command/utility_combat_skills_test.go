@@ -23,6 +23,7 @@ func TestChangHandlerDamagesVisibleMonstersStartsCooldownAndRevealsActor(t *test
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	var broadcasts []roomBroadcastRecord
 	ctx := contextWithRoomBroadcast("player:alice", "session:alice", &broadcasts)
@@ -133,6 +134,7 @@ func TestChangHandlerRejectsInvalidStates(t *testing.T) {
 				tt.mutate(loaded)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			if tt.setup != nil {
 				tt.setup(world)
 			}
@@ -162,6 +164,7 @@ func TestChangHandlerRespectsCooldownBeforeWeaponTargetAndReveal(t *testing.T) {
 	proto.Properties["type"] = "1"
 	loaded.ObjectPrototypes[proto.ID] = proto
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if err := world.SetCreatureCooldown("creature:alice", changCooldownKey, time.Now().Unix(), 10); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
 	}
@@ -198,6 +201,7 @@ func TestChangHandlerNoTargetsDoesNotConsumeCooldown(t *testing.T) {
 		loaded.Creatures[id] = creature
 	}
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewChangHandler(world)(ctx, ResolvedCommand{})
@@ -217,6 +221,7 @@ func TestChangHandlerNoTargetsDoesNotConsumeCooldown(t *testing.T) {
 func TestChangHandlerFailureUsesCooldownWithoutDamage(t *testing.T) {
 	withAttackRolls(t, 22)
 	world := state.NewWorld(utilityCombatWorld(t, model.ClassCaretaker, legacyObjectPole))
+	defer world.Close()
 	handler := NewChangHandler(world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -256,6 +261,7 @@ func TestChangHandlerFailureCanBreakDamagedWeaponAndKeepsCooldown(t *testing.T) 
 	proto.Properties["shotsMax"] = "4"
 	loaded.ObjectPrototypes[proto.ID] = proto
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	var broadcasts []roomBroadcastRecord
 	ctx := contextWithRoomBroadcast("player:alice", "session:alice", &broadcasts)
@@ -293,6 +299,7 @@ func TestChangHandlerFailureDoesNotBreakShatterproofWeapon(t *testing.T) {
 	proto.Properties["ONSHAT"] = "1"
 	loaded.ObjectPrototypes[proto.ID] = proto
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewChangHandler(world)(ctx, ResolvedCommand{})
@@ -314,6 +321,7 @@ func TestChangHandlerWeaponBreakOnSuccessDoesNotStartCooldown(t *testing.T) {
 	proto.Properties["shotsCurrent"] = "1"
 	loaded.ObjectPrototypes[proto.ID] = proto
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewChangHandler(world)(ctx, ResolvedCommand{})
@@ -343,6 +351,7 @@ func TestChoiHandlerRangerDamagesMonsterConsumesMissileChargeAndStartsCooldown(t
 	alice.Stats["level"] = 50
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewChoiHandler(world)(ctx, ResolvedCommand{})
@@ -418,6 +427,7 @@ func TestChoiHandlerRejectsInvalidStates(t *testing.T) {
 			loaded := utilityCombatWorld(t, model.ClassRanger, legacyObjectMissile)
 			tt.mutate(loaded)
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			ctx := &Context{ActorID: "player:alice"}
 			status, err := NewChoiHandler(world)(ctx, ResolvedCommand{})
 			if err != nil {
@@ -433,6 +443,7 @@ func TestChoiHandlerRejectsInvalidStates(t *testing.T) {
 func TestRmBlind2HandlerClearsBlindCostsMPAndBroadcasts(t *testing.T) {
 	loaded := rmBlind2World(t)
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	var broadcasts []roomBroadcastRecord
 	ctx := contextWithRoomBroadcast("player:alice", "session:alice", &broadcasts)
 
@@ -511,6 +522,7 @@ func TestRmBlind2HandlerRejectsInvalidStates(t *testing.T) {
 				tt.mutate(loaded)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			ctx := &Context{ActorID: "player:alice"}
 			status, err := NewRmBlind2Handler(world)(ctx, ResolvedCommand{Args: tt.args})
 			if err != nil {
@@ -587,6 +599,7 @@ func TestUtilityCombatSkillHandlersCanBeRegisteredByDispatcherAliases(t *testing
 				withAttackRolls(t, tt.rolls...)
 			}
 			world := state.NewWorld(tt.loaded(t))
+	defer world.Close()
 			dispatcher := utilityCombatSkillDispatcher(t, world)
 			ctx := &Context{ActorID: "player:alice"}
 			status, err := dispatcher.DispatchLine(ctx, tt.line)

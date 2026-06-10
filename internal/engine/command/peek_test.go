@@ -12,6 +12,7 @@ import (
 
 func TestPeekHandlerShowsMonsterInventory(t *testing.T) {
 	world := state.NewWorld(peekWorld(t, model.ClassThief))
+	defer world.Close()
 	dispatcher := peekDispatcher(t, world, fixedPeekRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -30,6 +31,7 @@ func TestPeekHandlerShowsMonsterInventory(t *testing.T) {
 
 func TestPeekHandlerShowsPlayerInventoryAfterMonsterSearch(t *testing.T) {
 	world := state.NewWorld(peekWorld(t, model.ClassThief))
+	defer world.Close()
 	dispatcher := peekDispatcher(t, world, fixedPeekRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -78,6 +80,7 @@ func TestPeekHandlerRejectsClassBlindMissingAndProtectedTargets(t *testing.T) {
 				tt.mutate(loaded)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			handler := NewPeekHandler(world, fixedPeekRoll(1))
 			ctx := &Context{ActorID: "player:alice"}
 			status, err := handler(ctx, ResolvedCommand{Args: compactArgs(tt.target)})
@@ -93,6 +96,7 @@ func TestPeekHandlerRejectsClassBlindMissingAndProtectedTargets(t *testing.T) {
 
 func TestPeekHandlerFailureDoesNotShowInventory(t *testing.T) {
 	world := state.NewWorld(peekWorld(t, model.ClassThief))
+	defer world.Close()
 	handler := NewPeekHandler(world, fixedPeekRoll(100))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -107,6 +111,7 @@ func TestPeekHandlerFailureDoesNotShowInventory(t *testing.T) {
 
 func TestPeekHandlerAppliesLegacyCooldownAfterTargetLookup(t *testing.T) {
 	world := state.NewWorld(peekWorld(t, model.ClassThief))
+	defer world.Close()
 	handler := NewPeekHandler(world, fixedPeekRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -134,6 +139,7 @@ func TestPeekHandlerNotifiesVictimAndRoomWhenCaughtLikeLegacy(t *testing.T) {
 		RoomID:      "room:peek",
 	})
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	type peekSession struct {
 		ID      string

@@ -23,6 +23,7 @@ func TestKickHandlerKicksMonsterAndRevealsActor(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := kickDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -59,6 +60,7 @@ func TestKickHandlerKicksMonsterAndRevealsActor(t *testing.T) {
 func TestKickHandlerReportsFailureWithoutDamage(t *testing.T) {
 	withAttackRolls(t, 100)
 	world := state.NewWorld(kickWorld(t, model.ClassBarbarian))
+	defer world.Close()
 	handler := NewKickHandler(world)
 
 	var broadcasts []roomBroadcastRecord
@@ -93,6 +95,7 @@ func TestKickHandlerRespectsCooldownBeforeReveal(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if err := world.SetCreatureCooldown("creature:alice", kickCooldownKey, time.Now().Unix(), 2); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
 	}
@@ -156,6 +159,7 @@ func TestKickHandlerRejectsInvalidInputs(t *testing.T) {
 				tt.mutate(loaded)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			handler := NewKickHandler(world)
 
 			ctx := &Context{ActorID: "player:alice"}
@@ -184,6 +188,7 @@ func TestKickHandlerRejectsCharmedPlayerLikeLegacy(t *testing.T) {
 	bob.Metadata.Tags = []string{"PCHAOS", "PCHARM", "charm:Alice"}
 	loaded.Creatures[bob.ID] = bob
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewKickHandler(world)(ctx, ResolvedCommand{Args: []string{"Bob"}})
@@ -214,6 +219,7 @@ func TestKickHandlerInvincibleWithBarbarianTrainingCanKick(t *testing.T) {
 	alice.Metadata.Tags = []string{"SBARBARIAN"}
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewKickHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}})
@@ -233,6 +239,7 @@ func TestKickHandlerFinalizesMonsterDeathWhenDamageKillsTarget(t *testing.T) {
 	goblin.Stats["hpMax"] = 1
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewKickHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}})
@@ -332,6 +339,7 @@ func TestKickHandlerDoesNotMutateLegacyProficiency(t *testing.T) {
 	loaded.Creatures[alice.ID] = alice
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := kickDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}

@@ -658,6 +658,7 @@ func TestMoveTrapLegacyAlarmRoomLoadsPermanentGuardAndStartsHostility(t *testing
 	}
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	world.SetDBRoot(root)
 	var broadcasts []roomBroadcastRecord
 	out := dispatchMoveLineWithMoveWorldAndBroadcast(t, world, "동", &broadcasts)

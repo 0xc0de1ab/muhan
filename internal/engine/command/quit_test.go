@@ -50,6 +50,7 @@ func TestQuitHandlerDispatchesLegacyQuitCommand(t *testing.T) {
 func TestQuitHandlerBlocksCombatUntilAttackCooldownPlusTwentyLikeLegacy(t *testing.T) {
 	withFakeMagicEffectTime(t, 1000)
 	world := state.NewWorld(lookWorld(t))
+	defer world.Close()
 	if _, err := world.AddEnemy("creature:guard", "creature:alice"); err != nil {
 		t.Fatalf("AddEnemy() error = %v", err)
 	}
@@ -73,6 +74,7 @@ func TestQuitHandlerBlocksCombatUntilAttackCooldownPlusTwentyLikeLegacy(t *testi
 func TestQuitHandlerAllowsCombatAfterAttackCooldownPlusTwentyLikeLegacy(t *testing.T) {
 	withFakeMagicEffectTime(t, 1022)
 	world := state.NewWorld(lookWorld(t))
+	defer world.Close()
 	if _, err := world.AddEnemy("creature:guard", "creature:alice"); err != nil {
 		t.Fatalf("AddEnemy() error = %v", err)
 	}
@@ -99,6 +101,7 @@ func TestQuitHandlerCleansUpLowLevelNonInvinciblePlayerLikeLegacy(t *testing.T) 
 	alice.Stats = map[string]int{"class": model.ClassFighter, "level": 5}
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	sink := &recordingQuitLowLevelSink{}
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -133,6 +136,7 @@ func TestQuitHandlerKeepsHighLevelOrInvinciblePlayerLikeLegacy(t *testing.T) {
 			alice.Stats = map[string]int{"class": tt.class, "level": tt.level}
 			loaded.Creatures[alice.ID] = alice
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			sink := &recordingQuitLowLevelSink{}
 
 			ctx := &Context{ActorID: "player:alice"}

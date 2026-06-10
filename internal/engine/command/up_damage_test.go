@@ -13,6 +13,7 @@ import (
 
 func TestUpDamageHandlerSuccessBoostsBarbarianStartsCooldownAndExpiration(t *testing.T) {
 	world := state.NewWorld(upDamageWorld(t, model.ClassBarbarian, 50))
+	defer world.Close()
 	handler := NewUpDamageHandler(world, fixedRoll(1))
 	var broadcasts []roomBroadcastRecord
 
@@ -69,6 +70,7 @@ func TestUpDamageHandlerSuccessBoostsInvincibleWithTraining(t *testing.T) {
 	alice.Metadata.Tags = []string{"SBARBARIAN"}
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewUpDamageHandler(world, fixedRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -148,6 +150,7 @@ func TestUpDamageHandlerRejectsInvalidStates(t *testing.T) {
 			alice.Metadata.Tags = tt.tags
 			loaded.Creatures[alice.ID] = alice
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			if tt.setup != nil {
 				tt.setup(world)
 			}
@@ -167,6 +170,7 @@ func TestUpDamageHandlerRejectsInvalidStates(t *testing.T) {
 
 func TestUpDamageHandlerFailureSetsShortCooldownWithoutBoost(t *testing.T) {
 	world := state.NewWorld(upDamageWorld(t, model.ClassBarbarian, 50))
+	defer world.Close()
 	handler := NewUpDamageHandler(world, fixedRoll(100))
 	var broadcasts []roomBroadcastRecord
 
@@ -205,6 +209,7 @@ func TestUpDamageHandlerCanBeRegisteredByDispatcherAliases(t *testing.T) {
 	for _, line := range []string{"잠력격발", "up_dmg"} {
 		t.Run(line, func(t *testing.T) {
 			world := state.NewWorld(upDamageWorld(t, model.ClassBarbarian, 50))
+	defer world.Close()
 			dispatcher := Dispatcher{
 				Registry: mustRegistry(t, []commandspec.CommandSpec{
 					{Name: "잠력격발", Number: 99, Handler: "up_dmg"},

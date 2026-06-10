@@ -22,6 +22,7 @@ func TestCircleHandlerBefuddlesMonsterAndRevealsActor(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := circleDispatcher(t, world)
 
 	var broadcasts []roomBroadcastRecord
@@ -69,6 +70,7 @@ func TestCircleHandlerBefuddlesMonsterAndRevealsActor(t *testing.T) {
 func TestCircleHandlerReportsFailureWithoutBefuddle(t *testing.T) {
 	withAttackRolls(t, 100)
 	world := state.NewWorld(kickWorld(t, model.ClassFighter))
+	defer world.Close()
 	handler := NewCircleHandler(world)
 
 	var broadcasts []roomBroadcastRecord
@@ -104,6 +106,7 @@ func TestCircleHandlerRespectsAttackCooldownBeforeReveal(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if err := world.SetCreatureCooldown("creature:alice", "attack", time.Now().Unix(), 2); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
 	}
@@ -163,6 +166,7 @@ func TestCircleHandlerRejectsInvalidInputs(t *testing.T) {
 			alice.Metadata.Tags = tt.tags
 			loaded.Creatures[alice.ID] = alice
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			room, _ := world.Room("room:arena")
 			if tt.mutate != nil {
 				tt.mutate(room, world)
@@ -190,6 +194,7 @@ func TestCircleHandlerSetsPlayerBefuddleCooldownWithoutTagsLikeLegacy(t *testing
 	bob.Metadata.Tags = []string{"PCHAOS"}
 	loaded.Creatures[bob.ID] = bob
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewCircleHandler(world)(ctx, ResolvedCommand{Args: []string{"bob"}})
@@ -226,6 +231,7 @@ func TestCircleHandlerRejectsCharmedPlayerLikeLegacy(t *testing.T) {
 	bob.Metadata.Tags = []string{"PCHAOS", "PCHARM", "charm:Alice"}
 	loaded.Creatures[bob.ID] = bob
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewCircleHandler(world)(ctx, ResolvedCommand{Args: []string{"Bob"}})
@@ -263,6 +269,7 @@ func TestCircleHandlerUsesLegacyByteLengthForPlayerTarget(t *testing.T) {
 	bob.Metadata.Tags = []string{"PCHAOS"}
 	loaded.Creatures[bob.ID] = bob
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewCircleHandler(world)(ctx, ResolvedCommand{Args: []string{"보브"}})
@@ -288,6 +295,7 @@ func TestCircleHandlerInvincibleWithTrainingCanCircle(t *testing.T) {
 	alice.Metadata.Tags = []string{"SFIGHTER"}
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewCircleHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}})

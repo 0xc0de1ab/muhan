@@ -14,6 +14,7 @@ import (
 func TestEquipmentMutationHandlers(t *testing.T) {
 	loaded := equipmentWorld(t)
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := Dispatcher{
 		Registry: mustRegistry(t, []commandspec.CommandSpec{
 			{Name: "입어", Number: 9, Handler: "wear"},
@@ -82,6 +83,7 @@ func TestEquipHandlersClearHiddenAfterArgumentLikeLegacy(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			world := state.NewWorld(equipmentWorld(t))
+	defer world.Close()
 			if tt.setup != nil {
 				tt.setup(t, world)
 			}
@@ -131,6 +133,7 @@ func TestEquipHandlersClearHiddenAfterArgumentLikeLegacy(t *testing.T) {
 
 func TestReadyRejectsNonWeaponAndWearRejectsWeapon(t *testing.T) {
 	world := state.NewWorld(equipmentWorld(t))
+	defer world.Close()
 	dispatcher := Dispatcher{
 		Registry: mustRegistry(t, []commandspec.CommandSpec{
 			{Name: "입어", Number: 9, Handler: "wear"},
@@ -148,6 +151,7 @@ func TestReadyRejectsNonWeaponAndWearRejectsWeapon(t *testing.T) {
 
 func TestEquipHandlersUseLegacyMissingArgumentNewlines(t *testing.T) {
 	world := state.NewWorld(equipmentWorld(t))
+	defer world.Close()
 	dispatcher := fullEquipDispatcher(t, world)
 
 	assertEquipDispatchExact(t, dispatcher, "입어", "뭘 입으실려구요?\n")
@@ -162,6 +166,7 @@ func TestWearAllNoEligibleObjectsUsesLegacyNoNewlineMessage(t *testing.T) {
 	creature.Inventory.ObjectIDs = []model.ObjectInstanceID{"object:sword", "object:charm"}
 	loaded.Creatures[creature.ID] = creature
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := fullEquipDispatcher(t, world)
 
 	assertEquipDispatchExact(t, dispatcher, "모두 입어", "당신은 입을 물건을 가지고 있지 않습니다.")
@@ -172,6 +177,7 @@ func TestWearAllNoEligibleObjectsUsesLegacyNoNewlineMessage(t *testing.T) {
 func TestReadyRejectsObjectIDTargetLikeLegacyFindObj(t *testing.T) {
 	loaded := equipmentWorld(t)
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := fullEquipDispatcher(t, world)
 
 	assertEquipDispatchExact(t, dispatcher, "object:sword 무장", "당신은 그런 물건을 가지고 있지 않습니다.")
@@ -199,6 +205,7 @@ func TestReadyUsesLegacyPrefixOrderInsteadOfExactFirst(t *testing.T) {
 	alice.Inventory.ObjectIDs = []model.ObjectInstanceID{"object:sword", "object:sword-exact", "object:armor", "object:charm"}
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := fullEquipDispatcher(t, world)
 
 	assertEquipDispatchExact(t, dispatcher, "목검 무장", "당신은 목검 조각으로 전투태세를 취합니다.")
@@ -212,6 +219,7 @@ func TestReadyFindObjVisibilityUsesPDINVI(t *testing.T) {
 	sword.Metadata.Tags = []string{"OINVIS"}
 	loaded.Objects[sword.ID] = sword
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := fullEquipDispatcher(t, world)
 
 	assertEquipDispatchExact(t, dispatcher, "목검 무장", "당신은 그런 물건을 가지고 있지 않습니다.")
@@ -225,6 +233,7 @@ func TestReadyFindObjVisibilityUsesPDINVI(t *testing.T) {
 	creature.Metadata.Tags = []string{"PDINVI"}
 	loaded.Creatures[creature.ID] = creature
 	world = state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher = fullEquipDispatcher(t, world)
 
 	assertEquipDispatchExact(t, dispatcher, "목검 무장", "당신은 목검으로 전투태세를 취합니다.")
@@ -242,6 +251,7 @@ func TestRemoveFindObjVisibilityUsesPDINVI(t *testing.T) {
 	armor.Metadata.Tags = []string{"OINVIS"}
 	loaded.Objects[armor.ID] = armor
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := Dispatcher{
 		Registry: mustRegistry(t, []commandspec.CommandSpec{{Name: "벗어", Number: 10, Handler: "remove_obj"}}),
 		Handlers: map[string]Handler{"remove_obj": NewRemoveObjectHandler(world)},
@@ -261,6 +271,7 @@ func TestRemoveFindObjVisibilityUsesPDINVI(t *testing.T) {
 	armor.Metadata.Tags = []string{"OINVIS"}
 	loaded.Objects[armor.ID] = armor
 	world = state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher = Dispatcher{
 		Registry: mustRegistry(t, []commandspec.CommandSpec{{Name: "벗어", Number: 10, Handler: "remove_obj"}}),
 		Handlers: map[string]Handler{"remove_obj": NewRemoveObjectHandler(world)},
@@ -296,6 +307,7 @@ func TestWearHandlerUsesLegacySlotSpecificMessages(t *testing.T) {
 			loaded := equipmentWorld(t)
 			addEquipTestObject(t, loaded, tt.objectID, tt.display, tt.flag, "inventory")
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			dispatcher := equipOnlyDispatcher(t, world)
 
 			assertEquipDispatchContains(t, dispatcher, tt.line, tt.want)
@@ -310,6 +322,7 @@ func TestWearHandlerUsesLegacyOccupiedAndFullSlotMessages(t *testing.T) {
 		addEquipTestObject(t, loaded, "object:old-helmet", "헌투구", legacyWearHead, "head")
 		addEquipTestObject(t, loaded, "object:new-helmet", "새투구", legacyWearHead, "inventory")
 		world := state.NewWorld(loaded)
+	defer world.Close()
 		dispatcher := equipOnlyDispatcher(t, world)
 
 		assertEquipDispatchContains(t, dispatcher, "새투구 입어", "당신은 이미 헌투구를 머리에 쓰고 있습니다.")
@@ -323,6 +336,7 @@ func TestWearHandlerUsesLegacyOccupiedAndFullSlotMessages(t *testing.T) {
 		addEquipTestObject(t, loaded, "object:neck-2", "둘목걸이", legacyWearNeck, "neck2")
 		addEquipTestObject(t, loaded, "object:neck-new", "새목걸이", legacyWearNeck, "inventory")
 		world := state.NewWorld(loaded)
+	defer world.Close()
 		dispatcher := equipOnlyDispatcher(t, world)
 
 		assertEquipDispatchContains(t, dispatcher, "새목걸이 입어", "더이상 목에 걸 수 없습니다.")
@@ -336,6 +350,7 @@ func TestWearHandlerUsesLegacyOccupiedAndFullSlotMessages(t *testing.T) {
 		}
 		addEquipTestObject(t, loaded, "object:ring-new", "새반지", legacyWearFinger, "inventory")
 		world := state.NewWorld(loaded)
+	defer world.Close()
 		dispatcher := equipOnlyDispatcher(t, world)
 
 		assertEquipDispatchContains(t, dispatcher, "새반지 입어", "더이상 손가락에 낄 수 없습니다.")
@@ -367,6 +382,7 @@ func TestEquipHandlersPrintLegacyUseOutput(t *testing.T) {
 	}, "inventory")
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := Dispatcher{
 		Registry: mustRegistry(t, []commandspec.CommandSpec{
 			{Name: "입어", Number: 9, Handler: "wear"},
@@ -402,6 +418,7 @@ func TestWearAllPrintsLegacyUseOutput(t *testing.T) {
 		"useOutput": "소매가 환하게 빛난다.",
 	}, "inventory")
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := equipOnlyDispatcher(t, world)
 
 	assertEquipDispatchContains(t, dispatcher, "모두 입어",
@@ -536,6 +553,7 @@ func TestEquipHandlersRejectLegacyWearReadyHoldRestrictions(t *testing.T) {
 			addEquipTestObjectWithProperties(t, loaded, tt.objectID, tt.display, tt.properties, "inventory")
 			setEquipCreatureStatsAndTags(t, loaded, tt.stats, tt.tags)
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			dispatcher := fullEquipDispatcher(t, world)
 
 			assertEquipDispatchExact(t, dispatcher, tt.line, tt.want)
@@ -558,6 +576,7 @@ func TestEquipAlignmentRestrictionDropsObjectToRoom(t *testing.T) {
 		"type": "1", "wearFlag": "20", "goodOnly": "1",
 	}, "inventory")
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := fullEquipDispatcher(t, world)
 
 	assertEquipDispatchExact(t, dispatcher, "성검 무장", "성검이 당신의 몸에서 튕겨져 나가 바닥에 떨어집니다.")
@@ -575,6 +594,7 @@ func TestRemoveRejectsLegacyPropertyCursedEquipment(t *testing.T) {
 	armor.Properties = map[string]string{"OCURSE": "1"}
 	loaded.Objects[armor.ID] = armor
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewRemoveObjectHandler(world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -599,6 +619,7 @@ func TestRemoveAllSkipsLegacyPropertyCursedEquipment(t *testing.T) {
 	armor.Properties = map[string]string{"ocurse": "true"}
 	loaded.Objects[armor.ID] = armor
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewRemoveObjectHandler(world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -619,6 +640,7 @@ func TestRemoveObjectClearsOnlyWornFlagFromHeldItemLikeLegacy(t *testing.T) {
 		"wearFlag": strconv.Itoa(legacyWearHeld),
 	}, "inventory")
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := fullEquipDispatcher(t, world)
 
 	assertEquipDispatchExact(t, dispatcher, "단검 쥐어", "당신은 단검을 쥐었습니다.")
@@ -638,6 +660,7 @@ func TestRemoveAllClearsWornAndHeldFlagsLikeLegacy(t *testing.T) {
 		"wearFlag": strconv.Itoa(legacyWearHeld),
 	}, "inventory")
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := fullEquipDispatcher(t, world)
 
 	assertEquipDispatchExact(t, dispatcher, "단검 쥐어", "당신은 단검을 쥐었습니다.")
@@ -672,6 +695,7 @@ func TestRemoveAllUsesLegacyReadySlotOrder(t *testing.T) {
 		addEquipTestObject(t, loaded, object.id, object.display, object.flag, object.slot)
 	}
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewRemoveObjectHandler(world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -693,6 +717,7 @@ func TestRemoveUsesLegacyReadySlotOrderForDuplicateNames(t *testing.T) {
 	addEquipTestObject(t, loaded, "object:second-ring", "동반지", legacyWearFinger, "finger2")
 	addEquipTestObject(t, loaded, "object:first-ring", "동반지", legacyWearFinger, "finger1")
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewRemoveObjectHandler(world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -732,6 +757,7 @@ func TestEquipmentHandlerUsesLegacyDisplaySlotOrder(t *testing.T) {
 		addEquipTestObject(t, loaded, object.id, object.display, object.flag, object.slot)
 	}
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	creature, ok := world.Creature("creature:alice")
 	if !ok {
 		t.Fatal("missing creature")
@@ -762,6 +788,7 @@ func TestEquipmentHandlerUsesLegacyBlindMessage(t *testing.T) {
 	creature.Metadata.Tags = append(creature.Metadata.Tags, "PBLIND")
 	loaded.Creatures[creature.ID] = creature
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := Dispatcher{
 		Registry: mustRegistry(t, []commandspec.CommandSpec{
 			{Name: "장비", Number: 11, Handler: "equipment"},
@@ -778,6 +805,7 @@ func TestEquipmentHandlerUsesLegacyANSIColors(t *testing.T) {
 	loaded := equipmentWorld(t)
 	addEquipTestObject(t, loaded, "object:ansi-armor", "갑옷", legacyWearBody, "body")
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewEquipmentHandler(world)
 
 	ctx := &Context{

@@ -14,6 +14,7 @@ import (
 
 func TestShopListHandlerRendersNextRoomStock(t *testing.T) {
 	world := state.NewWorld(shopWorld(t, true))
+	defer world.Close()
 	dispatcher := Dispatcher{
 		Registry: mustRegistry(t, []commandspec.CommandSpec{
 			{Name: "품목", Number: 41, Handler: "list"},
@@ -50,6 +51,7 @@ func TestShopListHandlerRendersNextRoomStock(t *testing.T) {
 
 func TestShopListHandlerIgnoresANSIForLegacyPlainText(t *testing.T) {
 	world := state.NewWorld(shopWorld(t, true))
+	defer world.Close()
 	handler := NewShopListHandler(world)
 	ctx := &Context{
 		ActorID: "player:alice",
@@ -76,6 +78,7 @@ func TestShopListHandlerIgnoresANSIForLegacyPlainText(t *testing.T) {
 
 func TestShopBuyHandlerBuysStockIntoInventory(t *testing.T) {
 	world := state.NewWorld(shopBuyWorld(t, true, 60000))
+	defer world.Close()
 	dispatcher := Dispatcher{
 		Registry: mustRegistry(t, []commandspec.CommandSpec{
 			{Name: "사", Number: 42, Handler: "buy"},
@@ -88,6 +91,7 @@ func TestShopBuyHandlerBuysStockIntoInventory(t *testing.T) {
 	for _, line := range []string{"목검 사", "사 기념패"} {
 		t.Run(line, func(t *testing.T) {
 			world := state.NewWorld(shopBuyWorld(t, true, 60000))
+	defer world.Close()
 			dispatcher.Handlers["buy"] = NewShopBuyHandler(world)
 			ctx := &Context{ActorID: "player:alice"}
 			status, err := dispatcher.DispatchLine(ctx, line)
@@ -139,6 +143,7 @@ func TestShopBuyHandlerBuysStockIntoInventory(t *testing.T) {
 
 func TestShopBuyHandlerDebitsGold(t *testing.T) {
 	world := state.NewWorld(shopBuyWorld(t, true, 60000))
+	defer world.Close()
 	handler := NewShopBuyHandler(world)
 	ctx := shopSellTestContext()
 
@@ -163,6 +168,7 @@ func TestShopBuyHandlerDebitsGold(t *testing.T) {
 
 func TestShopBuyHandlerClearsHiddenAndBroadcastsLikeLegacy(t *testing.T) {
 	world := state.NewWorld(shopBuyWorld(t, true, 60000))
+	defer world.Close()
 	if _, err := world.UpdateCreatureTags("creature:alice", []string{"hidden", "PHIDDN"}, nil); err != nil {
 		t.Fatalf("UpdateCreatureTags() error = %v", err)
 	}
@@ -200,6 +206,7 @@ func TestShopBuyHandlerClearsHiddenAndBroadcastsLikeLegacy(t *testing.T) {
 func TestShopBuyHandlerQueuesPlayerSave(t *testing.T) {
 	root := t.TempDir()
 	world := state.NewWorld(shopBuyWorld(t, true, 60000))
+	defer world.Close()
 	world.SetDBRoot(root)
 	handler := NewShopBuyHandler(world)
 	ctx := shopSellTestContext()
@@ -231,6 +238,7 @@ func TestShopBuyHandlerQueuesPlayerSave(t *testing.T) {
 func TestShopHandlersUseOnlyFirstArgumentLikeLegacy(t *testing.T) {
 	t.Run("buy", func(t *testing.T) {
 		world := state.NewWorld(shopBuyWorld(t, true, 60000))
+	defer world.Close()
 		handler := NewShopBuyHandler(world)
 		ctx := shopSellTestContext()
 
@@ -252,6 +260,7 @@ func TestShopHandlersUseOnlyFirstArgumentLikeLegacy(t *testing.T) {
 
 	t.Run("sell", func(t *testing.T) {
 		world := state.NewWorld(shopSellWorld(t, "pawnShop", "50000", 1000))
+	defer world.Close()
 		handler := NewShopSellHandler(world)
 		ctx := &Context{ActorID: "player:alice", Values: map[string]any{ContextShopSellBonusKey: false}}
 
@@ -269,6 +278,7 @@ func TestShopHandlersUseOnlyFirstArgumentLikeLegacy(t *testing.T) {
 
 	t.Run("value", func(t *testing.T) {
 		world := state.NewWorld(shopValueWorld(t, "pawnShop", "50000"))
+	defer world.Close()
 		handler := NewShopValueHandler(world)
 		ctx := &Context{ActorID: "player:alice"}
 
@@ -318,6 +328,7 @@ func TestShopBuyHandlerRejectsInvalidPurchases(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			world := state.NewWorld(tt.world)
+	defer world.Close()
 			handler := NewShopBuyHandler(world)
 			ctx := shopSellTestContext()
 			status, err := handler(ctx, tt.cmd)
@@ -347,6 +358,7 @@ func TestShopBuyHandlerRejectsTooHeavyPurchase(t *testing.T) {
 	proto.Properties = map[string]string{"value": "50000", "weight": "25"}
 	loaded.ObjectPrototypes[proto.ID] = proto
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewShopBuyHandler(world)
 	ctx := shopSellTestContext()
 
@@ -370,6 +382,7 @@ func TestShopBuyHandlerRejectsTooManyHeldItems(t *testing.T) {
 	loaded := shopBuyWorld(t, true, 60000)
 	shopTestFillInventoryAndEquip(t, loaded, 200)
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewShopBuyHandler(world)
 	ctx := shopSellTestContext()
 
@@ -393,6 +406,7 @@ func TestShopSellHandlerSellsInventoryAtPawnShop(t *testing.T) {
 	for _, line := range []string{"목검 팔아", "팔아 목검"} {
 		t.Run(line, func(t *testing.T) {
 			world := state.NewWorld(shopSellWorld(t, "pawnShop", "50000", 1000))
+	defer world.Close()
 			dispatcher := Dispatcher{
 				Registry: mustRegistry(t, []commandspec.CommandSpec{
 					{Name: "팔아", Number: 43, Handler: "sell"},
@@ -440,6 +454,7 @@ func TestShopSellHandlerSellsInventoryAtPawnShop(t *testing.T) {
 
 func TestShopSellHandlerCapsPawnShopSalePrice(t *testing.T) {
 	world := state.NewWorld(shopSellWorld(t, "pawnShop", "500000", 0))
+	defer world.Close()
 	handler := NewShopSellHandler(world)
 	ctx := shopSellTestContext()
 
@@ -464,6 +479,7 @@ func TestShopSellHandlerCapsPawnShopSalePrice(t *testing.T) {
 
 func TestShopSellHandlerAppliesLegacyBonusPayout(t *testing.T) {
 	world := state.NewWorld(shopSellWorld(t, "pawnShop", "50000", 0))
+	defer world.Close()
 	handler := NewShopSellHandler(world)
 	var broadcasts []roomBroadcastRecord
 	ctx := contextWithRoomBroadcast("player:alice", "session:alice", &broadcasts)
@@ -496,6 +512,7 @@ func TestShopSellHandlerAppliesLegacyBonusPayout(t *testing.T) {
 func TestShopSellHandlerQueuesPlayerSave(t *testing.T) {
 	root := t.TempDir()
 	world := state.NewWorld(shopSellWorld(t, "pawnShop", "50000", 1000))
+	defer world.Close()
 	world.SetDBRoot(root)
 	handler := NewShopSellHandler(world)
 	ctx := shopSellTestContext()
@@ -526,6 +543,7 @@ func TestShopSellHandlerQueuesPlayerSave(t *testing.T) {
 
 func TestShopSellHandlerRejectsObjectIDTargetLikeLegacyFindObj(t *testing.T) {
 	world := state.NewWorld(shopSellWorld(t, "pawnShop", "50000", 1000))
+	defer world.Close()
 	handler := NewShopSellHandler(world)
 	ctx := &Context{ActorID: "player:alice"}
 
@@ -565,6 +583,7 @@ func TestShopSellHandlerUsesLegacyPrefixOrderInsteadOfExactFirst(t *testing.T) {
 	alice.Inventory.ObjectIDs = []model.ObjectInstanceID{"object:sword", "object:sword-exact"}
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewShopSellHandler(world)
 	ctx := &Context{ActorID: "player:alice", Values: map[string]any{ContextShopSellBonusKey: false}}
 
@@ -596,6 +615,7 @@ func TestShopSellHandlerFindObjVisibilityUsesPDINVILikeLegacy(t *testing.T) {
 	object.Properties = map[string]string{"OINVIS": "1"}
 	loaded.Objects[object.ID] = object
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewShopSellHandler(world)
 	ctx := &Context{ActorID: "player:alice"}
 
@@ -615,6 +635,7 @@ func TestShopSellHandlerFindObjVisibilityUsesPDINVILikeLegacy(t *testing.T) {
 	alice.Metadata.Tags = []string{"PDINVI"}
 	loaded.Creatures[alice.ID] = alice
 	world = state.NewWorld(loaded)
+	defer world.Close()
 	handler = NewShopSellHandler(world)
 	ctx = &Context{ActorID: "player:alice", Values: map[string]any{ContextShopSellBonusKey: false}}
 
@@ -657,6 +678,7 @@ func TestShopSellHandlerRejectsUnsupportedRoomsAndMissingTargets(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			world := state.NewWorld(shopSellWorld(t, tt.room, "50000", 1000))
+	defer world.Close()
 			handler := NewShopSellHandler(world)
 			ctx := &Context{ActorID: "player:alice"}
 			status, err := handler(ctx, tt.cmd)
@@ -744,6 +766,7 @@ func TestShopSellHandlerRejectsLegacyUnsupportedObjects(t *testing.T) {
 			loaded := shopSellWorld(t, "pawnShop", "50000", 1000)
 			tt.mutate(loaded)
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			handler := NewShopSellHandler(world)
 			ctx := &Context{ActorID: "player:alice"}
 			status, err := handler(ctx, ResolvedCommand{Args: []string{"목검"}, Values: []int64{1}})
@@ -772,6 +795,7 @@ func TestShopSellHandlerRejectsLegacyUnsupportedObjects(t *testing.T) {
 
 func TestRenderShopListUsesLegacyPlainTextRows(t *testing.T) {
 	world := state.NewWorld(shopWorld(t, true))
+	defer world.Close()
 	stockRoom, ok := world.Room("room:01072")
 	if !ok {
 		t.Fatal("missing stock room")
@@ -796,6 +820,7 @@ func TestRenderShopListUsesLegacyPlainTextRows(t *testing.T) {
 
 func TestShopValueHandlerValuesInventoryAtPawnShop(t *testing.T) {
 	world := state.NewWorld(shopValueWorld(t, "pawnShop", "50000"))
+	defer world.Close()
 	dispatcher := Dispatcher{
 		Registry: mustRegistry(t, []commandspec.CommandSpec{
 			{Name: "가치", Number: 44, Handler: "value"},
@@ -834,6 +859,7 @@ func TestShopValueHandlerValuesInventoryAtPawnShop(t *testing.T) {
 
 func TestShopValueHandlerCapsPawnShopValue(t *testing.T) {
 	world := state.NewWorld(shopValueWorld(t, "pawnShop", "500000"))
+	defer world.Close()
 	handler := NewShopValueHandler(world)
 	ctx := &Context{ActorID: "player:alice"}
 
@@ -851,6 +877,7 @@ func TestShopValueHandlerCapsPawnShopValue(t *testing.T) {
 
 func TestShopValueHandlerValuesInventoryAtRepairShop(t *testing.T) {
 	world := state.NewWorld(shopValueWorld(t, "repair", "50000"))
+	defer world.Close()
 	handler := NewShopValueHandler(world)
 	var broadcasts []roomBroadcastRecord
 	ctx := contextWithRoomBroadcast("player:alice", "session:alice", &broadcasts)
@@ -877,6 +904,7 @@ func TestShopValueHandlerValuesInventoryAtRepairShop(t *testing.T) {
 
 func TestShopValueHandlerRejectsUnsupportedRoomsAndMissingTargets(t *testing.T) {
 	world := state.NewWorld(shopValueWorld(t, "", "50000"))
+	defer world.Close()
 	handler := NewShopValueHandler(world)
 	ctx := &Context{ActorID: "player:alice"}
 
@@ -892,6 +920,7 @@ func TestShopValueHandlerRejectsUnsupportedRoomsAndMissingTargets(t *testing.T) 
 	}
 
 	world = state.NewWorld(shopValueWorld(t, "pawnShop", "50000"))
+	defer world.Close()
 	handler = NewShopValueHandler(world)
 	ctx = &Context{ActorID: "player:alice"}
 	status, err = handler(ctx, ResolvedCommand{})
@@ -920,6 +949,7 @@ func TestShopValueHandlerRejectsUnsupportedRoomsAndMissingTargets(t *testing.T) 
 
 func TestShopValueHandlerClearsHiddenBeforeFindObjLikeLegacy(t *testing.T) {
 	world := state.NewWorld(shopValueWorld(t, "pawnShop", "50000"))
+	defer world.Close()
 	if _, err := world.UpdateCreatureTags("creature:alice", []string{"hidden", "PHIDDN"}, nil); err != nil {
 		t.Fatalf("UpdateCreatureTags() error = %v", err)
 	}
@@ -968,6 +998,7 @@ func TestFormatThousands(t *testing.T) {
 
 func TestShopListHandlerRejectsNonShopRoom(t *testing.T) {
 	world := state.NewWorld(shopWorld(t, false))
+	defer world.Close()
 	handler := NewShopListHandler(world)
 	ctx := &Context{ActorID: "player:alice"}
 

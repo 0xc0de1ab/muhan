@@ -12,6 +12,7 @@ import (
 
 func TestHasteHandlerSuccessSetsStatusDexterityCooldownAndExpiration(t *testing.T) {
 	world := state.NewWorld(hasteWorld(t, model.ClassRanger))
+	defer world.Close()
 	handler := NewHasteHandler(world, fixedHasteRoll(1))
 
 	var broadcasts []roomBroadcastRecord
@@ -97,6 +98,7 @@ func TestHasteHandlerRejectsInvalidStates(t *testing.T) {
 				tt.mutate(loaded)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			if tt.setup != nil {
 				tt.setup(world)
 			}
@@ -120,6 +122,7 @@ func TestHasteHandlerInvincibleWithRangerTrainingCanUse(t *testing.T) {
 	alice.Metadata.Tags = []string{"SRANGER"}
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewHasteHandler(world, fixedHasteRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -134,6 +137,7 @@ func TestHasteHandlerInvincibleWithRangerTrainingCanUse(t *testing.T) {
 
 func TestHasteHandlerFailureStartsShortCooldownWithoutStatus(t *testing.T) {
 	world := state.NewWorld(hasteWorld(t, model.ClassRanger))
+	defer world.Close()
 	handler := NewHasteHandler(world, fixedHasteRoll(100))
 
 	var broadcasts []roomBroadcastRecord

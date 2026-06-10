@@ -95,6 +95,7 @@ func TestRepairHandlerRejectsInvalidConditions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			world := state.NewWorld(repairTestWorld(t, tt.repairRoom, tt.props))
+	defer world.Close()
 			ctx := &Context{ActorID: "Alice"}
 			status, err := NewRepairHandler(world, repairTestRoll)(ctx, ResolvedCommand{Args: tt.args})
 			if err != nil {
@@ -109,6 +110,7 @@ func TestRepairHandlerRejectsInvalidConditions(t *testing.T) {
 
 func TestRepairHandlerRejectsObjectIDTargetLikeLegacyFindObj(t *testing.T) {
 	world := state.NewWorld(repairTestWorld(t, true, repairWeaponProps()))
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewRepairHandler(world, repairTestRoll)(ctx, ResolvedCommand{Args: []string{"object:sword"}})
@@ -175,6 +177,7 @@ func TestRepairHandlerUsesLegacyPrefixOrderInsteadOfExactFirst(t *testing.T) {
 	alice.Inventory.ObjectIDs = []model.ObjectInstanceID{"object:sword", "object:sword-exact"}
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewRepairHandler(world, repairTestRoll)(ctx, ResolvedCommand{Args: []string{"목검"}})
@@ -196,6 +199,7 @@ func TestRepairHandlerUsesLegacyPrefixOrderInsteadOfExactFirst(t *testing.T) {
 
 func TestRepairHandlerUsesOnlyFirstArgumentLikeLegacy(t *testing.T) {
 	world := state.NewWorld(repairTestWorld(t, true, repairWeaponProps()))
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewRepairHandler(world, repairTestRoll)(ctx, ResolvedCommand{Args: []string{"목검", "무시"}})
@@ -215,6 +219,7 @@ func TestRepairHandlerFindObjVisibilityUsesPDINVILikeLegacy(t *testing.T) {
 	props := repairWeaponProps()
 	props["OINVIS"] = "1"
 	world := state.NewWorld(repairTestWorld(t, true, props))
+	defer world.Close()
 	ctx := &Context{ActorID: "Alice"}
 
 	status, err := NewRepairHandler(world, repairTestRoll)(ctx, ResolvedCommand{Args: []string{"목검"}})
@@ -230,6 +235,7 @@ func TestRepairHandlerFindObjVisibilityUsesPDINVILikeLegacy(t *testing.T) {
 	alice.Metadata.Tags = []string{"PDINVI"}
 	loaded.Creatures[alice.ID] = alice
 	world = state.NewWorld(loaded)
+	defer world.Close()
 	ctx = &Context{ActorID: "Alice"}
 
 	status, err = NewRepairHandler(world, repairTestRoll)(ctx, ResolvedCommand{Args: []string{"목검"}})
@@ -370,6 +376,7 @@ func TestRepairHandlerUsesLegacyLowercaseWearflagForBodyArmorStrip(t *testing.T)
 
 func TestRepairHandlerBroadcastsPaymentAndBreakage(t *testing.T) {
 	world := state.NewWorld(repairTestWorld(t, true, repairWeaponProps()))
+	defer world.Close()
 	var broadcasts []roomBroadcastRecord
 	ctx := contextWithRoomBroadcast("Alice", "session:alice", &broadcasts)
 
@@ -395,6 +402,7 @@ func TestRepairHandlerBroadcastsPaymentAndBreakage(t *testing.T) {
 
 func TestRepairHandlerIgnoresBroadcastFailuresLikeLegacy(t *testing.T) {
 	world := state.NewWorld(repairTestWorld(t, true, repairWeaponProps()))
+	defer world.Close()
 	ctx := &Context{
 		ActorID:   "Alice",
 		SessionID: "session:alice",

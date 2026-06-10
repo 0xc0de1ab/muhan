@@ -23,6 +23,7 @@ func TestBackstabHandlerBackstabsMonsterAndRevealsActor(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := backstabDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -59,6 +60,7 @@ func TestBackstabHandlerBackstabsMonsterAndRevealsActor(t *testing.T) {
 
 func TestBackstabHandlerFailsWhenActorIsNotHidden(t *testing.T) {
 	world := state.NewWorld(backstabWorld(t, model.ClassThief))
+	defer world.Close()
 	handler := NewBackstabHandler(world)
 
 	var broadcasts []roomBroadcastRecord
@@ -88,6 +90,7 @@ func TestBackstabHandlerRejectsEnemyMonsterBeforeRevealLikeLegacy(t *testing.T) 
 	player.Metadata.Tags = []string{"hidden", "invisible"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if _, err := world.AddEnemy("creature:goblin-1", "creature:alice"); err != nil {
 		t.Fatalf("AddEnemy() error = %v", err)
 	}
@@ -120,6 +123,7 @@ func TestBackstabHandlerRejectsWhenTargetCharmListContainsCharmedActorLikeLegacy
 	bob.Metadata.Tags = []string{"PCHAOS", "charm:Alice"}
 	loaded.Creatures[bob.ID] = bob
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewBackstabHandler(world)(ctx, ResolvedCommand{Args: []string{"Bob"}})
@@ -152,6 +156,7 @@ func TestBackstabHandlerRejectsActorsOwnCharmedTargetLikeLegacy(t *testing.T) {
 	alicePlayer.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[alicePlayer.ID] = alicePlayer
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewBackstabHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}})
@@ -246,6 +251,7 @@ func TestBackstabHandlerRejectsInvalidInputs(t *testing.T) {
 				tt.mutate(loaded)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			handler := NewBackstabHandler(world)
 
 			ctx := &Context{ActorID: "player:alice"}
@@ -267,6 +273,7 @@ func TestBackstabHandlerInvincibleWithTrainingUsesAssassinDamage(t *testing.T) {
 	alice.Metadata.Tags = []string{"hidden", "SASSASSIN"}
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewBackstabHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}})
@@ -285,6 +292,7 @@ func TestBackstabHandlerCapsDamageForCaretakerClassTarget(t *testing.T) {
 	alice.Metadata.Tags = []string{"hidden"}
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewBackstabHandler(world)(ctx, ResolvedCommand{Args: []string{"관리자"}})

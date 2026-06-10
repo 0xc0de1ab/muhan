@@ -996,6 +996,16 @@ func (w *World) FlushSaveQueue() {
 	<-done
 }
 
+// Close gracefully stops the background saver and cleans up resources.
+func (w *World) Close() {
+	if w == nil || w.saveQueue == nil {
+		return
+	}
+	w.FlushSaveQueue()
+	close(w.saveQueue)
+	w.saveQueue = nil
+}
+
 // QueueSave enqueues a save request (non-blocking best effort).
 func (w *World) QueueSave(playerID model.PlayerID, bankID model.BankID) {
 	select {

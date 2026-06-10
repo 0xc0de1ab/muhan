@@ -23,6 +23,7 @@ func TestPoisonMonHandlerPoisonsMonsterDamagesStartsCooldownAndRevealsActor(t *t
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := poisonMonDispatcher(t, world)
 	var broadcasts []roomBroadcastRecord
 
@@ -84,6 +85,7 @@ func TestPoisonMonHandlerPoisonsMonsterDamagesStartsCooldownAndRevealsActor(t *t
 func TestPoisonMonHandlerFailureUsesCooldownWithoutPoisonOrDamage(t *testing.T) {
 	withAttackRolls(t, 100)
 	world := state.NewWorld(poisonMonWorld(t, model.ClassInvincible, true))
+	defer world.Close()
 	handler := NewPoisonMonHandler(world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -110,6 +112,7 @@ func TestPoisonMonHandlerFinalizesMonsterDeath(t *testing.T) {
 	goblin.Stats["hpCurrent"] = 40
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewPoisonMonHandler(world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -136,6 +139,7 @@ func TestPoisonMonHandlerUsesCustomDeathFinalizer(t *testing.T) {
 	goblin.Stats["hpCurrent"] = 40
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	called := false
 	handler := NewPoisonMonHandlerWithDeathFinalizer(world, func(_ *Context, attacker model.Creature, victim model.Creature) error {
 		called = true
@@ -193,6 +197,7 @@ func TestPoisonMonHandlerRejectsInvalidInputs(t *testing.T) {
 				tt.mutate(loaded)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			handler := NewPoisonMonHandler(world)
 
 			ctx := &Context{ActorID: "player:alice"}
@@ -212,6 +217,7 @@ func TestPoisonMonHandlerCanBeRegisteredByDispatcher(t *testing.T) {
 		t.Run(line, func(t *testing.T) {
 			withAttackRolls(t, 1, 100)
 			world := state.NewWorld(poisonMonWorld(t, model.ClassInvincible, true))
+	defer world.Close()
 			dispatcher := poisonMonDispatcher(t, world)
 
 			ctx := &Context{ActorID: "player:alice"}

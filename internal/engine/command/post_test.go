@@ -18,6 +18,7 @@ import (
 func TestPostSendHandlerWritesPendingMail(t *testing.T) {
 	root := t.TempDir()
 	world := state.NewWorld(postTestWorld(t, true))
+	defer world.Close()
 	var pending PendingLineHandler
 	ctx := postTestContext(&pending, "Alice")
 	dispatcher := Dispatcher{
@@ -90,6 +91,7 @@ func TestPostSendHandlerWritesPendingMail(t *testing.T) {
 func TestPostSendHandlerDotFirstDoesNotCreateMail(t *testing.T) {
 	root := t.TempDir()
 	world := state.NewWorld(postTestWorld(t, true))
+	defer world.Close()
 	var pending PendingLineHandler
 	ctx := postTestContext(&pending, "Alice")
 	handler := NewPostSendHandler(world, root)
@@ -118,6 +120,7 @@ func TestPostSendHandlerDotFirstDoesNotCreateMail(t *testing.T) {
 func TestPostSendHandlerPersistsEachLineBeforeFinalDotLikeC(t *testing.T) {
 	root := t.TempDir()
 	world := state.NewWorld(postTestWorld(t, true))
+	defer world.Close()
 	var pending PendingLineHandler
 	ctx := postTestContext(&pending, "Alice")
 	handler := newPostSendHandler(world, root, func() time.Time {
@@ -188,6 +191,7 @@ func TestPostReadAndDeleteHandlers(t *testing.T) {
 	}
 
 	world := state.NewWorld(postTestWorld(t, true))
+	defer world.Close()
 	read := NewPostReadHandler(world, root)
 	ctx := &Context{ActorID: "Alice"}
 	status, err := read(ctx, ResolvedCommand{})
@@ -229,6 +233,7 @@ func TestPostReadHandlerPaginatesLongMail(t *testing.T) {
 	}
 
 	world := state.NewWorld(postTestWorld(t, true))
+	defer world.Close()
 	var pending PendingLineHandler
 	ctx := postTestContext(&pending, "Alice")
 	status, err := NewPostReadHandler(world, root)(ctx, ResolvedCommand{})
@@ -274,6 +279,7 @@ func TestPostReadHandlerCancelsPagination(t *testing.T) {
 	}
 
 	world := state.NewWorld(postTestWorld(t, true))
+	defer world.Close()
 	var pending PendingLineHandler
 	ctx := postTestContext(&pending, "Alice")
 	status, err := NewPostReadHandler(world, root)(ctx, ResolvedCommand{})
@@ -309,6 +315,7 @@ func TestPostReadHandlerPaginatesLongUTF8Line(t *testing.T) {
 	}
 
 	world := state.NewWorld(postTestWorld(t, true))
+	defer world.Close()
 	var pending PendingLineHandler
 	ctx := postTestContext(&pending, "Alice")
 	status, err := NewPostReadHandler(world, root)(ctx, ResolvedCommand{})
@@ -335,6 +342,7 @@ func TestPostReadHandlerPaginatesLongUTF8Line(t *testing.T) {
 func TestPostHandlersRequirePostOffice(t *testing.T) {
 	root := t.TempDir()
 	world := state.NewWorld(postTestWorld(t, false))
+	defer world.Close()
 
 	ctx := &Context{ActorID: "Alice"}
 	if _, err := NewPostSendHandler(world, root)(ctx, ResolvedCommand{Args: []string{"Bob"}}); err != nil {

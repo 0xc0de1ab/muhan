@@ -719,6 +719,7 @@ func TestReadScrollHandlerLetsSpecialWarFallThroughToScrollRouting(t *testing.T)
 func TestReadScrollHandlerRoutesBareReadToRoomBoard(t *testing.T) {
 	root := boardTestRoot(t)
 	world := state.NewWorld(boardTestWorld(t, true))
+	defer world.Close()
 	dispatcher := Dispatcher{
 		Registry: mustRegistry(t, []commandspec.CommandSpec{
 			{Name: "게시판", Number: 94, Handler: "look_board"},

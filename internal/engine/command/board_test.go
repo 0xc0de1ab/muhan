@@ -34,6 +34,8 @@ const (
 func TestBoardLookHandlerRendersCurrentRoomBoardList(t *testing.T) {
 	root := boardTestRoot(t)
 	world := state.NewWorld(boardTestWorld(t, true))
+	defer world.Close()
+	defer world.Close()
 	dispatcher := boardTestDispatcher(t, world, root)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -58,6 +60,8 @@ func TestBoardLookHandlerRendersCurrentRoomBoardList(t *testing.T) {
 func TestBoardLookHandlerInstallsLegacyListMenu(t *testing.T) {
 	root := boardTestRoot(t)
 	world := state.NewWorld(boardTestWorld(t, true))
+	defer world.Close()
+	defer world.Close()
 	dispatcher := boardTestDispatcher(t, world, root)
 
 	var pending PendingLineHandler
@@ -95,6 +99,8 @@ func TestBoardLookHandlerInstallsLegacyListMenu(t *testing.T) {
 func TestBoardLookHandlerBroadcastsListButNotDirectReadLikeLegacy(t *testing.T) {
 	root := boardTestRoot(t)
 	world := state.NewWorld(boardTestWorld(t, true))
+	defer world.Close()
+	defer world.Close()
 	dispatcher := boardTestDispatcher(t, world, root)
 
 	var pending PendingLineHandler
@@ -129,6 +135,8 @@ func TestBoardLookHandlerBroadcastsListButNotDirectReadLikeLegacy(t *testing.T) 
 func TestBoardListMenuPaginatesLikeLegacy(t *testing.T) {
 	root := boardTestRootWithPosts(t, 25)
 	world := state.NewWorld(boardTestWorld(t, true))
+	defer world.Close()
+	defer world.Close()
 	dispatcher := boardTestDispatcher(t, world, root)
 
 	var pending PendingLineHandler
@@ -175,6 +183,8 @@ func TestBoardListMenuPaginatesLikeLegacy(t *testing.T) {
 func TestBoardListMenuReadsPostThenReentersListOnNextInputLikeLegacy(t *testing.T) {
 	root := boardTestRoot(t)
 	world := state.NewWorld(boardTestWorld(t, true))
+	defer world.Close()
+	defer world.Close()
 	dispatcher := boardTestDispatcher(t, world, root)
 
 	var pending PendingLineHandler
@@ -229,6 +239,8 @@ func TestBoardListMenuLongReadDoesNotContinueViewFileLikeLegacy(t *testing.T) {
 		t.Fatal(err)
 	}
 	world := state.NewWorld(boardTestWorld(t, true))
+	defer world.Close()
+	defer world.Close()
 	dispatcher := boardTestDispatcher(t, world, root)
 
 	var pending PendingLineHandler
@@ -271,6 +283,8 @@ func TestBoardListMenuLongReadDoesNotContinueViewFileLikeLegacy(t *testing.T) {
 func TestBoardListMenuWriteReentersListOnNextInputLikeLegacy(t *testing.T) {
 	root := boardTestRoot(t)
 	world := state.NewWorld(boardTestWorld(t, true))
+	defer world.Close()
+	defer world.Close()
 	world.SetDBRoot(root)
 	dispatcher := boardTestDispatcher(t, world, root)
 
@@ -334,6 +348,8 @@ func TestBoardListMenuWriteReentersListOnNextInputLikeLegacy(t *testing.T) {
 func TestBoardListMenuWriteBroadcastsLikeLegacy(t *testing.T) {
 	root := boardTestRoot(t)
 	world := state.NewWorld(boardTestWorld(t, true))
+	defer world.Close()
+	defer world.Close()
 	dispatcher := boardTestDispatcher(t, world, root)
 
 	var pending PendingLineHandler
@@ -376,6 +392,8 @@ func TestBoardListMenuWriteHonorsNoticeOnlyBoardLikeLegacy(t *testing.T) {
 		Location:    model.ObjectLocation{RoomID: "room:board"},
 	})
 	world := state.NewWorld(loaded)
+	defer world.Close()
+	defer world.Close()
 	dispatcher := boardTestDispatcher(t, world, root)
 
 	var pending PendingLineHandler
@@ -419,6 +437,8 @@ func TestBoardListMenuWriteHonorsNoticeOnlyBoardLikeLegacy(t *testing.T) {
 func TestBoardLookHandlerRendersSelectedPost(t *testing.T) {
 	root := boardTestRoot(t)
 	world := state.NewWorld(boardTestWorld(t, true))
+	defer world.Close()
+	defer world.Close()
 	dispatcher := boardTestDispatcher(t, world, root)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -446,6 +466,8 @@ func TestBoardLookHandlerPaginatesSelectedPostLikeLegacyViewFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	world := state.NewWorld(boardTestWorld(t, true))
+	defer world.Close()
+	defer world.Close()
 	dispatcher := boardTestDispatcher(t, world, root)
 
 	var pending PendingLineHandler
@@ -491,6 +513,8 @@ func TestBoardLookHandlerPaginatesSelectedPostLikeLegacyViewFile(t *testing.T) {
 func TestBoardLookHandlerSupportsCommandFirstRead(t *testing.T) {
 	root := boardTestRoot(t)
 	world := state.NewWorld(boardTestWorld(t, true))
+	defer world.Close()
+	defer world.Close()
 	dispatcher := boardTestDispatcher(t, world, root)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -505,6 +529,8 @@ func TestBoardLookHandlerSupportsCommandFirstRead(t *testing.T) {
 func TestBoardReadAliasHandlerRoutesBoardReadCommands(t *testing.T) {
 	root := boardTestRoot(t)
 	world := state.NewWorld(boardTestWorld(t, true))
+	defer world.Close()
+	defer world.Close()
 	dispatcher := boardTestDispatcher(t, world, root)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -529,6 +555,8 @@ func TestBoardReadAliasHandlerRoutesBoardReadCommands(t *testing.T) {
 func TestBoardLookHandlerRequiresBoardObject(t *testing.T) {
 	root := boardTestRoot(t)
 	world := state.NewWorld(boardTestWorld(t, false))
+	defer world.Close()
+	defer world.Close()
 	dispatcher := boardTestDispatcher(t, world, root)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -547,6 +575,8 @@ func TestBoardLookupUsesLegacyFindObjNameAndKeys(t *testing.T) {
 	proto.DisplayName = "알림판"
 	loaded.ObjectPrototypes[proto.ID] = proto
 	world := state.NewWorld(loaded)
+	defer world.Close()
+	defer world.Close()
 	dispatcher := boardTestDispatcher(t, world, root)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -563,6 +593,9 @@ func TestBoardLookupUsesLegacyFindObjNameAndKeys(t *testing.T) {
 	proto.Properties["key[0]"] = "게시판"
 	loaded.ObjectPrototypes[proto.ID] = proto
 	world = state.NewWorld(loaded)
+	defer world.Close()
+	defer world.Close()
+	defer world.Close()
 	dispatcher = boardTestDispatcher(t, world, root)
 
 	ctx = &Context{ActorID: "player:alice"}
@@ -581,6 +614,8 @@ func TestBoardLookupVisibilityUsesPDINVI(t *testing.T) {
 	board.Metadata.Tags = []string{"OINVIS"}
 	loaded.Objects[board.ID] = board
 	world := state.NewWorld(loaded)
+	defer world.Close()
+	defer world.Close()
 	dispatcher := boardTestDispatcher(t, world, root)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -599,6 +634,9 @@ func TestBoardLookupVisibilityUsesPDINVI(t *testing.T) {
 	creature.Metadata.Tags = []string{"PDINVI"}
 	loaded.Creatures[creature.ID] = creature
 	world = state.NewWorld(loaded)
+	defer world.Close()
+	defer world.Close()
+	defer world.Close()
 	dispatcher = boardTestDispatcher(t, world, root)
 
 	ctx = &Context{ActorID: "player:alice"}
@@ -613,6 +651,8 @@ func TestBoardLookupVisibilityUsesPDINVI(t *testing.T) {
 func TestBoardLookHandlerRejectsOutOfRangeAndDeletedPost(t *testing.T) {
 	root := boardTestRoot(t)
 	world := state.NewWorld(boardTestWorld(t, true))
+	defer world.Close()
+	defer world.Close()
 	dispatcher := boardTestDispatcher(t, world, root)
 
 	for _, line := range []string{"99 게시판"} {
@@ -639,6 +679,8 @@ func TestBoardLookHandlerRejectsOutOfRangeAndDeletedPost(t *testing.T) {
 func TestBoardLookHandlerIncrementsReadCountLikeLegacy(t *testing.T) {
 	root := boardTestRoot(t)
 	world := state.NewWorld(boardTestWorld(t, true))
+	defer world.Close()
+	defer world.Close()
 	dispatcher := boardTestDispatcher(t, world, root)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -671,6 +713,8 @@ func TestBoardLookHandlerDMCanListAndReadDeletedPostsLikeLegacy(t *testing.T) {
 	creature.Stats = map[string]int{"class": model.ClassDM}
 	loaded.Creatures[creature.ID] = creature
 	world := state.NewWorld(loaded)
+	defer world.Close()
+	defer world.Close()
 	world.SetDBRoot(root)
 	dispatcher := boardTestDispatcher(t, world, root)
 
@@ -709,6 +753,8 @@ func TestBoardDeleteRequiresLegacyBoardSpecial(t *testing.T) {
 	creature.Stats = map[string]int{"class": model.ClassDM}
 	loaded.Creatures[creature.ID] = creature
 	world := state.NewWorld(loaded)
+	defer world.Close()
+	defer world.Close()
 	world.SetDBRoot(root)
 	dispatcher := boardTestDispatcher(t, world, root)
 
@@ -735,6 +781,8 @@ func TestBoardDeleteRequiresLegacyBoardSpecial(t *testing.T) {
 func TestBoardDeleteRejectsUnauthorizedPlayerLikeLegacy(t *testing.T) {
 	root := boardTestRoot(t)
 	world := state.NewWorld(boardTestWorld(t, true))
+	defer world.Close()
+	defer world.Close()
 	world.SetDBRoot(root)
 	dispatcher := boardTestDispatcher(t, world, root)
 
@@ -757,6 +805,8 @@ func TestBoardDeleteUsesLegacyParsedSlots(t *testing.T) {
 	creature.Stats = map[string]int{"class": model.ClassDM}
 	loaded.Creatures[creature.ID] = creature
 	world := state.NewWorld(loaded)
+	defer world.Close()
+	defer world.Close()
 	world.SetDBRoot(root)
 	dispatcher := boardTestDispatcher(t, world, root)
 
@@ -808,6 +858,8 @@ func TestBoardDeleteUsesLegacyParsedSlots(t *testing.T) {
 func TestBoardWriteHandlerAppendsPostAndSnapshotsSidecar(t *testing.T) {
 	root := boardTestRoot(t)
 	world := state.NewWorld(boardTestWorld(t, true))
+	defer world.Close()
+	defer world.Close()
 	world.SetDBRoot(root)
 
 	var pending PendingLineHandler
@@ -915,6 +967,8 @@ func TestBoardWriteHandlerAppendsPostAndSnapshotsSidecar(t *testing.T) {
 func TestBoardWriteHandlerAcceptsWhitespaceOnlyTitleLikeLegacy(t *testing.T) {
 	root := boardTestRoot(t)
 	world := state.NewWorld(boardTestWorld(t, true))
+	defer world.Close()
+	defer world.Close()
 	world.SetDBRoot(root)
 
 	var pending PendingLineHandler
@@ -1009,6 +1063,8 @@ func TestAppendBoardPostWritesLegacyRawBytesLikeC(t *testing.T) {
 func TestBoardWriteHandlerDoesNotPersistBeforeFinalDot(t *testing.T) {
 	root := boardTestRoot(t)
 	world := state.NewWorld(boardTestWorld(t, true))
+	defer world.Close()
+	defer world.Close()
 	world.SetDBRoot(root)
 
 	var pending PendingLineHandler

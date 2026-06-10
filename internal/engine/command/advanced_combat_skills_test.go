@@ -23,6 +23,7 @@ func TestBnahanHandlerDamagesRoomTargetsAndStartsCooldown(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewBnahanHandler(world)
 
 	var broadcasts []roomBroadcastRecord
@@ -82,6 +83,7 @@ func TestBnahanHandlerDamagesRoomTargetsAndStartsCooldown(t *testing.T) {
 func TestBnahanHandlerFailureFatiguesActor(t *testing.T) {
 	withAttackRolls(t, 100)
 	world := state.NewWorld(advancedCombatWorld(t))
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewBnahanHandler(world)(ctx, ResolvedCommand{})
@@ -115,6 +117,7 @@ func TestBnahanHandlerFinalizesMonsterDeath(t *testing.T) {
 	goblin.Stats["hpMax"] = 10
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewBnahanHandler(world)(ctx, ResolvedCommand{})
@@ -200,6 +203,7 @@ func TestBnahanHandlerRejectsInvalidStates(t *testing.T) {
 				tt.mutate(loaded)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			if tt.setup != nil {
 				tt.setup(world)
 			}
@@ -233,6 +237,7 @@ func TestBnahanHandlerCooldownPrecedesTargetScanAndReveal(t *testing.T) {
 		loaded.Creatures[id] = creature
 	}
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if err := world.SetCreatureCooldown("creature:alice", bnahanCooldownKey, time.Now().Unix(), bnahanCooldownSeconds(alice)); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
 	}
@@ -265,6 +270,7 @@ func TestTaguHandlerHitsMonsterAndStartsCooldown(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewTaguHandler(world)
 
 	var broadcasts []roomBroadcastRecord
@@ -321,6 +327,7 @@ func TestTaguHandlerCooldownPrecedesWeaponTargetAndReveal(t *testing.T) {
 	proto.Properties["type"] = "1"
 	loaded.ObjectPrototypes[proto.ID] = proto
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if err := world.SetCreatureCooldown("creature:alice", taguCooldownKey, time.Now().Unix(), taguSuccessCooldownSeconds(alice)); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
 	}
@@ -345,6 +352,7 @@ func TestTaguHandlerFailureAndMissSetShorterCooldowns(t *testing.T) {
 	t.Run("chance failure", func(t *testing.T) {
 		withAttackRolls(t, 100)
 		world := state.NewWorld(advancedCombatWorld(t))
+	defer world.Close()
 
 		ctx := &Context{ActorID: "player:alice"}
 		status, err := NewTaguHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}})
@@ -375,6 +383,7 @@ func TestTaguHandlerFailureAndMissSetShorterCooldowns(t *testing.T) {
 		alice.Stats["thaco"] = 20
 		loaded.Creatures[alice.ID] = alice
 		world := state.NewWorld(loaded)
+	defer world.Close()
 
 		ctx := &Context{ActorID: "player:alice"}
 		status, err := NewTaguHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}})
@@ -420,6 +429,7 @@ func TestTaguHandlerWeaponBreakOnSuccessDoesNotStartCooldown(t *testing.T) {
 	proto.Properties["shotsCurrent"] = "1"
 	loaded.ObjectPrototypes[proto.ID] = proto
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewTaguHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}})
@@ -448,6 +458,7 @@ func TestTaguHandlerFinalizesMonsterDeath(t *testing.T) {
 	goblin.Stats["hpMax"] = 10
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewTaguHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}})
@@ -549,6 +560,7 @@ func TestTaguHandlerRejectsInvalidStates(t *testing.T) {
 				tt.mutate(loaded)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			if tt.setup != nil {
 				tt.setup(world)
 			}
@@ -570,6 +582,7 @@ func TestAdvancedCombatHandlersCanBeRegisteredByDispatcherAliases(t *testing.T) 
 			t.Run(line, func(t *testing.T) {
 				withAttackRolls(t, 1, 5, 6)
 				world := state.NewWorld(advancedCombatWorld(t))
+	defer world.Close()
 				dispatcher := advancedCombatDispatcher(t, world)
 
 				ctx := &Context{ActorID: "player:alice"}
@@ -589,6 +602,7 @@ func TestAdvancedCombatHandlersCanBeRegisteredByDispatcherAliases(t *testing.T) 
 			t.Run(line, func(t *testing.T) {
 				withAttackRolls(t, 1, 20, 1)
 				world := state.NewWorld(advancedCombatWorld(t))
+	defer world.Close()
 				dispatcher := advancedCombatDispatcher(t, world)
 
 				ctx := &Context{ActorID: "player:alice"}

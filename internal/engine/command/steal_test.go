@@ -14,6 +14,7 @@ import (
 
 func TestStealHandlerMovesMonsterInventoryObject(t *testing.T) {
 	world := state.NewWorld(stealWorld(t, model.ClassThief))
+	defer world.Close()
 	dispatcher := stealDispatcher(t, world, fixedStealRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -36,6 +37,7 @@ func TestStealHandlerMovesMonsterInventoryObject(t *testing.T) {
 
 func TestStealHandlerCreditsMoneyObject(t *testing.T) {
 	world := state.NewWorld(stealWorld(t, model.ClassThief))
+	defer world.Close()
 	handler := NewStealHandler(world, fixedStealRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -113,6 +115,7 @@ func TestStealHandlerDMWithThiefSpellCanStealQuestObjectLikeLegacy(t *testing.T)
 	apple.Properties = map[string]string{"questnum": "7"}
 	loaded.Objects[apple.ID] = apple
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewStealHandler(world, fixedStealRoll(100))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -138,6 +141,7 @@ func TestStealHandlerDMWithThiefSpellStillCannotStealTopLevelEventObjectLikeLega
 	apple.Properties = map[string]string{"OEVENT": "1"}
 	loaded.Objects[apple.ID] = apple
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewStealHandler(world, fixedStealRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -193,6 +197,7 @@ func TestStealHandlerRejectsInvalidInputs(t *testing.T) {
 				tt.mutate(loaded)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			handler := NewStealHandler(world, fixedStealRoll(1))
 
 			ctx := &Context{ActorID: "player:alice"}
@@ -213,6 +218,7 @@ func TestStealHandlerInvincibleWithThiefSpellCanSteal(t *testing.T) {
 	alice.Metadata.Tags = []string{"STHIEF"}
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewStealHandler(world, fixedStealRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -231,6 +237,7 @@ func TestStealHandlerRejectsOneByteTargetPrefixLikeLegacyFindCrt(t *testing.T) {
 	merchant.DisplayName = "Merchant"
 	loaded.Creatures[merchant.ID] = merchant
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewStealHandler(world, fixedStealRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -249,6 +256,7 @@ func TestStealHandlerRejectsOneByteTargetPrefixLikeLegacyFindCrt(t *testing.T) {
 
 func TestStealHandlerRejectsObjectIDTargetLikeLegacyFindObj(t *testing.T) {
 	world := state.NewWorld(stealWorld(t, model.ClassThief))
+	defer world.Close()
 	handler := NewStealHandler(world, fixedStealRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -267,6 +275,7 @@ func TestStealHandlerRejectsObjectIDTargetLikeLegacyFindObj(t *testing.T) {
 
 func TestStealHandlerRejectsEnemyMonsterTargetLikeLegacy(t *testing.T) {
 	world := state.NewWorld(stealWorld(t, model.ClassThief))
+	defer world.Close()
 	if _, err := world.AddEnemy("creature:merchant", "creature:alice"); err != nil {
 		t.Fatalf("AddEnemy() error = %v", err)
 	}
@@ -288,6 +297,7 @@ func TestStealHandlerRejectsEnemyMonsterTargetLikeLegacy(t *testing.T) {
 
 func TestStealHandlerFailureDoesNotMoveObjectAndStartsCooldown(t *testing.T) {
 	world := state.NewWorld(stealWorld(t, model.ClassThief))
+	defer world.Close()
 	handler := NewStealHandler(world, fixedStealRoll(100))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -315,6 +325,7 @@ func TestStealHandlerFailureDoesNotMoveObjectAndStartsCooldown(t *testing.T) {
 
 func TestStealHandlerDoesNotRevealInvisibleActorDuringCooldown(t *testing.T) {
 	world := state.NewWorld(stealWorld(t, model.ClassThief))
+	defer world.Close()
 	handler := NewStealHandler(world, fixedStealRoll(100))
 
 	if _, err := handler(&Context{ActorID: "player:alice"}, ResolvedCommand{Args: []string{"사과", "상인"}}); err != nil {
@@ -358,6 +369,7 @@ func TestStealHandlerRevealsInvisibleActorAfterCooldownPasses(t *testing.T) {
 	player.Metadata.Tags = []string{"invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewStealHandler(world, fixedStealRoll(100))
 
 	var broadcasts []roomBroadcastRecord
@@ -392,6 +404,7 @@ func TestStealHandlerClearsHiddenBeforeTargetLookupLikeLegacy(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewStealHandler(world, fixedStealRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -421,6 +434,7 @@ func TestStealHandlerFailureNotifiesPlayerVictimDirectly(t *testing.T) {
 	bob.Metadata.Tags = []string{"chaos"}
 	loaded.Creatures[bob.ID] = bob
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewStealHandler(world, fixedStealRoll(100))
 
 	var sent []session.Command
@@ -470,6 +484,7 @@ func TestStealHandlerSuccessfulPlayerVictimStartsPlayerKillPenalty(t *testing.T)
 	bob.Metadata.Tags = []string{"chaos"}
 	loaded.Creatures[bob.ID] = bob
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := NewStealHandler(world, fixedStealRoll(1))
 
 	before := time.Now().Unix()

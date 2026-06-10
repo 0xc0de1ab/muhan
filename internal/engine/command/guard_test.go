@@ -13,6 +13,7 @@ import (
 
 func TestGuardHandlerDamagesRemoteMonstersStartsCooldown(t *testing.T) {
 	world := state.NewWorld(guardWorld(t, model.ClassRanger, 50))
+	defer world.Close()
 	handler := NewGuardHandlerWithRoll(world, fixedRoll(1))
 
 	var broadcasts []roomBroadcastRecord
@@ -59,6 +60,7 @@ func TestGuardHandlerDamagesRemoteMonstersStartsCooldown(t *testing.T) {
 
 func TestGuardHandlerFailurePrimesRemoteMonstersAndStartsCooldown(t *testing.T) {
 	world := state.NewWorld(guardWorld(t, model.ClassRanger, 50))
+	defer world.Close()
 	handler := NewGuardHandlerWithRoll(world, fixedRoll(22))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -89,6 +91,7 @@ func TestGuardHandlerFailurePrimesRemoteMonstersAndStartsCooldown(t *testing.T) 
 
 func TestGuardHandlerCooldownPrecedesExitLookup(t *testing.T) {
 	world := state.NewWorld(guardWorld(t, model.ClassRanger, 50))
+	defer world.Close()
 	if err := world.SetCreatureCooldown("creature:alice", guardCooldownKey, time.Now().Unix(), guardCooldownSeconds(model.Creature{Stats: map[string]int{"dexterity": 30}})); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
 	}
@@ -202,6 +205,7 @@ func TestGuardHandlerInvalidRemoteStatesDoNotStartCooldown(t *testing.T) {
 				tt.mutate(loaded)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			ctx := &Context{ActorID: "player:alice"}
 			status, err := NewGuardHandlerWithRoll(world, fixedRoll(1))(ctx, ResolvedCommand{Args: tt.args, Values: []int64{1, 1}})
 			if err != nil {
@@ -227,6 +231,7 @@ func TestGuardHandlerAllowsTrainedInvincible(t *testing.T) {
 	alice.Metadata.Tags = []string{"SRANGER"}
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewGuardHandlerWithRoll(world, fixedRoll(1))(ctx, ResolvedCommand{Args: []string{"동", "Bob"}, Values: []int64{1, 1}})
@@ -242,6 +247,7 @@ func TestGuardHandlerCanBeRegisteredByDispatcherAliases(t *testing.T) {
 	for _, line := range []string{"동 Bob 엄호", "엄호 동 Bob", "guard 동 Bob"} {
 		t.Run(line, func(t *testing.T) {
 			world := state.NewWorld(guardWorld(t, model.ClassRanger, 50))
+	defer world.Close()
 			dispatcher := guardDispatcher(t, world)
 
 			ctx := &Context{ActorID: "player:alice"}

@@ -16,6 +16,7 @@ func TestTrackHandlerIgnoresTargetArgsLikeLegacyRoomTrack(t *testing.T) {
 	room.Properties = map[string]string{"track": "east"}
 	loaded.Rooms[room.ID] = room
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := newTrackHandler(world, fixedRoll(1))
 
 	var broadcasts []roomBroadcastRecord
@@ -36,6 +37,7 @@ func TestTrackHandlerDoesNotTrackAdjacentTargetsLikeLegacy(t *testing.T) {
 	loaded := trackWorld(t, model.ClassRanger)
 	moveTrackPlayerToRoom(loaded, "player:bob", "creature:bob", "room:east")
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := newTrackHandler(world, fixedRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -54,6 +56,7 @@ func TestTrackHandlerReportsLegacyRoomTrackWithoutTarget(t *testing.T) {
 	room.Properties = map[string]string{"track": "west"}
 	loaded.Rooms[room.ID] = room
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := newTrackHandler(world, fixedRoll(1))
 
 	var broadcasts []roomBroadcastRecord
@@ -74,6 +77,7 @@ func TestTrackHandlerIgnoresMissingTargetLikeLegacy(t *testing.T) {
 	loaded := trackWorld(t, model.ClassRanger)
 	moveTrackPlayerToRoom(loaded, "player:bob", "creature:bob", "room:far")
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := newTrackHandler(world, fixedRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -104,6 +108,7 @@ func TestTrackHandlerRejectsClassAndBlindActor(t *testing.T) {
 			alice.Metadata.Tags = tt.tags
 			loaded.Creatures[alice.ID] = alice
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			handler := newTrackHandler(world, fixedRoll(1))
 
 			ctx := &Context{ActorID: "player:alice"}
@@ -124,6 +129,7 @@ func TestTrackHandlerCanBeRegisteredByDispatcher(t *testing.T) {
 	room.Properties = map[string]string{"track": "east"}
 	loaded.Rooms[room.ID] = room
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	registry, err := commandspec.NewRegistry([]commandspec.CommandSpec{
 		{Name: "추적", Number: 21, Handler: "track"},
 		{Name: "track", Number: 21, Handler: "track"},
@@ -150,6 +156,7 @@ func TestTrackHandlerCanBeRegisteredByDispatcher(t *testing.T) {
 
 func TestTrackHandlerReportsLegacyNoRoomTrack(t *testing.T) {
 	world := state.NewWorld(trackWorld(t, model.ClassRanger))
+	defer world.Close()
 	handler := newTrackHandler(world, fixedRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -169,6 +176,7 @@ func TestTrackHandlerFailureAndCooldownLikeLegacy(t *testing.T) {
 	alice.Stats = map[string]int{"class": model.ClassRanger, "level": 1, "dexterity": 10}
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := newTrackHandler(world, fixedRoll(100))
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -199,6 +207,7 @@ func TestTrackHandlerClearsHiddenBeforeCooldownLikeLegacy(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	handler := newTrackHandler(world, fixedRoll(1))
 
 	ctx := &Context{ActorID: "player:alice"}

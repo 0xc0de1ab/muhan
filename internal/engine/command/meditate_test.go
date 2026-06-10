@@ -13,6 +13,7 @@ import (
 
 func TestMeditateHandlerSuccessAddsTagsIntelligenceCooldownAndExpiration(t *testing.T) {
 	world := state.NewWorld(meditateWorld(t, model.ClassCleric))
+	defer world.Close()
 	handler := NewMeditateHandler(world, fixedRoll(1))
 	var broadcasts []roomBroadcastRecord
 
@@ -97,6 +98,7 @@ func TestMeditateHandlerRejectsClassAndAlreadyActive(t *testing.T) {
 			alice.Metadata.Tags = tt.tags
 			loaded.Creatures[alice.ID] = alice
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			handler := NewMeditateHandler(world, fixedRoll(1))
 
 			ctx := &Context{ActorID: "player:alice"}
@@ -117,6 +119,7 @@ func TestMeditateHandlerRejectsClassAndAlreadyActive(t *testing.T) {
 
 func TestMeditateHandlerFailureSetsShortCooldownWithoutTags(t *testing.T) {
 	world := state.NewWorld(meditateWorld(t, model.ClassCleric))
+	defer world.Close()
 	handler := NewMeditateHandler(world, fixedRoll(100))
 	var broadcasts []roomBroadcastRecord
 
@@ -154,6 +157,7 @@ func TestMeditateHandlerCanBeRegisteredByDispatcherAliases(t *testing.T) {
 	for _, line := range []string{"참선", "meditate"} {
 		t.Run(line, func(t *testing.T) {
 			world := state.NewWorld(meditateWorld(t, model.ClassCleric))
+	defer world.Close()
 			dispatcher := Dispatcher{
 				Registry: mustRegistry(t, []commandspec.CommandSpec{
 					{Name: "참선", Number: 90, Handler: "meditate"},

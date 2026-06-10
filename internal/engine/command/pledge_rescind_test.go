@@ -16,6 +16,7 @@ func TestPledgeAndRescindHandlerTransitions(t *testing.T) {
 	loaded.Rooms[plaza.ID] = plaza
 
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	pledgeHandler := NewPledgeHandler(world)
 	rescindHandler := NewRescindHandler(world)
 
@@ -90,6 +91,7 @@ func TestPledgeHandlerFailsIfNoRoomOrMonsterFlag(t *testing.T) {
 	loaded := lookWorld(t)
 	// No room pledge flags
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	pledgeHandler := NewPledgeHandler(world)
 
 	ctx := &Context{ActorID: "player:alice"}

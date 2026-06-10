@@ -23,6 +23,7 @@ func TestInvincibleKickHandlerHitsMonsterRevealsAndStartsCooldown(t *testing.T) 
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := invincibleAttackDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -120,6 +121,7 @@ func TestInvincibleKickHandlerRejectsInvalidInputsOutput(t *testing.T) {
 				tt.mutate(loaded)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			ctx := &Context{ActorID: "player:alice"}
 			status, err := NewInvincibleKickHandler(world)(ctx, ResolvedCommand{Args: tt.args})
 			if err != nil {
@@ -146,6 +148,7 @@ func TestInvincibleKickHandlerRejectsCharmedPlayerLikeLegacy(t *testing.T) {
 	bob.Metadata.Tags = []string{"PCHAOS", "PCHARM", "charm:Alice"}
 	loaded.Creatures[bob.ID] = bob
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewInvincibleKickHandler(world)(ctx, ResolvedCommand{Args: []string{"Bob"}})
@@ -176,6 +179,7 @@ func TestInvincibleKickHandlerCooldownPrecedesTargetAndReveal(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if err := world.SetCreatureCooldown("creature:alice", invincibleKickCooldownKey, time.Now().Unix(), invincibleKickSuccessCooldown(alice)); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
 	}
@@ -203,6 +207,7 @@ func TestInvincibleKickHandlerFailurePrimesMonsterAndStartsShortCooldown(t *test
 	alice.Metadata.Tags = []string{"SBARBARIAN"}
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewInvincibleKickHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}})
@@ -238,6 +243,7 @@ func TestOneKillHandlerKillsMonsterAndStartsCooldown(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	dispatcher := invincibleAttackDispatcher(t, world)
 
 	ctx := &Context{ActorID: "player:alice"}
@@ -284,6 +290,7 @@ func TestOneKillHandlerCooldownPrecedesWeaponAndReveal(t *testing.T) {
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if err := world.SetCreatureCooldown("creature:alice", oneKillCooldownKey, time.Now().Unix(), oneKillCooldownSeconds); err != nil {
 		t.Fatalf("SetCreatureCooldown() error = %v", err)
 	}
@@ -315,6 +322,7 @@ func TestOneKillHandlerRejectsEnemyMonsterBeforeCooldownAndRevealLikeLegacy(t *t
 	player.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS"}
 	loaded.Players[player.ID] = player
 	world := state.NewWorld(loaded)
+	defer world.Close()
 	if _, err := world.AddEnemy("creature:goblin", "creature:alice"); err != nil {
 		t.Fatalf("AddEnemy() error = %v", err)
 	}
@@ -353,6 +361,7 @@ func TestOneKillHandlerWeaponBreakAfterSuccessKeepsPreliminaryCooldown(t *testin
 	sword.Properties["shotsCurrent"] = "1"
 	loaded.Objects[sword.ID] = sword
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewOneKillHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}})
@@ -380,6 +389,7 @@ func TestOneKillHandlerUsesCustomDeathFinalizer(t *testing.T) {
 	alice.Metadata.Tags = []string{"SASSASSIN"}
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	called := false
 	finalizer := func(ctx *Context, attacker model.Creature, victim model.Creature) error {
@@ -407,6 +417,7 @@ func TestOneKillHandlerFailureDamagesActor(t *testing.T) {
 	alice.Metadata.Tags = []string{"SASSASSIN"}
 	loaded.Creatures[alice.ID] = alice
 	world := state.NewWorld(loaded)
+	defer world.Close()
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := NewOneKillHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}})
@@ -525,6 +536,7 @@ func TestOneKillHandlerRejectsInvalidInputs(t *testing.T) {
 				tt.mutate(loaded)
 			}
 			world := state.NewWorld(loaded)
+	defer world.Close()
 			ctx := &Context{ActorID: "player:alice"}
 			status, err := NewOneKillHandler(world)(ctx, ResolvedCommand{Args: tt.args})
 			if err != nil {
