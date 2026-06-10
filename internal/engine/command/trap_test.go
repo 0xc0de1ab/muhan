@@ -886,6 +886,9 @@ func moveTrapDescribeLegacyRoutes(routes []moveTrapLegacyTrapRoute, trapType int
 
 func moveTrapLegacyRoot(t *testing.T) string {
 	t.Helper()
+	if os.Getenv("CI") != "" || testing.Short() {
+		t.Skip("skipping test requiring legacy rooms/ in CI or short mode")
+	}
 
 	dir, err := os.Getwd()
 	if err != nil {

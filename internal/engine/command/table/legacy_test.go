@@ -230,6 +230,9 @@ func writeLegacyRoot(t *testing.T, source string) string {
 
 func repoRoot(t *testing.T) string {
 	t.Helper()
+	if os.Getenv("CI") != "" || testing.Short() {
+		t.Skip("skipping test requiring legacy src/ in CI or short mode")
+	}
 
 	_, file, _, ok := runtime.Caller(0)
 	if !ok {
