@@ -92,43 +92,36 @@ jobs:
           username: ${{ secrets.OCI_REGISTRY_USER }}
           password: ${{ secrets.OCI_REGISTRY_PASSWORD }}
 
-      - name: Compute tags
-        id: tags
-        env:
-          OCI_REGISTRY: ${{ secrets.OCI_REGISTRY }}
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          TAGS=""
-
-          # GHCR tags
-          if [ "${{ inputs.push_ghcr }}" = "true" ]; then
-            GHCR_IMAGE="ghcr.io/${{ github.repository }}"
-            TAGS="${GHCR_IMAGE}:v${VERSION}"
-            TAGS="${TAGS},${GHCR_IMAGE}:latest"
-          fi
-
-          # OCI tags (only if login succeeded)
-          if [ "${{ inputs.push_oci }}" = "true" ] && [ -n "$OCI_REGISTRY" ] && [ "${{ steps.oci_login.outcome }}" = "success" ]; then
-            OCI_IMAGE="${OCI_REGISTRY}/muhan"
-            [ -n "$TAGS" ] && TAGS="${TAGS},"
-            TAGS="${TAGS}${OCI_IMAGE}:v${VERSION}"
-            TAGS="${TAGS},${OCI_IMAGE}:latest"
-          fi
-
-          PUSH="false"
-          [ -n "$TAGS" ] && PUSH="true"
-
-          echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
-          echo "push=${PUSH}" >> "$GITHUB_OUTPUT"
-          echo "Tags: ${TAGS}"
-
-      - name: Build Docker image
+      # ─── Build & Push to GHCR ───
+      - name: Build & Push to GHCR
+        id: ghcr_push
+        if: inputs.push_ghcr
         uses: docker/build-push-action@v6
         with:
           context: .
           file: docker/Dockerfile.release
-          push: ${{ steps.tags.outputs.push }}
-          tags: ${{ steps.tags.outputs.tags }}
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:v${{ steps.version.outputs.version }}
+            ghcr.io/${{ github.repository }}:latest
+          build-args: |
+            BINARY=muhan-server-linux-amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ─── Build & Push to OCI Registry ───
+      - name: Build & Push to OCI Registry
+        id: oci_push
+        if: inputs.push_oci && env.OCI_REGISTRY != '' && steps.oci_login.outcome == 'success'
+        continue-on-error: true
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.release
+          push: true
+          tags: |
+            ${{ env.OCI_REGISTRY }}/muhan:v${{ steps.version.outputs.version }}
+            ${{ env.OCI_REGISTRY }}/muhan:latest
           build-args: |
             BINARY=muhan-server-linux-amd64
           cache-from: type=gha
@@ -154,18 +147,24 @@ jobs:
             echo "|----------|--------|------|"
 
             if [ "${{ inputs.push_ghcr }}" = "true" ]; then
-              echo "| GHCR | \`ghcr.io/${{ github.repository }}:v${VERSION}\` | ✅ |"
-              echo "| GHCR | \`ghcr.io/${{ github.repository }}:latest\` | ✅ |"
+              if [ "${{ steps.ghcr_push.outcome }}" = "success" ]; then
+                echo "| GHCR | \`ghcr.io/${{ github.repository }}:v${VERSION}\` | ✅ 성공 |"
+                echo "| GHCR | \`ghcr.io/${{ github.repository }}:latest\` | ✅ 성공 |"
+              else
+                echo "| GHCR | \`ghcr.io/${{ github.repository }}:v${VERSION}\` | ❌ 실패 |"
+              fi
             else
               echo "| GHCR | — | ⏭ 스킵 |"
             fi
 
             if [ "${{ inputs.push_oci }}" = "true" ] && [ -n "$OCI_REGISTRY" ]; then
-              if [ "${{ steps.oci_login.outcome }}" = "success" ]; then
-                echo "| OCI | \`${OCI_REGISTRY}/muhan:v${VERSION}\` | ✅ |"
-                echo "| OCI | \`${OCI_REGISTRY}/muhan:latest\` | ✅ |"
-              else
+              if [ "${{ steps.oci_login.outcome }}" != "success" ]; then
                 echo "| OCI | \`${OCI_REGISTRY}/muhan:v${VERSION}\` | ❌ 로그인 실패 (Push 건너뜀) |"
+              elif [ "${{ steps.oci_push.outcome }}" = "success" ]; then
+                echo "| OCI | \`${OCI_REGISTRY}/muhan:v${VERSION}\` | ✅ 성공 |"
+                echo "| OCI | \`${OCI_REGISTRY}/muhan:latest\` | ✅ 성공 |"
+              else
+                echo "| OCI | \`${OCI_REGISTRY}/muhan:v${VERSION}\` | ❌ Push 실패 (권한 없음 등) |"
               fi
             else
               echo "| OCI | — | ⏭ 스킵 |"
@@ -174,7 +173,7 @@ jobs:
             echo ""
             echo "### 🚀 Pull & Run 가이드"
             echo ""
-            if [ "${{ inputs.push_ghcr }}" = "true" ]; then
+            if [ "${{ inputs.push_ghcr }}" = "true" ] && [ "${{ steps.ghcr_push.outcome }}" = "success" ]; then
               echo "#### 1. GHCR 이미지 사용"
               echo "\`\`\`bash"
               echo "# 이미지 다운로드"
@@ -191,7 +190,7 @@ jobs:
               echo ""
             fi
 
-            if [ "${{ inputs.push_oci }}" = "true" ] && [ -n "$OCI_REGISTRY" ] && [ "${{ steps.oci_login.outcome }}" = "success" ]; then
+            if [ "${{ inputs.push_oci }}" = "true" ] && [ -n "$OCI_REGISTRY" ] && [ "${{ steps.oci_push.outcome }}" = "success" ]; then
               echo "#### 2. OCI Registry 이미지 사용"
               echo "\`\`\`bash"
               echo "# 이미지 다운로드"
