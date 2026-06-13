@@ -1,8 +1,9 @@
 # =============================================================================
 #  [02] Bump up — VERSION 파일 버전 업데이트
 #
-#  수동 트리거 전용. patch / minor / major 중 선택.
-#  VERSION 파일을 업데이트하고 커밋합니다.
+#  버전 형식: major.minor.rev-YYYYMM.seq
+#  - 상위 버전 변경 시 하위 버전 리셋 (minor, rev → 0, YYYYMM → 현재, seq → 자동)
+#  - seq: 동일 canonical 버전(major.minor.rev-YYYYMM)의 이전 태그가 있으면 +1, 없으면 1
 # =============================================================================
 
 name: "[02] Bump up"
@@ -10,7 +11,7 @@ name: "[02] Bump up"
 on:
   workflow_dispatch:
     inputs:
-      bump:
+      bump_type:
         description: "버전 업 유형"
         required: true
         type: choice
@@ -18,40 +19,131 @@ on:
           - patch
           - minor
           - major
+          - custom
+      custom_version:
+        description: "직접 지정할 버전 (bump_type=custom 시 필수, 예: 1.0.0-202606.1)"
+        required: false
+        type: string
+      set_major:
+        description: "major 값 직접 지정 (비어있으면 현재값 유지, bump_type=custom 시 무시)"
+        required: false
+        type: string
+      set_minor:
+        description: "minor 값 직접 지정 (비어있으면 현재값 유지, bump_type=custom 시 무시)"
+        required: false
+        type: string
+      set_rev:
+        description: "rev 값 직접 지정 (비어있으면 현재값 유지, bump_type=custom 시 무시)"
+        required: false
+        type: string
+      trigger_release:
+        description: "버전 업 후 [03] Release 를 자동 실행"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   bump:
     name: Bump Version
     runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.bump.outputs.new_version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Bump VERSION
         id: bump
         run: |
+          set -e
           CURRENT=$(cat VERSION | tr -d '[:space:]')
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+          echo "Current version: ${CURRENT}"
 
-          case "${{ inputs.bump }}" in
-            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
-            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
-            patch) PATCH=$((PATCH + 1)) ;;
-          esac
+          if [ "${{ inputs.bump_type }}" = "custom" ]; then
+            if [ -z "${{ inputs.custom_version }}" ]; then
+              echo "::error::custom_version is required when bump_type=custom"
+              exit 1
+            fi
+            NEW_VERSION="${{ inputs.custom_version }}"
+          else
+            # Parse current: major.minor.rev-YYYYMM.seq
+            CANONICAL=$(echo "$CURRENT" | cut -d'-' -f1)
+            MAJOR=$(echo "$CANONICAL" | cut -d'.' -f1)
+            MINOR=$(echo "$CANONICAL" | cut -d'.' -f2)
+            REV=$(echo "$CANONICAL" | cut -d'.' -f3)
 
-          NEW="${MAJOR}.${MINOR}.${PATCH}"
-          echo "$NEW" > VERSION
-          echo "old=${CURRENT}" >> "$GITHUB_OUTPUT"
-          echo "new=${NEW}" >> "$GITHUB_OUTPUT"
-          echo "Bumped: ${CURRENT} → ${NEW} (${{ inputs.bump }})"
+            # Apply set_* overrides first
+            [ -n "${{ inputs.set_major }}" ] && MAJOR="${{ inputs.set_major }}"
+            [ -n "${{ inputs.set_minor }}" ] && MINOR="${{ inputs.set_minor }}"
+            [ -n "${{ inputs.set_rev }}" ]   && REV="${{ inputs.set_rev }}"
+
+            # Apply bump (resets lower parts)
+            case "${{ inputs.bump_type }}" in
+              major) MAJOR=$((MAJOR + 1)); MINOR=0; REV=0 ;;
+              minor) MINOR=$((MINOR + 1)); REV=0 ;;
+              patch) REV=$((REV + 1)) ;;
+            esac
+
+            NEW_CANONICAL="${MAJOR}.${MINOR}.${REV}"
+            NEW_YYYYMM=$(date -u '+%Y%m')
+
+            # Compute seq: find previous tags with same canonical-YYYYMM prefix
+            MAX_SEQ=0
+            PREFIX="v${NEW_CANONICAL}-${NEW_YYYYMM}."
+            for tag in $(git tag -l "${PREFIX}*" 2>/dev/null); do
+              TAG_SEQ=$(echo "$tag" | sed "s|${PREFIX}||")
+              if echo "$TAG_SEQ" | grep -qE '^[0-9]+$'; then
+                if [ "$TAG_SEQ" -gt "$MAX_SEQ" ]; then
+                  MAX_SEQ=$TAG_SEQ
+                fi
+              fi
+            done
+            NEW_SEQ=$((MAX_SEQ + 1))
+
+            NEW_VERSION="${NEW_CANONICAL}-${NEW_YYYYMM}.${NEW_SEQ}"
+          fi
+
+          echo "${NEW_VERSION}" > VERSION
+          echo "new_version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "old_version=${CURRENT}" >> "$GITHUB_OUTPUT"
+
+          # Job summary
+          {
+            echo "## 🔖 Version Bump"
+            echo ""
+            echo "| | 값 |"
+            echo "|---|---|"
+            echo "| **이전 버전** | \`${CURRENT}\` |"
+            echo "| **새 버전** | \`${NEW_VERSION}\` |"
+            echo "| **Bump 유형** | ${{ inputs.bump_type }} |"
+            echo "| **Release 연계** | ${{ inputs.trigger_release }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          echo "Bumped: ${CURRENT} → ${NEW_VERSION}"
 
       - name: Commit version bump
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add VERSION
-          git commit -m "release: bump version ${{ steps.bump.outputs.old }} → ${{ steps.bump.outputs.new }}"
+          git commit -m "release: bump version → ${{ steps.bump.outputs.new_version }}"
           git push origin main
+
+  trigger-release:
+    name: Trigger Release
+    needs: [bump]
+    if: inputs.trigger_release == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger [03] Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run "03-release.yml" --repo "${{ github.repository }}"
+          echo "✅ [03] Release triggered for v${{ needs.bump.outputs.new_version }}"

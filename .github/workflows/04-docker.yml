@@ -1,23 +1,29 @@
 # =============================================================================
-#  [04] Build Docker Image — Docker 빌드 및 레지스트리 푸시
+#  [04] Build Docker Image — Release 바이너리로 Docker 이미지 빌드
 #
-#  트리거:
-#    - main push 시 자동 (Build 성공 후)
-#    - 수동 트리거
-#
-#  두 레지스트리에 동시 푸시:
-#    1. GHCR (ghcr.io) — GitHub Container Registry
-#    2. OCI  — 자체 OCI Registry (Secret 설정 시)
+#  마지막 Release의 바이너리를 다운로드하여 Docker 이미지를 생성합니다.
+#  Go 빌드를 수행하지 않습니다.
 # =============================================================================
 
 name: "[04] Build Docker Image"
 
 on:
-  workflow_run:
-    workflows: ["[01] Build"]
-    types: [completed]
-    branches: [main]
   workflow_dispatch:
+    inputs:
+      version:
+        description: "대상 릴리즈 버전 (비우면 최신 릴리즈 사용, 예: 0.9.0-202606.1)"
+        required: false
+        type: string
+      push_ghcr:
+        description: "GHCR (ghcr.io) 에 Push"
+        required: false
+        type: boolean
+        default: true
+      push_oci:
+        description: "OCI Registry 에 Push"
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -27,39 +33,55 @@ jobs:
   docker:
     name: Build & Push
     runs-on: ubuntu-latest
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.event == 'push')
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Read VERSION
+      - name: Determine version
         id: version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION=$(cat VERSION | tr -d '[:space:]')
-          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          BUILD_DATE=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+          if [ -n "${{ inputs.version }}" ]; then
+            VERSION="${{ inputs.version }}"
+            TAG="v${VERSION}"
+          else
+            # 최신 릴리즈 태그 가져오기
+            TAG=$(gh release view --repo "${{ github.repository }}" --json tagName -q '.tagName')
+            VERSION=$(echo "$TAG" | sed 's/^v//')
+          fi
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "short_sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
-          echo "build_date=${BUILD_DATE}" >> "$GITHUB_OUTPUT"
-          echo "Version: ${VERSION}, SHA: ${SHORT_SHA}, Date: ${BUILD_DATE}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "Target release: ${TAG}"
+
+      - name: Download release binary
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          echo "Downloading binary from release ${TAG}..."
+          gh release download "${TAG}" \
+            --repo "${{ github.repository }}" \
+            --pattern "muhan-server-linux-amd64" \
+            --dir .
+          chmod +x muhan-server-linux-amd64
+          ./muhan-server-linux-amd64 -version || true
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       # ─── GHCR 로그인 ───
-      - name: Login to GitHub Container Registry
+      - name: Login to GHCR
+        if: inputs.push_ghcr
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # ─── OCI Registry 로그인 (Secret 설정 시에만) ───
+      # ─── OCI Registry 로그인 ───
       - name: Login to OCI Registry
-        if: env.OCI_REGISTRY != ''
+        if: inputs.push_oci && env.OCI_REGISTRY != ''
         uses: docker/login-action@v3
         env:
           OCI_REGISTRY: ${{ secrets.OCI_REGISTRY }}
@@ -68,40 +90,78 @@ jobs:
           username: ${{ secrets.OCI_REGISTRY_USER }}
           password: ${{ secrets.OCI_REGISTRY_PASSWORD }}
 
-      - name: Compute image list
-        id: images
+      - name: Compute tags
+        id: tags
         env:
           OCI_REGISTRY: ${{ secrets.OCI_REGISTRY }}
         run: |
-          IMAGES="ghcr.io/${{ github.repository }}"
-          if [ -n "$OCI_REGISTRY" ]; then
-            IMAGES="${IMAGES}
-          ${OCI_REGISTRY}/muhan"
+          VERSION="${{ steps.version.outputs.version }}"
+          TAGS=""
+
+          # GHCR tags
+          if [ "${{ inputs.push_ghcr }}" = "true" ]; then
+            GHCR_IMAGE="ghcr.io/${{ github.repository }}"
+            TAGS="${GHCR_IMAGE}:v${VERSION}"
+            TAGS="${TAGS},${GHCR_IMAGE}:latest"
           fi
-          echo "list<<EOF" >> "$GITHUB_OUTPUT"
-          echo "$IMAGES" >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
 
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ steps.images.outputs.list }}
-          tags: |
-            type=raw,value=v${{ steps.version.outputs.version }}
-            type=sha,prefix=
-            type=raw,value=latest
+          # OCI tags
+          if [ "${{ inputs.push_oci }}" = "true" ] && [ -n "$OCI_REGISTRY" ]; then
+            OCI_IMAGE="${OCI_REGISTRY}/muhan"
+            [ -n "$TAGS" ] && TAGS="${TAGS},"
+            TAGS="${TAGS}${OCI_IMAGE}:v${VERSION}"
+            TAGS="${TAGS},${OCI_IMAGE}:latest"
+          fi
 
-      - name: Build and push Docker image
+          PUSH="false"
+          [ -n "$TAGS" ] && PUSH="true"
+
+          echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
+          echo "push=${PUSH}" >> "$GITHUB_OUTPUT"
+          echo "Tags: ${TAGS}"
+
+      - name: Build Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          file: docker/Dockerfile.release
+          push: ${{ steps.tags.outputs.push }}
+          tags: ${{ steps.tags.outputs.tags }}
           build-args: |
-            VERSION=${{ steps.version.outputs.version }}
-            COMMIT=${{ steps.version.outputs.short_sha }}
-            BUILD_DATE=${{ steps.version.outputs.build_date }}
+            BINARY=muhan-server-linux-amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Job Summary
+        env:
+          OCI_REGISTRY: ${{ secrets.OCI_REGISTRY }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          {
+            echo "## 🐳 Docker Image Build"
+            echo ""
+            echo "| | 값 |"
+            echo "|---|---|"
+            echo "| **릴리즈 버전** | \`v${VERSION}\` |"
+            echo "| **릴리즈 소스** | [v${VERSION}](https://github.com/${{ github.repository }}/releases/tag/v${VERSION}) |"
+            echo "| **Dockerfile** | \`docker/Dockerfile.release\` |"
+            echo ""
+            echo "### 이미지 태그"
+            echo ""
+            echo "| Registry | 이미지 | Push |"
+            echo "|----------|--------|------|"
+
+            if [ "${{ inputs.push_ghcr }}" = "true" ]; then
+              echo "| GHCR | \`ghcr.io/${{ github.repository }}:v${VERSION}\` | ✅ |"
+              echo "| GHCR | \`ghcr.io/${{ github.repository }}:latest\` | ✅ |"
+            else
+              echo "| GHCR | — | ⏭ 스킵 |"
+            fi
+
+            if [ "${{ inputs.push_oci }}" = "true" ] && [ -n "$OCI_REGISTRY" ]; then
+              echo "| OCI | \`${OCI_REGISTRY}/muhan:v${VERSION}\` | ✅ |"
+              echo "| OCI | \`${OCI_REGISTRY}/muhan:latest\` | ✅ |"
+            else
+              echo "| OCI | — | ⏭ 스킵 |"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

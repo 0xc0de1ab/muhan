@@ -1,0 +1,58 @@
+# =============================================================================
+#  Muhan MUD Server - Release Docker Build
+#
+#  릴리즈된 바이너리를 사용하여 Docker 이미지를 생성합니다.
+#  Go 빌드를 수행하지 않고, 사전 빌드된 바이너리를 복사합니다.
+#
+#  사용법:
+#    docker build -f docker/Dockerfile.release \
+#      --build-arg BINARY=muhan-server-linux-amd64 \
+#      -t muhan-server:v0.9.0-202606.1 .
+# =============================================================================
+
+# ─── Stage 1: Web UI 빌드 ──────────────────────────────────────────────────
+FROM node:22-alpine AS webui-builder
+
+WORKDIR /build
+
+COPY webui/package.json webui/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+
+COPY webui/ ./
+RUN npm run build
+
+# ─── Stage 2: 최종 런타임 이미지 ────────────────────────────────────────────
+FROM alpine:3.21
+
+RUN apk add --no-cache \
+    ca-certificates \
+    tzdata \
+    tini
+
+ARG UID=1000
+ARG GID=1000
+RUN addgroup -g ${GID} -S muhan && adduser -u ${UID} -G muhan -S muhan
+
+WORKDIR /app
+
+# 릴리즈 바이너리 복사 (빌드 컨텍스트에서)
+ARG BINARY=muhan-server-linux-amd64
+COPY ${BINARY} /app/muhan-server
+RUN chmod +x /app/muhan-server
+
+# Web UI 정적 파일
+COPY --from=webui-builder /build/dist /app/webui/dist
+
+RUN mkdir -p /data && chown -R muhan:muhan /data /app
+
+EXPOSE 4000 4041
+
+ENTRYPOINT ["/sbin/tini", "--"]
+
+USER muhan
+
+CMD ["/app/muhan-server", \
+     "-root", "/data", \
+     "-listen", ":4000", \
+     "-ws-listen", "0.0.0.0:4041", \
+     "-ansi"]
