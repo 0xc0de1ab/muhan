@@ -17,102 +17,83 @@ func (w *World) TickWorld(t int64) error {
 	}
 
 	// 1. Every 1 second: call UpdateActiveMonsters(t)
-	var lastActive int64
-	w.rLockDomains(true, true, true, true, true, true, true)
-	lastActive = w.lastActiveUpdate
-	w.rUnlockDomains(true, true, true, true, true, true, true)
-
-	if t != lastActive {
-		w.lockDomains(true, true, true, true, true, true, true)
+	w.lockDomains(true, true, true, true, true, true, true)
+	if t != w.lastActiveUpdate {
 		w.lastActiveUpdate = t
 		w.unlockDomains(true, true, true, true, true, true, true)
 		if err := w.UpdateActiveMonsters(t); err != nil {
 			// handle/log error if needed
 		}
+	} else {
+		w.unlockDomains(true, true, true, true, true, true, true)
 	}
 
 	// 2. Every 20 seconds: call UpdatePlayerStatuses(t)
-	var lastPlayer int64
-	w.rLockDomains(true, true, true, true, true, true, true)
-	lastPlayer = w.lastPlayerUpdate
-	w.rUnlockDomains(true, true, true, true, true, true, true)
-
-	if t-lastPlayer >= 20 {
-		w.lockDomains(true, true, true, true, true, true, true)
+	w.lockDomains(true, true, true, true, true, true, true)
+	if t-w.lastPlayerUpdate >= 20 {
 		w.lastPlayerUpdate = t
 		w.unlockDomains(true, true, true, true, true, true, true)
 		if err := w.UpdatePlayerStatuses(t); err != nil {
 			// handle/log error if needed
 		}
+	} else {
+		w.unlockDomains(true, true, true, true, true, true, true)
 	}
 
 	// 3. Every Random_update_interval: call UpdateRandomSpawns(t)
-	var lastRandom, randomInt int64
-	w.rLockDomains(true, true, true, true, true, true, true)
-	lastRandom = w.lastRandomUpdate
-	randomInt = w.randomUpdateInterval
+	w.lockDomains(true, true, true, true, true, true, true)
+	randomInt := w.randomUpdateInterval
 	if randomInt == 0 {
 		randomInt = 20
 	}
-	w.rUnlockDomains(true, true, true, true, true, true, true)
-
-	if t-lastRandom >= randomInt {
-		w.lockDomains(true, true, true, true, true, true, true)
+	if t-w.lastRandomUpdate >= randomInt {
 		w.lastRandomUpdate = t
 		w.unlockDomains(true, true, true, true, true, true, true)
 		if err := w.UpdateRandomSpawns(t); err != nil {
 			// handle/log error if needed
 		}
+	} else {
+		w.unlockDomains(true, true, true, true, true, true, true)
 	}
 
 	// 4. Every 150 seconds: call UpdateTimeClock(t)
-	var lastTime int64
-	w.rLockDomains(true, true, true, true, true, true, true)
-	lastTime = w.lastTimeUpdate
-	w.rUnlockDomains(true, true, true, true, true, true, true)
-
-	if t-lastTime >= 150 {
-		w.lockDomains(true, true, true, true, true, true, true)
+	w.lockDomains(true, true, true, true, true, true, true)
+	if t-w.lastTimeUpdate >= 150 {
 		w.lastTimeUpdate = t
 		w.unlockDomains(true, true, true, true, true, true, true)
 		if err := w.UpdateTimeClock(t); err != nil {
 			// handle/log error if needed
 		}
+	} else {
+		w.unlockDomains(true, true, true, true, true, true, true)
 	}
 
 	// 5. Every TX_interval: call UpdateTimedExits(t)
-	var lastExit, txInt int64
-	w.rLockDomains(true, true, true, true, true, true, true)
-	lastExit = w.lastExitUpdate
-	txInt = w.txInterval
+	w.lockDomains(true, true, true, true, true, true, true)
+	txInt := w.txInterval
 	if txInt == 0 {
 		txInt = 3600
 	}
-	w.rUnlockDomains(true, true, true, true, true, true, true)
-
-	if t-lastExit >= txInt {
-		w.lockDomains(true, true, true, true, true, true, true)
+	if t-w.lastExitUpdate >= txInt {
 		w.lastExitUpdate = t
 		w.unlockDomains(true, true, true, true, true, true, true)
 		if err := w.UpdateTimedExits(t); err != nil {
 			// handle/log error if needed
 		}
+	} else {
+		w.unlockDomains(true, true, true, true, true, true, true)
 	}
 
 	// 6. Every 30 seconds: call UpdateShutdown(t) if shutdown is scheduled
-	var lastShutdown, shutdownLTime int64
-	w.rLockDomains(true, true, true, true, true, true, true)
-	lastShutdown = w.lastShutdownUpdate
-	shutdownLTime = w.shutdownLTime
-	w.rUnlockDomains(true, true, true, true, true, true, true)
-
-	if shutdownLTime != 0 && t-lastShutdown >= 30 {
-		w.lockDomains(true, true, true, true, true, true, true)
+	w.lockDomains(true, true, true, true, true, true, true)
+	if w.shutdownLTime != 0 && t-w.lastShutdownUpdate >= 30 {
 		w.lastShutdownUpdate = t
 		w.unlockDomains(true, true, true, true, true, true, true)
 		if err := w.UpdateShutdown(t); err != nil {
 			// handle/log error if needed
 		}
+	} else {
+		w.unlockDomains(true, true, true, true, true, true, true)
 	}
 
 	return nil

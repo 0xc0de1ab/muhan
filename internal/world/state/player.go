@@ -448,18 +448,16 @@ func (w *World) CreatePlayerCharacter(player model.Player, creature model.Creatu
 	}
 
 	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
 
 	if _, exists := w.players[player.ID]; exists {
-		w.unlockDomains(true, true, true, true, true, true, true)
 		return fmt.Errorf("create player character %q: player already exists", player.ID)
 	}
 	if _, exists := w.creatures[creature.ID]; exists {
-		w.unlockDomains(true, true, true, true, true, true, true)
 		return fmt.Errorf("create player character %q: creature %q already exists", player.ID, creature.ID)
 	}
 	room, ok := w.rooms[player.RoomID]
 	if !ok {
-		w.unlockDomains(true, true, true, true, true, true, true)
 		return fmt.Errorf("create player character %q: starting room %q not found", player.ID, player.RoomID)
 	}
 
@@ -475,7 +473,6 @@ func (w *World) CreatePlayerCharacter(player model.Player, creature model.Creatu
 	room.PlayerIDs = w.insertPlayerIDLegacySortedLocked(room.PlayerIDs, player.ID)
 	room.CreatureIDs = w.insertCreatureIDLegacySortedLocked(room.CreatureIDs, creature.ID)
 	w.rooms[room.ID] = room
-	w.unlockDomains(true, true, true, true, true, true, true)
 
 	w.MarkPlayerDirty(player.ID)
 	return nil

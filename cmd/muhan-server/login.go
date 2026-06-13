@@ -120,8 +120,6 @@ func (m *serverLoginManager) HandleLine(ctx context.Context, id session.ID, line
 		return game.UnauthenticatedLineResult{}, errors.New("login manager is nil")
 	}
 	m.mu.Lock()
-	defer m.mu.Unlock()
-
 	login := m.sessions[id]
 
 	// C5: IP 차단 여부 확인 (비밀번호 단계에서만)
@@ -129,6 +127,7 @@ func (m *serverLoginManager) HandleLine(ctx context.Context, id session.ID, line
 		if rec, ok := m.ipFailures[login.remoteHost]; ok {
 			if time.Now().Before(rec.blockedUntil) {
 				delete(m.sessions, id)
+				m.mu.Unlock()
 				return game.UnauthenticatedLineResult{
 					Command: session.Command{
 						Write: "\r\n로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.\r\n",
@@ -140,30 +139,85 @@ func (m *serverLoginManager) HandleLine(ctx context.Context, id session.ID, line
 	}
 
 	switch login.step {
-	case serverLoginSitePassword:
-		return m.handleSitePassword(id, login, line)
 	case serverLoginPassword:
-		return m.handlePassword(id, login, line)
-	case serverLoginCreateConfirm:
-		return m.handleCreateConfirm(id, login, line)
-	case serverLoginCreateEnter:
-		return m.handleCreateEnter(id, login, line)
-	case serverLoginCreateGender:
-		return m.handleCreateGender(id, login, line)
-	case serverLoginCreateClass:
-		return m.handleCreateClass(id, login, line)
-	case serverLoginCreateStats:
-		return m.handleCreateStats(id, login, line)
-	case serverLoginCreateWeapon:
-		return m.handleCreateWeapon(id, login, line)
-	case serverLoginCreateAlignment:
-		return m.handleCreateAlignment(id, login, line)
-	case serverLoginCreateRace:
-		return m.handleCreateRace(id, login, line)
+		player, ok := m.world.Player(login.playerID)
+		if !ok {
+			delete(m.sessions, id)
+			m.mu.Unlock()
+			return loginCommand("플레이어 정보를 다시 찾을 수 없습니다.\n" + loginNamePrompt), nil
+		}
+		storedHash := legacyPasswordHash(m.world, player)
+		m.mu.Unlock()
+
+		// Perform CPU-intensive password verify outside the lock (W-5)
+		verified := legacycrypt.Verify(line, storedHash)
+		var newHash string
+		var rehashed bool
+		if verified && !legacycrypt.IsBcryptHash(storedHash) {
+			if nh, err := legacycrypt.HashBcrypt(line); err == nil {
+				newHash = nh
+				rehashed = true
+			}
+		}
+
+		m.mu.Lock()
+		login, exists := m.sessions[id]
+		if !exists || login.step != serverLoginPassword {
+			m.mu.Unlock()
+			return game.UnauthenticatedLineResult{}, fmt.Errorf("login session expired during verification")
+		}
+		return m.handlePasswordAfterVerify(id, login, line, verified, rehashed, newHash)
+
 	case serverLoginCreatePassword:
-		return m.handleCreatePassword(id, login, line)
+		passwordLen := legacyCreatePasswordByteLen(line)
+		if passwordLen > 14 {
+			m.mu.Unlock()
+			return loginCommand("입력된 암호가 너무 깁니다.\n암호를 다시 넣으십시요(3자이상 14자이하): "), nil
+		}
+		if passwordLen < 3 {
+			m.mu.Unlock()
+			return loginCommand("입력된 암호가 너무 짧습니다.\n암호를 다시 넣으십시요(3자이상 14자이하): "), nil
+		}
+		m.mu.Unlock()
+
+		// Perform CPU-intensive bcrypt generation outside the lock (W-5)
+		hash, err := legacycrypt.HashBcrypt(line)
+		if err != nil {
+			return game.UnauthenticatedLineResult{}, err
+		}
+
+		m.mu.Lock()
+		login, exists := m.sessions[id]
+		if !exists || login.step != serverLoginCreatePassword {
+			m.mu.Unlock()
+			return game.UnauthenticatedLineResult{}, fmt.Errorf("login session expired during hashing")
+		}
+		return m.handleCreatePasswordAfterHash(id, login, line, hash)
+
 	default:
-		return m.handleName(id, login, line)
+		defer m.mu.Unlock()
+		switch login.step {
+		case serverLoginSitePassword:
+			return m.handleSitePassword(id, login, line)
+		case serverLoginCreateConfirm:
+			return m.handleCreateConfirm(id, login, line)
+		case serverLoginCreateEnter:
+			return m.handleCreateEnter(id, login, line)
+		case serverLoginCreateGender:
+			return m.handleCreateGender(id, login, line)
+		case serverLoginCreateClass:
+			return m.handleCreateClass(id, login, line)
+		case serverLoginCreateStats:
+			return m.handleCreateStats(id, login, line)
+		case serverLoginCreateWeapon:
+			return m.handleCreateWeapon(id, login, line)
+		case serverLoginCreateAlignment:
+			return m.handleCreateAlignment(id, login, line)
+		case serverLoginCreateRace:
+			return m.handleCreateRace(id, login, line)
+		default:
+			return m.handleName(id, login, line)
+		}
 	}
 }
 
@@ -207,14 +261,16 @@ func (m *serverLoginManager) handleName(id session.ID, login serverLoginState, l
 	return loginCommand("암호를 넣어 주십시요: "), nil
 }
 
-func (m *serverLoginManager) handlePassword(id session.ID, login serverLoginState, line string) (game.UnauthenticatedLineResult, error) {
+func (m *serverLoginManager) handlePasswordAfterVerify(id session.ID, login serverLoginState, line string, verified bool, rehashed bool, newHash string) (game.UnauthenticatedLineResult, error) {
+	defer m.mu.Unlock()
+
 	player, ok := m.world.Player(login.playerID)
 	if !ok {
 		delete(m.sessions, id)
 		return loginCommand("플레이어 정보를 다시 찾을 수 없습니다.\n" + loginNamePrompt), nil
 	}
-	storedHash := legacyPasswordHash(m.world, player)
-	if legacycrypt.Verify(line, storedHash) {
+
+	if verified {
 		delete(m.sessions, id)
 		// C5: 로그인 성공 시 IP 실패 카운터 리셋
 		if login.remoteHost != "" {
@@ -222,11 +278,9 @@ func (m *serverLoginManager) handlePassword(id session.ID, login serverLoginStat
 		}
 
 		// C2: bcrypt가 아니면(DES이면) re-hash 후 저장
-		if !legacycrypt.IsBcryptHash(storedHash) {
-			if newHash, err := legacycrypt.HashBcrypt(line); err == nil {
-				_, _ = m.world.SetCreatureProperty(player.CreatureID, "legacyPasswordHash", newHash)
-				_ = m.world.SavePlayer(player.ID)
-			}
+		if rehashed {
+			_, _ = m.world.SetCreatureProperty(player.CreatureID, "legacyPasswordHash", newHash)
+			_ = m.world.SavePlayer(player.ID)
 		}
 
 		// S3: 중복 로그인 확인 - 기존 세션 종료
@@ -408,6 +462,13 @@ func (m *serverLoginManager) handleCreatePassword(id session.ID, login serverLog
 	if err != nil {
 		return game.UnauthenticatedLineResult{}, err
 	}
+
+	m.mu.Lock()
+	return m.handleCreatePasswordAfterHash(id, login, line, hash)
+}
+
+func (m *serverLoginManager) handleCreatePasswordAfterHash(id session.ID, login serverLoginState, line string, hash string) (game.UnauthenticatedLineResult, error) {
+	defer m.mu.Unlock()
 
 	player, creature, err := legacyCreatedPlayerCharacter(login.create, hash)
 	if err != nil {
