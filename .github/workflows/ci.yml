@@ -148,9 +148,10 @@ jobs:
 
       # ─── OCI Registry 로그인 ───
       - name: Login to OCI Registry
+        if: ${{ secrets.OCI_REGISTRY != '' }}
         uses: docker/login-action@v3
         with:
-          registry: a2.oci.0xc0de1ab.dev
+          registry: ${{ secrets.OCI_REGISTRY }}
           username: ${{ secrets.OCI_REGISTRY_USER }}
           password: ${{ secrets.OCI_REGISTRY_PASSWORD }}
 
@@ -160,7 +161,7 @@ jobs:
         with:
           images: |
             ghcr.io/${{ github.repository }}
-            a2.oci.0xc0de1ab.dev/muhan
+            ${{ secrets.OCI_REGISTRY && format('{0}/muhan', secrets.OCI_REGISTRY) || '' }}
           tags: |
             type=raw,value=v${{ steps.version.outputs.version }}
             type=sha,prefix=
