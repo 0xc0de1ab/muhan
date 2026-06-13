@@ -1,6 +1,6 @@
 # Muhan Server (무한 서버)
 
-[![CI/CD](https://github.com/0xc0de1ab/muhan/actions/workflows/ci.yml/badge.svg)](https://github.com/0xc0de1ab/muhan/actions/workflows/ci.yml)
+[![Build](https://github.com/0xc0de1ab/muhan/actions/workflows/01-build.yml/badge.svg)](https://github.com/0xc0de1ab/muhan/actions/workflows/01-build.yml)
 
 Muhan(무한)은 레거시 C 기반 MUD(Multi-User Dungeon) 게임 서버를 Go 언어로 완전히 재작성한 프로젝트입니다.  
 기존의 방대한 바이너리 맵, 플레이어 데이터, 오브젝트/몬스터 데이터를 안정적으로 파싱하고, 최신 동시성 제어, 보안, 모니터링을 탑재한 프로덕션 수준의 게임 서버입니다.

@@ -1,0 +1,93 @@
+# =============================================================================
+#  [03] Release — Git Tag + GitHub Release 생성
+#
+#  수동 트리거 전용. VERSION 파일의 현재 버전으로 태그와 릴리즈를 생성합니다.
+# =============================================================================
+
+name: "[03] Release"
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  GO_VERSION: "1.25.0"
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read VERSION
+        id: version
+        run: |
+          VERSION=$(cat VERSION | tr -d '[:space:]')
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Release version: v${VERSION}"
+
+      - name: Check tag does not exist
+        run: |
+          if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "::error::Tag v${{ steps.version.outputs.version }} already exists. Run [02] Bump up first."
+            exit 1
+          fi
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Build release binary
+        run: |
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+            -ldflags="-s -w -X main.version=${{ steps.version.outputs.version }} -X main.commit=$(git rev-parse --short HEAD) -X main.buildDate=$(date -u '+%Y-%m-%dT%H:%M:%SZ')" \
+            -o muhan-server-linux-amd64 \
+            ./cmd/muhan-server/
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$PREV_TAG" ]; then
+            CHANGES=$(git log ${PREV_TAG}..HEAD --oneline --no-merges)
+          else
+            CHANGES=$(git log --oneline --no-merges -20)
+          fi
+          {
+            echo "notes<<EOF"
+            echo "## Changes"
+            echo ""
+            echo "$CHANGES"
+            echo ""
+            echo "## Docker Images"
+            echo ""
+            echo '```'
+            echo "ghcr.io/${{ github.repository }}:v${{ steps.version.outputs.version }}"
+            echo '```'
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create Git Tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v${{ steps.version.outputs.version }}" -m "Release v${{ steps.version.outputs.version }}"
+          git push origin "v${{ steps.version.outputs.version }}"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "v${{ steps.version.outputs.version }}" \
+            --title "v${{ steps.version.outputs.version }}" \
+            --notes "${{ steps.notes.outputs.notes }}" \
+            muhan-server-linux-amd64
