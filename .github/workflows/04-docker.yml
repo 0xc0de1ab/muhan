@@ -83,10 +83,10 @@ jobs:
 
       # ─── OCI Registry 로그인 ───
       - name: Login to OCI Registry
+        id: oci_login
         if: inputs.push_oci && env.OCI_REGISTRY != ''
+        continue-on-error: true
         uses: docker/login-action@v3
-        env:
-          OCI_REGISTRY: ${{ secrets.OCI_REGISTRY }}
         with:
           registry: ${{ secrets.OCI_REGISTRY }}
           username: ${{ secrets.OCI_REGISTRY_USER }}
@@ -107,8 +107,8 @@ jobs:
             TAGS="${TAGS},${GHCR_IMAGE}:latest"
           fi
 
-          # OCI tags
-          if [ "${{ inputs.push_oci }}" = "true" ] && [ -n "$OCI_REGISTRY" ]; then
+          # OCI tags (only if login succeeded)
+          if [ "${{ inputs.push_oci }}" = "true" ] && [ -n "$OCI_REGISTRY" ] && [ "${{ steps.oci_login.outcome }}" = "success" ]; then
             OCI_IMAGE="${OCI_REGISTRY}/muhan"
             [ -n "$TAGS" ] && TAGS="${TAGS},"
             TAGS="${TAGS}${OCI_IMAGE}:v${VERSION}"
@@ -161,9 +161,50 @@ jobs:
             fi
 
             if [ "${{ inputs.push_oci }}" = "true" ] && [ -n "$OCI_REGISTRY" ]; then
-              echo "| OCI | \`${OCI_REGISTRY}/muhan:v${VERSION}\` | ✅ |"
-              echo "| OCI | \`${OCI_REGISTRY}/muhan:latest\` | ✅ |"
+              if [ "${{ steps.oci_login.outcome }}" = "success" ]; then
+                echo "| OCI | \`${OCI_REGISTRY}/muhan:v${VERSION}\` | ✅ |"
+                echo "| OCI | \`${OCI_REGISTRY}/muhan:latest\` | ✅ |"
+              else
+                echo "| OCI | \`${OCI_REGISTRY}/muhan:v${VERSION}\` | ❌ 로그인 실패 (Push 건너뜀) |"
+              fi
             else
               echo "| OCI | — | ⏭ 스킵 |"
+            fi
+
+            echo ""
+            echo "### 🚀 Pull & Run 가이드"
+            echo ""
+            if [ "${{ inputs.push_ghcr }}" = "true" ]; then
+              echo "#### 1. GHCR 이미지 사용"
+              echo "\`\`\`bash"
+              echo "# 이미지 다운로드"
+              echo "docker pull ghcr.io/${{ github.repository }}:v${VERSION}"
+              echo ""
+              echo "# 컨테이너 실행 (볼륨 마운트 및 포트 바인딩)"
+              echo "docker run -d \\"
+              echo "  --name muhan-server \\"
+              echo "  -p 4000:4000 \\"
+              echo "  -p 4041:4041 \\"
+              echo "  -v ./data:/data \\"
+              echo "  ghcr.io/${{ github.repository }}:v${VERSION}"
+              echo "\`\`\`"
+              echo ""
+            fi
+
+            if [ "${{ inputs.push_oci }}" = "true" ] && [ -n "$OCI_REGISTRY" ] && [ "${{ steps.oci_login.outcome }}" = "success" ]; then
+              echo "#### 2. OCI Registry 이미지 사용"
+              echo "\`\`\`bash"
+              echo "# 이미지 다운로드"
+              echo "docker pull ${OCI_REGISTRY}/muhan:v${VERSION}"
+              echo ""
+              echo "# 컨테이너 실행 (볼륨 마운트 및 포트 바인딩)"
+              echo "docker run -d \\"
+              echo "  --name muhan-server \\"
+              echo "  -p 4000:4000 \\"
+              echo "  -p 4041:4041 \\"
+              echo "  -v ./data:/data \\"
+              echo "  ${OCI_REGISTRY}/muhan:v${VERSION}"
+              echo "\`\`\`"
+              echo ""
             fi
           } >> "$GITHUB_STEP_SUMMARY"

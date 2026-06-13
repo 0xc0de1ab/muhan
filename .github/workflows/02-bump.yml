@@ -74,23 +74,56 @@ jobs:
           else
             # Parse current: major.minor.rev-YYYYMM.seq
             CANONICAL=$(echo "$CURRENT" | cut -d'-' -f1)
-            MAJOR=$(echo "$CANONICAL" | cut -d'.' -f1)
-            MINOR=$(echo "$CANONICAL" | cut -d'.' -f2)
-            REV=$(echo "$CANONICAL" | cut -d'.' -f3)
+            CURRENT_MAJOR=$(echo "$CANONICAL" | cut -d'.' -f1)
+            CURRENT_MINOR=$(echo "$CANONICAL" | cut -d'.' -f2)
+            CURRENT_REV=$(echo "$CANONICAL" | cut -d'.' -f3)
 
-            # Apply set_* overrides first
-            [ -n "${{ inputs.set_major }}" ] && MAJOR="${{ inputs.set_major }}"
-            [ -n "${{ inputs.set_minor }}" ] && MINOR="${{ inputs.set_minor }}"
-            [ -n "${{ inputs.set_rev }}" ]   && REV="${{ inputs.set_rev }}"
+            TARGET_MAJOR=$CURRENT_MAJOR
+            TARGET_MINOR=$CURRENT_MINOR
+            TARGET_REV=$CURRENT_REV
 
-            # Apply bump (resets lower parts)
+            # Apply bump increment
             case "${{ inputs.bump_type }}" in
-              major) MAJOR=$((MAJOR + 1)); MINOR=0; REV=0 ;;
-              minor) MINOR=$((MINOR + 1)); REV=0 ;;
-              patch) REV=$((REV + 1)) ;;
+              major) TARGET_MAJOR=$((CURRENT_MAJOR + 1)) ;;
+              minor) TARGET_MINOR=$((CURRENT_MINOR + 1)) ;;
+              patch) TARGET_REV=$((CURRENT_REV + 1)) ;;
             esac
 
-            NEW_CANONICAL="${MAJOR}.${MINOR}.${REV}"
+            # Track explicit override inputs
+            SET_MAJOR_VAL="${{ inputs.set_major }}"
+            SET_MINOR_VAL="${{ inputs.set_minor }}"
+            SET_REV_VAL="${{ inputs.set_rev }}"
+
+            # Apply overrides if provided
+            if [ -n "$SET_MAJOR_VAL" ]; then
+              TARGET_MAJOR="$SET_MAJOR_VAL"
+            fi
+            if [ -n "$SET_MINOR_VAL" ]; then
+              TARGET_MINOR="$SET_MINOR_VAL"
+            fi
+            if [ -n "$SET_REV_VAL" ]; then
+              TARGET_REV="$SET_REV_VAL"
+            fi
+
+            # Reset logic:
+            # 1. If major has changed, reset minor and rev to 0 (unless explicitly overridden)
+            if [ "$TARGET_MAJOR" != "$CURRENT_MAJOR" ]; then
+              if [ -z "$SET_MINOR_VAL" ]; then
+                TARGET_MINOR=0
+              fi
+              if [ -z "$SET_REV_VAL" ]; then
+                TARGET_REV=0
+              fi
+            fi
+
+            # 2. If minor has changed (including due to reset), reset rev to 0 (unless explicitly overridden)
+            if [ "$TARGET_MINOR" != "$CURRENT_MINOR" ]; then
+              if [ -z "$SET_REV_VAL" ]; then
+                TARGET_REV=0
+              fi
+            fi
+
+            NEW_CANONICAL="${TARGET_MAJOR}.${TARGET_MINOR}.${TARGET_REV}"
             NEW_YYYYMM=$(date -u '+%Y%m')
 
             # Compute seq: find previous tags with same canonical-YYYYMM prefix
