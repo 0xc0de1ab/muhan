@@ -10,12 +10,12 @@ import (
 	"strconv"
 	"strings"
 
-	"muhan/internal/krtext"
-	"muhan/internal/persist/cbin"
-	"muhan/internal/persist/legacykr"
-	"muhan/internal/session"
-	"muhan/internal/world/model"
-	"muhan/internal/world/state"
+	"github.com/0xc0de1ab/muhan/internal/krtext"
+	"github.com/0xc0de1ab/muhan/internal/persist/cbin"
+	"github.com/0xc0de1ab/muhan/internal/persist/legacykr"
+	"github.com/0xc0de1ab/muhan/internal/session"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/state"
 )
 
 // UpdatePlyWorld is the interface required by UpdatePlayerStatuses.

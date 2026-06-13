@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"muhan/internal/migrate/bankmap"
+	"github.com/0xc0de1ab/muhan/internal/migrate/bankmap"
 )
 
 func main() {

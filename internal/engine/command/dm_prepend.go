@@ -3,7 +3,7 @@ package command
 import (
 	"strings"
 
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 // DMPrependWorld defines the minimum dependencies needed for the dm_prepend command.

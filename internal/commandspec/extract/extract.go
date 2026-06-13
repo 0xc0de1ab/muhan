@@ -10,8 +10,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"muhan/internal/commandspec"
-	"muhan/internal/persist/legacykr"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
+	"github.com/0xc0de1ab/muhan/internal/persist/legacykr"
 
 	"golang.org/x/text/encoding/korean"
 	"golang.org/x/text/transform"

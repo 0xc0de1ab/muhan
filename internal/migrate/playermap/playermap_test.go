@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"muhan/internal/persist/cbin"
-	"muhan/internal/persist/legacykr"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/persist/cbin"
+	"github.com/0xc0de1ab/muhan/internal/persist/legacykr"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 func TestMapPlayerFileUTF8Filename(t *testing.T) {

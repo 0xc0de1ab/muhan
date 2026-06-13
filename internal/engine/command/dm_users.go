@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"muhan/internal/persist/legacykr"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/persist/legacykr"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 // DMUsersWorld is the required interface for the dm_users command.

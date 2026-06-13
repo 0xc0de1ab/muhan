@@ -9,11 +9,11 @@ import (
 	"time"
 	"unicode/utf8"
 
-	enginecmd "muhan/internal/engine/command"
-	"muhan/internal/persist/jsonstore"
-	"muhan/internal/persist/legacykr"
-	"muhan/internal/world/model"
-	"muhan/internal/world/state"
+	enginecmd "github.com/0xc0de1ab/muhan/internal/engine/command"
+	"github.com/0xc0de1ab/muhan/internal/persist/jsonstore"
+	"github.com/0xc0de1ab/muhan/internal/persist/legacykr"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/state"
 )
 
 const familyNewsHeader = "                      === 패거리 공지 ===\n\n"

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 type SneakWorld interface {

@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 // DMAddRomWorld defines the world dependencies for the dm_add_rom command.

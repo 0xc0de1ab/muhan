@@ -7,7 +7,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"muhan/internal/krtext"
+	"github.com/0xc0de1ab/muhan/internal/krtext"
 )
 
 // Resolver supplies rendered names for world-backed values that textfmt cannot

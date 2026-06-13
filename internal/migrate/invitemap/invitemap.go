@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strconv"
 
-	"muhan/internal/persist/legacykr"
+	"github.com/0xc0de1ab/muhan/internal/persist/legacykr"
 )
 
 const (

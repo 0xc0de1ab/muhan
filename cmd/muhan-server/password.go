@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	enginecmd "muhan/internal/engine/command"
-	"muhan/internal/world/model"
-	"muhan/internal/world/state"
+	enginecmd "github.com/0xc0de1ab/muhan/internal/engine/command"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/state"
 )
 
 func legacyPasswordHash(world *state.World, player model.Player) string {

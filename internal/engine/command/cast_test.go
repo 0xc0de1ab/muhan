@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"muhan/internal/commandspec"
-	worldload "muhan/internal/world/load"
-	"muhan/internal/world/model"
-	"muhan/internal/world/state"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
+	worldload "github.com/0xc0de1ab/muhan/internal/world/load"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/state"
 )
 
 func TestCastHandlerCastsNamedSpellAndConsumesMP(t *testing.T) {

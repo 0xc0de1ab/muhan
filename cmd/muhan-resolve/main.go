@@ -9,10 +9,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"muhan/internal/commandparse"
-	"muhan/internal/commandspec"
-	"muhan/internal/engine/command"
-	"muhan/internal/engine/command/table"
+	"github.com/0xc0de1ab/muhan/internal/commandparse"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
+	"github.com/0xc0de1ab/muhan/internal/engine/command"
+	"github.com/0xc0de1ab/muhan/internal/engine/command/table"
 )
 
 type output struct {

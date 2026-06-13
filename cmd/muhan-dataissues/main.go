@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"muhan/internal/report/dataissues"
+	"github.com/0xc0de1ab/muhan/internal/report/dataissues"
 )
 
 func main() {

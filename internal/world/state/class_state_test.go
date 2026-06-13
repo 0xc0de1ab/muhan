@@ -3,9 +3,9 @@ package state_test
 import (
 	"testing"
 
-	worldload "muhan/internal/world/load"
-	"muhan/internal/world/model"
-	"muhan/internal/world/state"
+	worldload "github.com/0xc0de1ab/muhan/internal/world/load"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/state"
 )
 
 func TestSetCreatureClassRecalculatesCombatStats(t *testing.T) {

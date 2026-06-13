@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"muhan/internal/persist/legacykr"
+	"github.com/0xc0de1ab/muhan/internal/persist/legacykr"
 )
 
 func TestMapInviteFileDecodesEUCKRNames(t *testing.T) {

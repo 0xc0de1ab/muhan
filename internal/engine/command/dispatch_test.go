@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"muhan/internal/commandspec"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
 )
 
 func TestDispatcherDispatchesByHandlerName(t *testing.T) {

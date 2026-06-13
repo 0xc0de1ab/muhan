@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 // DMSetWorld defines a small mockable interface for the World dependencies of the dm_set command.

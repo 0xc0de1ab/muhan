@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"muhan/internal/commandspec"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 func TestGetHandlerMovesRoomObjectIntoLinkedCreatureInventoryAndConfirms(t *testing.T) {

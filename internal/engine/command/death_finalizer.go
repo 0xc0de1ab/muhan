@@ -1,6 +1,6 @@
 package command
 
-import "muhan/internal/world/model"
+import "github.com/0xc0de1ab/muhan/internal/world/model"
 
 type monsterDeathFinalizeWorld interface {
 	FinalizeMonsterDeath(model.CreatureID) (bool, error)

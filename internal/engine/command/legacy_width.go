@@ -3,7 +3,7 @@ package command
 import (
 	"strings"
 
-	"muhan/internal/persist/legacykr"
+	"github.com/0xc0de1ab/muhan/internal/persist/legacykr"
 )
 
 func legacyLeftWidthBytes(text string, width int) string {

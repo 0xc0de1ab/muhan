@@ -4,7 +4,7 @@ import (
 	"slices"
 	"testing"
 
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 func TestLegacyRandomEnchantAdjustmentThresholds(t *testing.T) {

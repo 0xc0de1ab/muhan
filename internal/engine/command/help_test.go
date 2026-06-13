@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"muhan/internal/commandspec"
-	"muhan/internal/persist/legacykr"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
+	"github.com/0xc0de1ab/muhan/internal/persist/legacykr"
 )
 
 func TestHelpHandlerReadsDefaultHelpFileAsUTF8(t *testing.T) {

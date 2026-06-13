@@ -1,6 +1,6 @@
 package state
 
-import "muhan/internal/world/model"
+import "github.com/0xc0de1ab/muhan/internal/world/model"
 
 func (w *World) ShutdownSchedule() (ltime int64, interval int64) {
 	w.rLockDomains(true, true, true, true, true, true, true)

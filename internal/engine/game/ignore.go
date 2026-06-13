@@ -5,8 +5,8 @@ import (
 	"strings"
 	"sync"
 
-	enginecmd "muhan/internal/engine/command"
-	"muhan/internal/world/model"
+	enginecmd "github.com/0xc0de1ab/muhan/internal/engine/command"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 type IgnoreWorld interface {

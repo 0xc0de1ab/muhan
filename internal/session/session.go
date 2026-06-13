@@ -10,7 +10,7 @@ import (
 	"sync/atomic"
 	"unicode/utf8"
 
-	"muhan/internal/protocol"
+	"github.com/0xc0de1ab/muhan/internal/protocol"
 )
 
 const (

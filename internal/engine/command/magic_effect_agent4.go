@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 // MagicEffectAgent4World defines the world interface for space-time spells.

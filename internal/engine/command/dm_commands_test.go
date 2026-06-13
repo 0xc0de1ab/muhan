@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"muhan/internal/commandparse"
-	"muhan/internal/commandspec"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/commandparse"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 // unifiedDMWorld mock implements all 6 DM command world interfaces.

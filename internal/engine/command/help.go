@@ -10,9 +10,9 @@ import (
 	"strings"
 	"sync"
 
-	"muhan/internal/commandspec"
-	"muhan/internal/persist/legacykr"
-	"muhan/internal/textfmt"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
+	"github.com/0xc0de1ab/muhan/internal/persist/legacykr"
+	"github.com/0xc0de1ab/muhan/internal/textfmt"
 )
 
 var ErrHelpRootRequired = errors.New("help root required")

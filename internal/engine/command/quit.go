@@ -1,6 +1,6 @@
 package command
 
-import "muhan/internal/world/model"
+import "github.com/0xc0de1ab/muhan/internal/world/model"
 
 const quitGoodbye = "안녕히 가세요.\n"
 

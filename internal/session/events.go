@@ -1,6 +1,6 @@
 package session
 
-import "muhan/internal/protocol"
+import "github.com/0xc0de1ab/muhan/internal/protocol"
 
 type ID string
 

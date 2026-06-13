@@ -14,11 +14,11 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 
-	"muhan/internal/migrate/boardmap"
-	"muhan/internal/migrate/dbimport"
-	"muhan/internal/migrate/dbschema"
-	"muhan/internal/migrate/protoaudit"
-	worldload "muhan/internal/world/load"
+	"github.com/0xc0de1ab/muhan/internal/migrate/boardmap"
+	"github.com/0xc0de1ab/muhan/internal/migrate/dbimport"
+	"github.com/0xc0de1ab/muhan/internal/migrate/dbschema"
+	"github.com/0xc0de1ab/muhan/internal/migrate/protoaudit"
+	worldload "github.com/0xc0de1ab/muhan/internal/world/load"
 )
 
 const importManifestVersion = "muhan-dbimport/v1"

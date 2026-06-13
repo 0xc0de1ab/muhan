@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 // DMForceWorld defines the world interface required by the dm_force command.

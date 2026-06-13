@@ -4,8 +4,8 @@ import (
 	"encoding/binary"
 	"testing"
 
-	"muhan/internal/persist/cbin"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/persist/cbin"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 func TestMapCreatureTreeInventoryAndStats(t *testing.T) {

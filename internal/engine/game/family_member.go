@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	enginecmd "muhan/internal/engine/command"
-	"muhan/internal/world/model"
+	enginecmd "github.com/0xc0de1ab/muhan/internal/engine/command"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 // FamilyMemberWorld is the state surface needed by the legacy family_member

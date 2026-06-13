@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"muhan/internal/krtext"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/krtext"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 type HideWorld interface {

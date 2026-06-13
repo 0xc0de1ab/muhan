@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"muhan/internal/report/dataissues"
+	"github.com/0xc0de1ab/muhan/internal/report/dataissues"
 )
 
 const (

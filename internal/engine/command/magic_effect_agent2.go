@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"muhan/internal/engine/legacy"
-	"muhan/internal/krtext"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/engine/legacy"
+	"github.com/0xc0de1ab/muhan/internal/krtext"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 // ApplyMagicPowerEffectAgent2 dispatches Agent 2's spell effects.

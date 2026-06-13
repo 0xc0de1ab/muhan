@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"muhan/internal/krtext"
-	"muhan/internal/textfmt"
-	"muhan/internal/world/model"
-	"muhan/internal/world/state"
+	"github.com/0xc0de1ab/muhan/internal/krtext"
+	"github.com/0xc0de1ab/muhan/internal/textfmt"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/state"
 )
 
 type LookWorld interface {

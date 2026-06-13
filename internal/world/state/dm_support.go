@@ -17,12 +17,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"muhan/internal/migrate/protomap"
-	"muhan/internal/migrate/roommap"
-	"muhan/internal/persist/cbin"
-	"muhan/internal/persist/jsonstore"
-	"muhan/internal/persist/legacykr"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/migrate/protomap"
+	"github.com/0xc0de1ab/muhan/internal/migrate/roommap"
+	"github.com/0xc0de1ab/muhan/internal/persist/cbin"
+	"github.com/0xc0de1ab/muhan/internal/persist/jsonstore"
+	"github.com/0xc0de1ab/muhan/internal/persist/legacykr"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 const (

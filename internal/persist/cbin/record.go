@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"muhan/internal/persist/legacykr"
+	"github.com/0xc0de1ab/muhan/internal/persist/legacykr"
 )
 
 // TextField is a decoded legacy C text field. Raw is NUL-trimmed and copied.

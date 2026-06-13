@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"muhan/internal/persist/jsonstore"
-	worldload "muhan/internal/world/load"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/persist/jsonstore"
+	worldload "github.com/0xc0de1ab/muhan/internal/world/load"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 func TestJSONFileStoreLoadsExistingJSONAndReturnsDefensiveCopy(t *testing.T) {

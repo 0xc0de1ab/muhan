@@ -1,7 +1,7 @@
 package command
 
 import (
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 // CheatWorld는 치트 아이템 체크 및 삭제를 위한 인터페이스입니다.

@@ -11,15 +11,15 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"muhan/internal/krtext"
-	"muhan/internal/migrate/bankmap"
-	"muhan/internal/migrate/invitemap"
-	"muhan/internal/migrate/playermap"
-	"muhan/internal/migrate/protomap"
-	"muhan/internal/migrate/protoresolve"
-	"muhan/internal/migrate/roommap"
-	"muhan/internal/persist/legacykr"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/krtext"
+	"github.com/0xc0de1ab/muhan/internal/migrate/bankmap"
+	"github.com/0xc0de1ab/muhan/internal/migrate/invitemap"
+	"github.com/0xc0de1ab/muhan/internal/migrate/playermap"
+	"github.com/0xc0de1ab/muhan/internal/migrate/protomap"
+	"github.com/0xc0de1ab/muhan/internal/migrate/protoresolve"
+	"github.com/0xc0de1ab/muhan/internal/migrate/roommap"
+	"github.com/0xc0de1ab/muhan/internal/persist/legacykr"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 type Options struct {

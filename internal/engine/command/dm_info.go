@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 // DMInfoWorld defines the world interface for the dm_info command.

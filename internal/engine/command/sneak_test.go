@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"muhan/internal/commandspec"
-	model "muhan/internal/world/model"
-	state "muhan/internal/world/state"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
+	model "github.com/0xc0de1ab/muhan/internal/world/model"
+	state "github.com/0xc0de1ab/muhan/internal/world/state"
 )
 
 func TestSneakHandlerSuccessMovesPlayer(t *testing.T) {

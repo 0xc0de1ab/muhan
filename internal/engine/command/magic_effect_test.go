@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"muhan/internal/world/model"
-	"muhan/internal/world/state"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/state"
 )
 
 func TestDefaultReadScrollMagicEffectCurePoison(t *testing.T) {

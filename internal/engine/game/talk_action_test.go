@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"testing"
 
-	enginecmd "muhan/internal/engine/command"
-	"muhan/internal/session"
-	"muhan/internal/world/model"
-	"muhan/internal/world/state"
+	enginecmd "github.com/0xc0de1ab/muhan/internal/engine/command"
+	"github.com/0xc0de1ab/muhan/internal/session"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/state"
 )
 
 // Package 6/6 cross-cut verification: talk actions exercise legacy special hooks from C command8.c/files3.c (ACTION/ATTACK/CAST/GIVE).

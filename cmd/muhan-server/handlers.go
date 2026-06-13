@@ -5,10 +5,10 @@ import (
 	"strings"
 	"time"
 
-	enginecmd "muhan/internal/engine/command"
-	"muhan/internal/engine/game"
-	"muhan/internal/world/model"
-	"muhan/internal/world/state"
+	enginecmd "github.com/0xc0de1ab/muhan/internal/engine/command"
+	"github.com/0xc0de1ab/muhan/internal/engine/game"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/state"
 )
 
 func serverDispatcher(inputs runtimeInputs) enginecmd.Dispatcher {

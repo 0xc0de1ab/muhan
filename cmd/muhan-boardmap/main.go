@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"muhan/internal/migrate/boardmap"
+	"github.com/0xc0de1ab/muhan/internal/migrate/boardmap"
 )
 
 type summary struct {

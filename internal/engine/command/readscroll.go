@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"muhan/internal/textfmt"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/textfmt"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 type ReadScrollWorld interface {

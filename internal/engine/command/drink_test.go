@@ -8,12 +8,12 @@ import (
 	"strings"
 	"testing"
 
-	"muhan/internal/commandspec"
-	"muhan/internal/persist/cbin"
-	"muhan/internal/persist/legacykr"
-	worldload "muhan/internal/world/load"
-	"muhan/internal/world/model"
-	"muhan/internal/world/state"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
+	"github.com/0xc0de1ab/muhan/internal/persist/cbin"
+	"github.com/0xc0de1ab/muhan/internal/persist/legacykr"
+	worldload "github.com/0xc0de1ab/muhan/internal/world/load"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/state"
 )
 
 func TestDrinkHandlerConsumesPotionChargeAndClearsHidden(t *testing.T) {

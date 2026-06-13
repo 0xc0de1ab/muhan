@@ -3,11 +3,11 @@ package game
 import (
 	"testing"
 
-	"muhan/internal/commandspec"
-	enginecmd "muhan/internal/engine/command"
-	"muhan/internal/session"
-	"muhan/internal/world/model"
-	"muhan/internal/world/state"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
+	enginecmd "github.com/0xc0de1ab/muhan/internal/engine/command"
+	"github.com/0xc0de1ab/muhan/internal/session"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/state"
 )
 
 func TestIgnoreHandlerAddsActiveTarget(t *testing.T) {

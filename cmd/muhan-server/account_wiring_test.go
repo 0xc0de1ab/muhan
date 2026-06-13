@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"muhan/internal/commandspec"
-	"muhan/internal/engine/game"
-	"muhan/internal/persist/legacycrypt"
-	"muhan/internal/session"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
+	"github.com/0xc0de1ab/muhan/internal/engine/game"
+	"github.com/0xc0de1ab/muhan/internal/persist/legacycrypt"
+	"github.com/0xc0de1ab/muhan/internal/session"
 )
 
 func TestServerLoopPasswdQueuesRuntimePasswordSave(t *testing.T) {

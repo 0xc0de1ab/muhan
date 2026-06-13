@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	worldload "muhan/internal/world/load"
-	"muhan/internal/world/model"
+	worldload "github.com/0xc0de1ab/muhan/internal/world/load"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 func TestRealDataORENCHPrototypeRawFlagMaterializesAndSurvivesPlayerRestart(t *testing.T) {

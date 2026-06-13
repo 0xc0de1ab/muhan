@@ -4,7 +4,7 @@ import (
 	"strings"
 	"unicode"
 
-	"muhan/internal/textfmt"
+	"github.com/0xc0de1ab/muhan/internal/textfmt"
 )
 
 func cleanDisplayText(text string) string {

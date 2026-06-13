@@ -3,7 +3,7 @@ package command
 import (
 	"strings"
 
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 type legacyFindWhoWorld interface {

@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 
-	"muhan/internal/migrate/snapshot"
+	"github.com/0xc0de1ab/muhan/internal/migrate/snapshot"
 )
 
 func main() {

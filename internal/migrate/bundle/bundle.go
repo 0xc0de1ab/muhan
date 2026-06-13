@@ -10,15 +10,15 @@ import (
 	"regexp"
 	"time"
 
-	"muhan/internal/engine/command/table"
-	"muhan/internal/migrate/bankmap"
-	"muhan/internal/migrate/boardmap"
-	"muhan/internal/migrate/playermap"
-	"muhan/internal/migrate/protomap"
-	"muhan/internal/migrate/roommap"
-	"muhan/internal/persist/cbin"
-	"muhan/internal/report/repairplan"
-	worldload "muhan/internal/world/load"
+	"github.com/0xc0de1ab/muhan/internal/engine/command/table"
+	"github.com/0xc0de1ab/muhan/internal/migrate/bankmap"
+	"github.com/0xc0de1ab/muhan/internal/migrate/boardmap"
+	"github.com/0xc0de1ab/muhan/internal/migrate/playermap"
+	"github.com/0xc0de1ab/muhan/internal/migrate/protomap"
+	"github.com/0xc0de1ab/muhan/internal/migrate/roommap"
+	"github.com/0xc0de1ab/muhan/internal/persist/cbin"
+	"github.com/0xc0de1ab/muhan/internal/report/repairplan"
+	worldload "github.com/0xc0de1ab/muhan/internal/world/load"
 )
 
 type Bundle struct {

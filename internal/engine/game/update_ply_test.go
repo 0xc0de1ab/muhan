@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"muhan/internal/session"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/session"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 type mockUpdatePlyWorld struct {

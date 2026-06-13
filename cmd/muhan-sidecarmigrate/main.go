@@ -10,7 +10,7 @@ import (
 	"sort"
 	"strings"
 
-	"muhan/internal/world/state"
+	"github.com/0xc0de1ab/muhan/internal/world/state"
 )
 
 type migrationSummary struct {

@@ -8,8 +8,8 @@ import (
 	"slices"
 	"testing"
 
-	"muhan/internal/commandspec/extract"
-	"muhan/internal/engine/command"
+	"github.com/0xc0de1ab/muhan/internal/commandspec/extract"
+	"github.com/0xc0de1ab/muhan/internal/engine/command"
 )
 
 const fixtureSource = `

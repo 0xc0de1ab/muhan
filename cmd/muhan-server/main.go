@@ -20,14 +20,14 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"muhan/internal/commandspec"
-	enginecmd "muhan/internal/engine/command"
-	"muhan/internal/engine/command/table"
-	"muhan/internal/engine/game"
-	"muhan/internal/session"
-	"muhan/internal/world/load"
-	"muhan/internal/world/model"
-	"muhan/internal/world/state"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
+	enginecmd "github.com/0xc0de1ab/muhan/internal/engine/command"
+	"github.com/0xc0de1ab/muhan/internal/engine/command/table"
+	"github.com/0xc0de1ab/muhan/internal/engine/game"
+	"github.com/0xc0de1ab/muhan/internal/session"
+	"github.com/0xc0de1ab/muhan/internal/world/load"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/state"
 )
 
 type runtimeInputs struct {

@@ -3,7 +3,7 @@ package command
 import (
 	"strings"
 
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 // DMListWorld defines the required interface for the dm_list command.

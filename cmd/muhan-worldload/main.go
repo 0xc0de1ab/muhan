@@ -7,7 +7,7 @@ import (
 	"io"
 	"os"
 
-	"muhan/internal/world/load"
+	"github.com/0xc0de1ab/muhan/internal/world/load"
 )
 
 func main() {

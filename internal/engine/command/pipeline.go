@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"muhan/internal/commandparse"
-	"muhan/internal/commandspec"
+	"github.com/0xc0de1ab/muhan/internal/commandparse"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
 )
 
 var (

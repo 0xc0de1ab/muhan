@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"muhan/internal/commandspec"
-	enginecommand "muhan/internal/engine/command"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
+	enginecommand "github.com/0xc0de1ab/muhan/internal/engine/command"
 )
 
 func TestSessionLineDispatchesThroughCommandDispatcherToOutput(t *testing.T) {

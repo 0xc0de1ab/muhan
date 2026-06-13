@@ -3,9 +3,9 @@ package command
 import (
 	"testing"
 
-	"muhan/internal/commandspec"
-	"muhan/internal/world/model"
-	"muhan/internal/world/state"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/state"
 )
 
 func TestQuitHandlerWritesGoodbyeAndDisconnects(t *testing.T) {

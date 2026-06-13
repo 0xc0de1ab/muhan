@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 func serverRemoteHost(addr net.Addr) string {

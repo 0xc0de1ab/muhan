@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"muhan/internal/report/dataissues"
+	"github.com/0xc0de1ab/muhan/internal/report/dataissues"
 )
 
 func TestGenerateReportsZeroByteRoomAction(t *testing.T) {

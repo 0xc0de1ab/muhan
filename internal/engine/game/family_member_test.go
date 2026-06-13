@@ -4,11 +4,11 @@ import (
 	"strings"
 	"testing"
 
-	"muhan/internal/commandspec"
-	enginecmd "muhan/internal/engine/command"
-	worldload "muhan/internal/world/load"
-	"muhan/internal/world/model"
-	"muhan/internal/world/state"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
+	enginecmd "github.com/0xc0de1ab/muhan/internal/engine/command"
+	worldload "github.com/0xc0de1ab/muhan/internal/world/load"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/state"
 )
 
 func TestFamilyMemberHandlerRendersLoadedFamilyMembers(t *testing.T) {

@@ -3,7 +3,7 @@ package command
 import (
 	"testing"
 
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 type dmRmstatTestWorld struct {

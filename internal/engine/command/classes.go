@@ -1,6 +1,6 @@
 package command
 
-import "muhan/internal/world/model"
+import "github.com/0xc0de1ab/muhan/internal/world/model"
 
 // Standard legacy class ID mappings (matching the original C source structure)
 // Legacy alias mappings used in magic_heal.go

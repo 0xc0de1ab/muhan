@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"muhan/internal/persist/cbin"
+	"github.com/0xc0de1ab/muhan/internal/persist/cbin"
 )
 
 func TestEncodeManifestJSON(t *testing.T) {

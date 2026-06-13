@@ -5,8 +5,8 @@ import (
 	"log"
 	"strings"
 
-	"muhan/internal/persist/legacykr"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/persist/legacykr"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 const (

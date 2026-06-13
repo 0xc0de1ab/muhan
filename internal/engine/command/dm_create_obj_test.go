@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"muhan/internal/commandparse"
-	"muhan/internal/commandspec"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/commandparse"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 type mockDMCreateObjWorld struct {

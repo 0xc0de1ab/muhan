@@ -1,4 +1,4 @@
-module muhan
+module github.com/0xc0de1ab/muhan
 
 go 1.25.0
 

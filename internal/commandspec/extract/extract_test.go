@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"muhan/internal/commandspec"
-	"muhan/internal/persist/legacykr"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
+	"github.com/0xc0de1ab/muhan/internal/persist/legacykr"
 )
 
 const fixtureSource = `

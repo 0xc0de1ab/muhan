@@ -25,7 +25,7 @@ import (
 	"strings"
 	"unsafe"
 
-	"muhan/internal/persist/legacykr"
+	"github.com/0xc0de1ab/muhan/internal/persist/legacykr"
 )
 
 const legacySalt = "St"

@@ -7,7 +7,7 @@ import (
 	"io"
 	"os"
 
-	"muhan/internal/migrate/protomap"
+	"github.com/0xc0de1ab/muhan/internal/migrate/protomap"
 )
 
 func main() {

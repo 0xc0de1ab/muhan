@@ -3,8 +3,8 @@ package command
 import (
 	"testing"
 
-	"muhan/internal/commandspec"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 type mockDMAcWorld struct {

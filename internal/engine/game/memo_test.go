@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"muhan/internal/commandparse"
-	enginecmd "muhan/internal/engine/command"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/commandparse"
+	enginecmd "github.com/0xc0de1ab/muhan/internal/engine/command"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 func TestMemoHandlerWritesLegacyStyleTargetMemo(t *testing.T) {

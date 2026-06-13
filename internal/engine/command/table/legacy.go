@@ -8,8 +8,8 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"muhan/internal/commandspec"
-	"muhan/internal/commandspec/extract"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
+	"github.com/0xc0de1ab/muhan/internal/commandspec/extract"
 )
 
 // EntryRef identifies a command table row in reports.

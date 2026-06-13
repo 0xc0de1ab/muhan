@@ -11,13 +11,13 @@ import (
 	"testing"
 	"time"
 
-	"muhan/internal/migrate/boardmap"
-	"muhan/internal/migrate/dbimport"
-	"muhan/internal/migrate/dbschema"
-	"muhan/internal/migrate/protoaudit"
-	"muhan/internal/persist/cbin"
-	"muhan/internal/persist/legacykr"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/migrate/boardmap"
+	"github.com/0xc0de1ab/muhan/internal/migrate/dbimport"
+	"github.com/0xc0de1ab/muhan/internal/migrate/dbschema"
+	"github.com/0xc0de1ab/muhan/internal/migrate/protoaudit"
+	"github.com/0xc0de1ab/muhan/internal/persist/cbin"
+	"github.com/0xc0de1ab/muhan/internal/persist/legacykr"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 func TestDryRunBuildsPlanWithoutDB(t *testing.T) {

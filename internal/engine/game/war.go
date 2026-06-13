@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"muhan/internal/world/state"
+	"github.com/0xc0de1ab/muhan/internal/world/state"
 )
 
 // FamilyWarWorld is the state surface needed for the legacy call_war transition.

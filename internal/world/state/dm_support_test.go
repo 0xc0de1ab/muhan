@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"muhan/internal/persist/cbin"
-	"muhan/internal/world/load"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/persist/cbin"
+	"github.com/0xc0de1ab/muhan/internal/world/load"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 func TestPersistence_Smoke(t *testing.T) {

@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	enginecmd "muhan/internal/engine/command"
-	"muhan/internal/persist/legacykr"
-	"muhan/internal/world/model"
+	enginecmd "github.com/0xc0de1ab/muhan/internal/engine/command"
+	"github.com/0xc0de1ab/muhan/internal/persist/legacykr"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 var memoFileMu sync.Mutex

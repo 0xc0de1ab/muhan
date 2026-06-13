@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"muhan/internal/persist/legacykr"
-	"muhan/internal/textfmt"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/persist/legacykr"
+	"github.com/0xc0de1ab/muhan/internal/textfmt"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 // DMHelpWorld defines the data access interface needed for dm_help.

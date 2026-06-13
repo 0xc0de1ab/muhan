@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"muhan/internal/commandspec"
-	state "muhan/internal/world/state"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
+	state "github.com/0xc0de1ab/muhan/internal/world/state"
 )
 
 func TestPledgeAndRescindHandlerTransitions(t *testing.T) {

@@ -5,8 +5,8 @@ import (
 	"slices"
 	"testing"
 
-	"muhan/internal/commandparse"
-	"muhan/internal/commandspec"
+	"github.com/0xc0de1ab/muhan/internal/commandparse"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
 )
 
 func TestParseAndResolveExactUTF8Command(t *testing.T) {

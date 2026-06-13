@@ -7,7 +7,7 @@ import (
 	"io"
 	"os"
 
-	"muhan/internal/migrate/protoaudit"
+	"github.com/0xc0de1ab/muhan/internal/migrate/protoaudit"
 )
 
 func main() {

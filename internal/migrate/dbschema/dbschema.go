@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"muhan/internal/persist/jsonstore"
+	"github.com/0xc0de1ab/muhan/internal/persist/jsonstore"
 )
 
 const (

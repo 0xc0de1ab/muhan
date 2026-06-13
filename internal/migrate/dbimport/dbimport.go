@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"muhan/internal/migrate/dbschema"
-	"muhan/internal/migrate/protoaudit"
-	worldload "muhan/internal/world/load"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/migrate/dbschema"
+	"github.com/0xc0de1ab/muhan/internal/migrate/protoaudit"
+	worldload "github.com/0xc0de1ab/muhan/internal/world/load"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 type Options struct {

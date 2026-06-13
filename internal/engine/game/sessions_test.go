@@ -6,9 +6,9 @@ import (
 	"reflect"
 	"testing"
 
-	enginecmd "muhan/internal/engine/command"
-	"muhan/internal/session"
-	"muhan/internal/world/model"
+	enginecmd "github.com/0xc0de1ab/muhan/internal/engine/command"
+	"github.com/0xc0de1ab/muhan/internal/session"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 func TestLoopActiveSessionsReturnsSortedSnapshot(t *testing.T) {

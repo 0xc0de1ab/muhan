@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"muhan/internal/migrate/roommap"
-	"muhan/internal/persist/cbin"
+	"github.com/0xc0de1ab/muhan/internal/migrate/roommap"
+	"github.com/0xc0de1ab/muhan/internal/persist/cbin"
 )
 
 type Summary struct {

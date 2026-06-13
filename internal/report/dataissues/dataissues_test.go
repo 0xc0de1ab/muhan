@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"muhan/internal/persist/cbin"
+	"github.com/0xc0de1ab/muhan/internal/persist/cbin"
 )
 
 func TestScanReportsZeroByteRoom(t *testing.T) {

@@ -8,9 +8,9 @@ import (
 	"os"
 	"sync"
 
-	"muhan/internal/persist/jsonstore"
-	worldload "muhan/internal/world/load"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/persist/jsonstore"
+	worldload "github.com/0xc0de1ab/muhan/internal/world/load"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 // JSONFileStore persists runtime world state as one atomic JSON snapshot.

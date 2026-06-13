@@ -5,10 +5,10 @@ import (
 	"strconv"
 	"strings"
 
-	"muhan/internal/engine/legacy"
-	"muhan/internal/krtext"
-	"muhan/internal/session"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/engine/legacy"
+	"github.com/0xc0de1ab/muhan/internal/krtext"
+	"github.com/0xc0de1ab/muhan/internal/session"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 // UpdateActiveWorld defines the required methods for active monster ticking, combat, AI, and player death handling.

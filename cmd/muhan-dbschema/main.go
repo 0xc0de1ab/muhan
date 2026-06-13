@@ -7,7 +7,7 @@ import (
 	"io"
 	"os"
 
-	"muhan/internal/migrate/dbschema"
+	"github.com/0xc0de1ab/muhan/internal/migrate/dbschema"
 )
 
 func main() {

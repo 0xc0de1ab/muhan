@@ -11,11 +11,11 @@ import (
 	"strings"
 	"sync"
 
-	enginecmd "muhan/internal/engine/command"
-	"muhan/internal/krtext"
-	"muhan/internal/persist/legacykr"
-	"muhan/internal/session"
-	"muhan/internal/world/model"
+	enginecmd "github.com/0xc0de1ab/muhan/internal/engine/command"
+	"github.com/0xc0de1ab/muhan/internal/krtext"
+	"github.com/0xc0de1ab/muhan/internal/persist/legacykr"
+	"github.com/0xc0de1ab/muhan/internal/session"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 // FamilyMembershipWorld is the mutable state surface needed by the safe subset

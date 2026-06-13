@@ -3,7 +3,7 @@ package command
 import (
 	"fmt"
 
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 func magicEffectBless(ctx *Context, world StatusWorld, actor model.Creature, object model.ObjectInstance, resolved ResolvedCommand) (bool, error) {

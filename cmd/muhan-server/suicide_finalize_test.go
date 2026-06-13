@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	enginecmd "muhan/internal/engine/command"
-	"muhan/internal/engine/game"
-	"muhan/internal/session"
+	enginecmd "github.com/0xc0de1ab/muhan/internal/engine/command"
+	"github.com/0xc0de1ab/muhan/internal/engine/game"
+	"github.com/0xc0de1ab/muhan/internal/session"
 )
 
 func TestServerSuicideSinkBroadcastsAndLogsViaHooks(t *testing.T) {

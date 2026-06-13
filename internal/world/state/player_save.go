@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"muhan/internal/migrate/boardmap"
-	"muhan/internal/persist/jsonstore"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/migrate/boardmap"
+	"github.com/0xc0de1ab/muhan/internal/persist/jsonstore"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 // CurrentSaveSchemaVersion is the canonical version for all player/bank/room/board JSON sidecars.

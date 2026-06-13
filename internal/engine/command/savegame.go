@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 var ErrSaveGameActorRequired = errors.New("savegame actor required")

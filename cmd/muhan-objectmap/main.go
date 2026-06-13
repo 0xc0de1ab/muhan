@@ -11,9 +11,9 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"muhan/internal/migrate/objectmap"
-	"muhan/internal/migrate/protoresolve"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/migrate/objectmap"
+	"github.com/0xc0de1ab/muhan/internal/migrate/protoresolve"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 type Report struct {

@@ -3,7 +3,7 @@ package state
 import (
 	"fmt"
 	"maps"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 	"slices"
 	"strconv"
 	"strings"

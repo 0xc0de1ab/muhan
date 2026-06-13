@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"muhan/internal/commandspec"
-	"muhan/internal/commandspec/extract"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
+	"github.com/0xc0de1ab/muhan/internal/commandspec/extract"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 func TestNewDMPlaceholderHandlersRegistersDefaultKeys(t *testing.T) {

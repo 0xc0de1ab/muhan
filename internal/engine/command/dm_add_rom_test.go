@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"muhan/internal/commandparse"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/commandparse"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 type mockDMAddRomWorld struct {

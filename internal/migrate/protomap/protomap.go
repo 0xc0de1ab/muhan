@@ -10,8 +10,8 @@ import (
 	"regexp"
 	"strconv"
 
-	"muhan/internal/persist/cbin"
-	"muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/persist/cbin"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 const legacySource = "legacy"

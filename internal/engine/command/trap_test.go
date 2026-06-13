@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
-	"muhan/internal/commandspec"
-	"muhan/internal/migrate/roommap"
-	worldload "muhan/internal/world/load"
-	"muhan/internal/world/model"
-	"muhan/internal/world/state"
+	"github.com/0xc0de1ab/muhan/internal/commandspec"
+	"github.com/0xc0de1ab/muhan/internal/migrate/roommap"
+	worldload "github.com/0xc0de1ab/muhan/internal/world/load"
+	"github.com/0xc0de1ab/muhan/internal/world/model"
+	"github.com/0xc0de1ab/muhan/internal/world/state"
 )
 
 func TestMoveTrapPitMovesToTrapExitAndDamagesAfterDestinationRender(t *testing.T) {

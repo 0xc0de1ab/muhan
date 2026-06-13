@@ -5,9 +5,9 @@ import (
 	"errors"
 	"testing"
 
-	enginecmd "muhan/internal/engine/command"
-	"muhan/internal/session"
-	"muhan/internal/world/state"
+	enginecmd "github.com/0xc0de1ab/muhan/internal/engine/command"
+	"github.com/0xc0de1ab/muhan/internal/session"
+	"github.com/0xc0de1ab/muhan/internal/world/state"
 )
 
 func TestTalkActionUntargetedRunsAfterResponseAndBroadcastsToRoom(t *testing.T) {

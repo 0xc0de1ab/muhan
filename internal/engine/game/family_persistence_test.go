@@ -7,7 +7,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"muhan/internal/persist/legacykr"
+	"github.com/0xc0de1ab/muhan/internal/persist/legacykr"
 )
 
 func TestPersistFamilyMemberClassChangeUpdatesLegacyFileAsUTF8(t *testing.T) {

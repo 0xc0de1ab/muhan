@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"muhan/internal/commandspec/extract"
+	"github.com/0xc0de1ab/muhan/internal/commandspec/extract"
 )
 
 type output struct {
