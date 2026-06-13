@@ -81,7 +81,7 @@ jobs:
 
       # ─── OCI Registry 로그인 ───
       - name: Login to OCI Registry
-        if: inputs.push_oci && env.OCI_REGISTRY != ''
+        if: inputs.push_oci && secrets.OCI_REGISTRY != ''
         uses: docker/login-action@v3
         env:
           OCI_REGISTRY: ${{ secrets.OCI_REGISTRY }}
