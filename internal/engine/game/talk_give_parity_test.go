@@ -3,6 +3,7 @@ package game
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	enginecmd "github.com/0xc0de1ab/muhan/internal/engine/command"
@@ -289,5 +290,64 @@ func TestTalkHandlerGivePrototypeRollsBackObjectWhenMaterializedQuestAlreadyComp
 	assertTalkCreatureHasPrototype(t, world, "creature:alice", protoID, 0)
 	if _, ok := world.Object("object:template-token"); !ok {
 		t.Fatal("template object was removed during rollback")
+	}
+}
+
+// TestTalkGiveCapacityExceededByteOrderParity verifies the exact byte order of
+// messages emitted during a GIVE capacity-exceeded rollback, matching the C
+// talk_action case 4 failure path (src/command8.c:988-991).
+//
+// C flow: NPC response already sent -> print "당신은 더이상 가질 수 없습니다.\n"
+// to player only -> no room broadcast -> object not added.
+//
+// Go must match: player sees NPC response + capacity error concatenated, room
+// sees only the question + NPC response, no give broadcast leaks, and the
+// materialized object is rolled back from the player's inventory.
+func TestTalkGiveCapacityExceededByteOrderParity(t *testing.T) {
+	loaded := talkTestWorld(t)
+	protoID := legacyTalkGivePrototypeID(130)
+	if err := loaded.AddObjectPrototype(model.ObjectPrototype{
+		ID:          protoID,
+		DisplayName: "무거운 상자",
+		Properties:  map[string]string{"weight": "200"},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	world := state.NewWorld(loaded)
+	root := talkActionTestRoot(t, "계석치무", 25, "보상 GIVE 130\n받게.\n")
+	loop := NewLoop(enginecmd.Dispatcher{
+		Registry: socialRegistry(t),
+		Handlers: map[string]enginecmd.Handler{
+			"talk": NewTalkHandlerWithRoot(world, root),
+		},
+	})
+	alice := make(chan session.Command, 8)
+	bob := make(chan session.Command, 8)
+	registerTestSession(t, loop, "s1", alice, "player:alice")
+	registerTestSession(t, loop, "s2", bob, "player:bob")
+
+	if err := loop.HandleEvent(context.Background(), session.Event{SessionID: "s1", Kind: session.EventLine, Line: "계석치무 보상 대화"}); err != nil {
+		t.Fatalf("HandleEvent() error = %v", err)
+	}
+
+	// Room (bob) sees: question broadcast, then NPC response. No give broadcast.
+	assertCommand(t, bob, session.Command{Write: "\nAlice가 계석치무에게 \"보상\"에 관해 물어봅니다.\n"})
+	assertCommand(t, bob, session.Command{Write: "\n계석치무가 Alice에게 \"받게.\"라고 이야기합니다.\n"})
+	assertNoCommand(t, bob)
+
+	// Player (alice) sees NPC response concatenated with capacity error.
+	// C: "당신은 더이상 가질 수 없습니다.\n" (command8.c:990)
+	wantPlayerOutput := "\n계석치무가 당신에게 \"받게.\"라고 이야기합니다.\n당신은 더이상 가질 수 없습니다.\n"
+	assertCommand(t, alice, session.Command{Write: wantPlayerOutput})
+
+	// Object must be rolled back — not in alice's inventory.
+	assertTalkCreatureHasPrototype(t, world, "creature:alice", protoID, 0)
+
+	// Verify exact C parity: the capacity message must be byte-identical to
+	// C src/command8.c line 990 output.
+	const cCapacityMessage = "당신은 더이상 가질 수 없습니다.\n"
+	if !strings.HasSuffix(wantPlayerOutput, cCapacityMessage) {
+		t.Fatalf("player output suffix = %q, want C parity suffix %q", wantPlayerOutput, cCapacityMessage)
 	}
 }

@@ -3,6 +3,7 @@ package game
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 
 	enginecmd "github.com/0xc0de1ab/muhan/internal/engine/command"
@@ -160,5 +161,56 @@ func talkSendErrorContext() *enginecmd.Context {
 				return errors.New("session closed")
 			},
 		},
+	}
+}
+
+// cSocialActions is the full list of social action command names from the C
+// cmdlist table (src/global.c, entries with cmdfn=action).  There are 41
+// unique names including aliases like 끄덕/응, 흡연/담배, etc.
+var cSocialActions = []string{
+	"보아", "감정표현", "노려봐", "끄덕", "응", "아니", "감", "감사",
+	"미소", "청혼", "떨어", "해", "하품", "웃어", "미안", "악수",
+	"하이파이브", "박수", "흡연", "담배", "절", "찔러", "춤", "노래",
+	"울어", "달래", "당황", "생각", "부끄러", "놀려", "설레", "잘가",
+	"바이", "안녕", "뽀뽀", "윙크", "구걸", "구박", "안아", "껴안아",
+	"니다",
+}
+
+// TestCSocialActionTableCompleteness asserts that every social action name from
+// the C cmdlist table (src/global.c, 41 entries with cmdfn=action) is recognized
+// by Go's renderActionMessages function.  The test fails if Go falls through to
+// the default case ("감정을 표현합니다.") for any C action, which would indicate a
+// parity gap.
+func TestCSocialActionTableCompleteness(t *testing.T) {
+	const defaultFallback = "감정을 표현합니다."
+	var missing []string
+	for _, action := range cSocialActions {
+		msg := renderActionMessages(action, "테스트", "대상자", false, "")
+		if strings.Contains(msg.Self, defaultFallback) {
+			missing = append(missing, action)
+		}
+	}
+	if len(missing) > 0 {
+		t.Fatalf("Go renderActionMessages does not recognize %d C social action(s): %v\n"+
+			"These actions fall through to the generic default. Add them to the switch in social.go.",
+			len(missing), missing)
+	}
+}
+
+// TestLegacyTalkActionNameRecognizesAllCSocialActions verifies that the
+// legacyTalkActionNames list used by the talk handler (for ACTION directives in
+// NPC talk files) covers every C cmdlist action name.  This is a separate gate
+// from renderActionMessages because the talk handler resolves action names via
+// legacyTalkActionName() before dispatching to renderActionMessages.
+func TestLegacyTalkActionNameRecognizesAllCSocialActions(t *testing.T) {
+	var missing []string
+	for _, action := range cSocialActions {
+		if _, ok := legacyTalkActionName(action); !ok {
+			missing = append(missing, action)
+		}
+	}
+	if len(missing) > 0 {
+		t.Fatalf("legacyTalkActionName does not recognize %d C social action(s): %v\n"+
+			"Add them to legacyTalkActionNames in talk.go.", len(missing), missing)
 	}
 }
