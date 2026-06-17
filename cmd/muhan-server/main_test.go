@@ -1413,6 +1413,69 @@ func TestServerLoopBoardWriteDisconnectBeforeFinalDotDoesNotPersist(t *testing.T
 	}
 }
 
+func TestServerLoopBoardDeleteDisconnectBeforeConfirmDoesNotMutate(t *testing.T) {
+	inputs := serverTestRuntimeInputs(t)
+	defer inputs.world.Close()
+	root := inputs.summary.Root
+	boardDir := filepath.Join(root, "board", "info")
+	indexPath := filepath.Join(boardDir, "board_index")
+	bodyPath := filepath.Join(boardDir, "board.3")
+
+	loop := newServerTestLoop(inputs)
+	commands := make(chan session.Command, 8)
+	registerServerTestSession(t, loop, "s1", commands, "player:mallory")
+
+	// Write a post so there is a deletable article owned by Mallory.
+	handleServerTestLine(t, loop, "s1", "써")
+	assertServerCommand(t, commands, session.Command{Write: "제목: "})
+	handleServerTestLine(t, loop, "s1", "삭제 대상")
+	assertServerCommandContains(t, commands, session.Command{}, "게시물을 작성합니다.", "  1: ")
+	handleServerTestLine(t, loop, "s1", "본문 한 줄")
+	assertServerCommand(t, commands, session.Command{Write: "  2: "})
+	handleServerTestLine(t, loop, "s1", ".")
+	assertServerCommandContains(t, commands, session.Command{Prompt: "> "}, "게시물이 등록되었습니다.")
+
+	// Snapshot state after writing post 3.
+	beforeIndex, err := os.ReadFile(indexPath)
+	if err != nil {
+		t.Fatalf("read board_index before disconnect: %v", err)
+	}
+	beforeBody, err := os.ReadFile(bodyPath)
+	if err != nil {
+		t.Fatalf("read board.3 before disconnect: %v", err)
+	}
+
+	// Disconnect the session before the delete command runs.
+	if err := loop.HandleEvent(context.Background(), session.Event{SessionID: "s1", Kind: session.EventClosed}); err != nil {
+		t.Fatalf("HandleEvent(close) error = %v", err)
+	}
+
+	// Attempting the delete after disconnect must fail with ErrSessionNotFound.
+	err = loop.HandleEvent(context.Background(), session.Event{SessionID: "s1", Kind: session.EventLine, Line: "게시판 3 글삭제"})
+	if !errors.Is(err, game.ErrSessionNotFound) {
+		t.Fatalf("HandleEvent(delete after close) error = %v, want ErrSessionNotFound", err)
+	}
+	assertNoServerCommand(t, commands)
+
+	// Board index must be unchanged (post 3 still has positive readnum).
+	afterIndex, err := os.ReadFile(indexPath)
+	if err != nil {
+		t.Fatalf("read board_index after disconnect: %v", err)
+	}
+	if !bytes.Equal(beforeIndex, afterIndex) {
+		t.Fatalf("board_index changed after disconnect:\nbefore=%x\nafter=%x", beforeIndex, afterIndex)
+	}
+
+	// Body file must still exist with identical content.
+	afterBody, err := os.ReadFile(bodyPath)
+	if err != nil {
+		t.Fatalf("board.3 body missing after disconnect: %v", err)
+	}
+	if !bytes.Equal(beforeBody, afterBody) {
+		t.Fatalf("board.3 body changed after disconnect")
+	}
+}
+
 func TestServerLoopNotepadDisconnectStopsPendingAppender(t *testing.T) {
 	inputs := serverTestRuntimeInputs(t)
 	defer inputs.world.Close()
