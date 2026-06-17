@@ -15,7 +15,7 @@ import (
 
 const (
 	DefaultReadBufferSize = 128
-	MaxInputLineBytes     = 512
+	MaxInputLineBytes     = 4096
 )
 
 type Option func(*Session)
@@ -23,6 +23,13 @@ type Option func(*Session)
 func WithReadBufferSize(size int) Option {
 	return func(s *Session) {
 		s.readBufferSize = size
+	}
+}
+
+// WithRateLimiter configures a per-session rate limiter. Pass nil to disable.
+func WithRateLimiter(rl *rateLimiter) Option {
+	return func(s *Session) {
+		s.limiter = rl
 	}
 }
 
@@ -34,6 +41,7 @@ type Session struct {
 	commands <-chan Command
 
 	readBufferSize int
+	limiter        *rateLimiter
 
 	mu          sync.Mutex
 	closeOnce   sync.Once
@@ -70,6 +78,9 @@ func New(id ID, conn net.Conn, events chan<- Event, commands <-chan Command, opt
 	}
 	if s.readBufferSize <= 0 {
 		s.readBufferSize = DefaultReadBufferSize
+	}
+	if s.limiter == nil {
+		s.limiter = newRateLimiter(DefaultBurstRate, DefaultSustainRate, DefaultRateWindow)
 	}
 	return s, nil
 }
@@ -141,6 +152,11 @@ func (s *Session) readLoop(ctx context.Context) error {
 			lines := s.feedInput(buf[:n])
 			for _, line := range lines {
 				line = truncateUTF8(line, MaxInputLineBytes)
+				// Per-session rate limiter: reject commands exceeding burst/sustained limits.
+				if s.limiter != nil && !s.limiter.allow(nowFunc()) {
+					_ = writeAll(s.conn, []byte(ThrottleMessage))
+					continue
+				}
 				if !s.emit(ctx, Event{SessionID: s.id, Kind: EventLine, Line: line}) {
 					return ctx.Err()
 				}

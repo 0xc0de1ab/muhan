@@ -6,11 +6,13 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/0xc0de1ab/muhan/internal/commandspec"
 	enginecmd "github.com/0xc0de1ab/muhan/internal/engine/command"
@@ -4331,4 +4333,87 @@ func mustAddServerTestObject(t *testing.T, world *worldload.World, object model.
 	if err := world.AddObjectInstance(object); err != nil {
 		t.Fatal(err)
 	}
+}
+
+// TestServerRateLimiterThrottlesFloodingSession verifies that a session
+// sending >30 commands in <1s is rate-limited by the session-layer limiter.
+// The limiter lives in session.readLoop, so we use a real net.Pipe session.
+func TestServerRateLimiterThrottlesFloodingSession(t *testing.T) {
+	inputs := serverTestRuntimeInputs(t)
+	defer inputs.world.Close()
+
+	events := make(chan session.Event, 256)
+	loop := newServerTestLoop(inputs)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() {
+		_ = loop.Run(ctx, events)
+	}()
+
+	// Create a real session with a tight limiter: burst=5, sustain=10.
+	client, serverConn := net.Pipe()
+	commands := make(chan session.Command, 256)
+	registerServerTestSession(t, loop, "s-rl", commands, "player:alice")
+
+	s, err := session.New("s-rl", serverConn, events, commands,
+		session.WithRateLimiter(session.NewRateLimiterForTest(5, 10)),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	go func() {
+		_ = s.Run(ctx)
+	}()
+
+	// Drain output from the client side so throttle messages don't block the pipe.
+	go func() {
+		buf := make([]byte, 512)
+		for {
+			if _, err := client.Read(buf); err != nil {
+				return
+			}
+		}
+	}()
+
+	// Flood 40 "봐\n" commands from a goroutine (net.Pipe is unbuffered).
+	writeDone := make(chan struct{})
+	go func() {
+		defer close(writeDone)
+		for i := 0; i < 40; i++ {
+			if _, err := client.Write([]byte("봐\n")); err != nil {
+				return
+			}
+		}
+	}()
+
+	// Count line events that reach the game loop.
+	// The rate limiter (burst=5, sustain=10) should prevent most of the 40
+	// commands from reaching the loop.
+	lineEvents := 0
+	deadline := time.After(3 * time.Second)
+	for {
+		select {
+		case ev := <-events:
+			if ev.Kind == session.EventLine {
+				lineEvents++
+			}
+		case <-deadline:
+			goto done
+		}
+	}
+done:
+	// We expect at most 10 (sustained limit) line events to pass through.
+	if lineEvents > 10 {
+		t.Fatalf("expected at most 10 line events (sustain=10), got %d", lineEvents)
+	}
+	if lineEvents == 0 {
+		t.Fatal("expected at least some line events to pass the rate limiter")
+	}
+
+	cancel()
+	_ = client.Close()
+	_ = serverConn.Close()
+	<-writeDone
 }

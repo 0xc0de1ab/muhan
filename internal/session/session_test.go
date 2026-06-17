@@ -3,8 +3,10 @@ package session
 import (
 	"context"
 	"net"
+	"strings"
 	"testing"
 	"time"
+	"unicode/utf8"
 )
 
 func TestSessionEmitsUTF8Lines(t *testing.T) {
@@ -84,12 +86,16 @@ func TestSessionCloseCommandEmitsClosed(t *testing.T) {
 }
 
 func startTestSession(t *testing.T) (net.Conn, net.Conn, chan Event, chan Command, chan error) {
+	return startTestSessionWithOpts(t)
+}
+
+func startTestSessionWithOpts(t *testing.T, opts ...Option) (net.Conn, net.Conn, chan Event, chan Command, chan error) {
 	t.Helper()
 
 	client, server := net.Pipe()
-	events := make(chan Event, 8)
-	commands := make(chan Command, 8)
-	s, err := New("s1", server, events, commands)
+	events := make(chan Event, 128)
+	commands := make(chan Command, 128)
+	s, err := New("s1", server, events, commands, opts...)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -128,4 +134,75 @@ func waitDone(t *testing.T, done <-chan error) {
 	case <-time.After(time.Second):
 		t.Fatal("timed out waiting for session shutdown")
 	}
+}
+
+func TestSessionTruncatesLongLine(t *testing.T) {
+	client, _, events, commands, done := startTestSession(t)
+
+	// Build a line that exceeds MaxInputLineBytes (4096).
+	// Each Korean syllable "가" is 3 UTF-8 bytes. 1400 syllables = 4200 bytes.
+	longLine := strings.Repeat("가", 1400) + "\n"
+	if _, err := client.Write([]byte(longLine)); err != nil {
+		t.Fatal(err)
+	}
+
+	event := recvEvent(t, events)
+	if event.Kind != EventLine {
+		t.Fatalf("event kind = %q, want line", event.Kind)
+	}
+	if len(event.Line) > MaxInputLineBytes {
+		t.Fatalf("line length = %d, want <= %d", len(event.Line), MaxInputLineBytes)
+	}
+	if !utf8.ValidString(event.Line) {
+		t.Fatal("truncated line is not valid UTF-8")
+	}
+
+	close(commands)
+	waitDone(t, done)
+	_ = client.Close()
+}
+
+func TestSessionRateLimiterThrottles(t *testing.T) {
+	// Use a tight limiter: burst=2, sustain=5, window=1s.
+	rl := newRateLimiter(2, 5, time.Second)
+	client, _, events, commands, done := startTestSessionWithOpts(t, WithRateLimiter(rl))
+
+	// Drain throttle messages from the client side so writes don't block.
+	go func() {
+		buf := make([]byte, 256)
+		for {
+			if _, err := client.Read(buf); err != nil {
+				return
+			}
+		}
+	}()
+
+	// Send 5 commands rapidly. Only 2 should produce events (burst limit).
+	for i := 0; i < 5; i++ {
+		if _, err := client.Write([]byte("봐\n")); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// We expect at most burst (2) line events. Collect what arrives in a short window.
+	received := 0
+	timeout := time.After(500 * time.Millisecond)
+	for received < 5 {
+		select {
+		case ev := <-events:
+			if ev.Kind == EventLine {
+				received++
+			}
+		case <-timeout:
+			goto check
+		}
+	}
+check:
+	if received > 2 {
+		t.Fatalf("received %d line events, expected at most %d (burst)", received, 2)
+	}
+
+	close(commands)
+	waitDone(t, done)
+	_ = client.Close()
 }
