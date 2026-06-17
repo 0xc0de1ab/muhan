@@ -704,6 +704,32 @@ func TestCastHandlerRejectsInvalidCastStates(t *testing.T) {
 	}
 }
 
+func TestCastHandlerFighterOffensiveSpellRejectedExactBytes(t *testing.T) {
+	loaded := castWorld(t, "room:dojo", 20)
+	actor := loaded.Creatures["creature:alice"]
+	actor.Stats["class"] = model.ClassFighter
+	actor.Metadata.Tags = append(actor.Metadata.Tags, "SHURTS")
+	loaded.Creatures[actor.ID] = actor
+	runtime := state.NewWorld(loaded)
+
+	called := false
+	ctx := &Context{ActorID: "player:alice"}
+	status, err := NewCastHandler(runtime, func(*Context, CastWorld, model.Creature, ResolvedCommand, int) (bool, error) {
+		called = true
+		return true, nil
+	})(ctx, ResolvedCommand{Args: []string{"삭풍"}})
+	if err != nil {
+		t.Fatalf("handler() error = %v", err)
+	}
+	want := "당신은 공격주문을 쓸 수 없는 직업을 갖고 있습니다."
+	if status != StatusDefault || ctx.OutputString() != want {
+		t.Fatalf("status/output = %d/%q, want exact %q", status, ctx.OutputString(), want)
+	}
+	if called {
+		t.Fatal("effect was called despite fighter offensive rejection")
+	}
+}
+
 func TestCastHandlerUsesLegacySpecificFailureMessages(t *testing.T) {
 	tests := []struct {
 		name string

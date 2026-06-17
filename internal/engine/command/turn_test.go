@@ -110,31 +110,31 @@ func TestTurnHandlerRejectsInvalidStates(t *testing.T) {
 		{
 			name:  "missing target",
 			class: model.ClassCleric,
-			want:  "누구에게 주문을 거실려고요?",
+			want:  "\n누구에게 주문을 거실려고요?\n",
 		},
 		{
 			name:  "wrong class",
 			class: model.ClassFighter,
 			args:  []string{"해골"},
-			want:  "불제자와 무사만이 방혼술을 사용할 수 있습니다.",
+			want:  "불제자와 무사만이 방혼술을 사용할 수 있습니다.\n",
 		},
 		{
 			name:  "invincible without cleric or paladin training",
 			class: model.ClassInvincible,
 			args:  []string{"해골"},
-			want:  "불제자나 무사를 무적수련하지 않았습니다.",
+			want:  "\n불제자나 무사를 무적수련하지 않았습니다.\n",
 		},
 		{
 			name:  "missing monster",
 			class: model.ClassCleric,
 			args:  []string{"없는"},
-			want:  "그런 괴물은 존재하지 않습니다.",
+			want:  "\n그런 괴물은 존재하지 않습니다.\n",
 		},
 		{
 			name:  "paladin living monster",
 			class: model.ClassPaladin,
 			args:  []string{"고블린"},
-			want:  "죽은 괴물에게만 사용가능합니다.",
+			want:  "\n죽은 괴물에게만 사용가능합니다.\n",
 		},
 		{
 			name:  "protected undead",
@@ -145,7 +145,7 @@ func TestTurnHandlerRejectsInvalidStates(t *testing.T) {
 				skeleton.Metadata.Tags = append(skeleton.Metadata.Tags, "MUNKIL", "MMALES")
 				loaded.Creatures[skeleton.ID] = skeleton
 			},
-			want: "당신은 그의 혼을 소멸시킬 수 없습니다.",
+			want: "\n당신은 그의 혼을 소멸시킬 수 없습니다.\n",
 		},
 	}
 
@@ -164,10 +164,30 @@ func TestTurnHandlerRejectsInvalidStates(t *testing.T) {
 			if err != nil {
 				t.Fatalf("handler() error = %v", err)
 			}
-			if status != StatusDefault || !strings.Contains(ctx.OutputString(), tt.want) {
-				t.Fatalf("status/output = %d/%q, want %q", status, ctx.OutputString(), tt.want)
+			if status != StatusDefault || ctx.OutputString() != tt.want {
+				t.Fatalf("status/output = %d/%q, want exact %q", status, ctx.OutputString(), tt.want)
 			}
 		})
+	}
+}
+
+func TestTurnHandlerDeadMonsterNoEffectExactBytes(t *testing.T) {
+	loaded := turnWorld(t, model.ClassCleric)
+	skeleton := loaded.Creatures["creature:skeleton-1"]
+	skeleton.Stats["hpCurrent"] = 0
+	loaded.Creatures[skeleton.ID] = skeleton
+	world := state.NewWorld(loaded)
+	defer world.Close()
+	handler := NewTurnHandler(world, fixedRoll(1))
+
+	ctx := &Context{ActorID: "player:alice"}
+	status, err := handler(ctx, ResolvedCommand{Args: []string{"해골"}, Values: []int64{1}})
+	if err != nil {
+		t.Fatalf("handler() error = %v", err)
+	}
+	want := "그 괴물에게는 아무 소용이 없습니다.\n"
+	if status != StatusDefault || ctx.OutputString() != want {
+		t.Fatalf("status/output = %d/%q, want exact %q", status, ctx.OutputString(), want)
 	}
 }
 

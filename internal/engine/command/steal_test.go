@@ -205,8 +205,8 @@ func TestStealHandlerRejectsInvalidInputs(t *testing.T) {
 			if err != nil {
 				t.Fatalf("handler() error = %v", err)
 			}
-			if status != StatusDefault || !strings.Contains(ctx.OutputString(), tt.want) {
-				t.Fatalf("status/output = %d/%q, want %q", status, ctx.OutputString(), tt.want)
+			if status != StatusDefault || ctx.OutputString() != tt.want {
+				t.Fatalf("status/output = %d/%q, want exact %q", status, ctx.OutputString(), tt.want)
 			}
 		})
 	}
