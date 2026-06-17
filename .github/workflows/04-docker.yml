@@ -75,7 +75,7 @@ jobs:
       # ─── GHCR 로그인 ───
       - name: Login to GHCR
         if: inputs.push_ghcr
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -96,7 +96,7 @@ jobs:
         id: oci_login
         if: inputs.push_oci && env.OCI_REGISTRY != ''
         continue-on-error: true
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ steps.oci_host.outputs.host }}
           username: ${{ secrets.OCI_REGISTRY_USER }}
