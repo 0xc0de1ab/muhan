@@ -1141,7 +1141,8 @@ func (w *moveTrapPopulatePermanentHookWorld) Room(roomID model.RoomID) (model.Ro
 
 type moveTrapEffectExpirationWorldHook struct {
 	*state.World
-	expirations map[model.CreatureID]map[string]int64
+	expirations  map[model.CreatureID]map[string]int64
+	setCallOrder []string
 }
 
 func (w *moveTrapEffectExpirationWorldHook) SetEffectExpiration(creatureID model.CreatureID, tag string, expires int64) {
@@ -1152,6 +1153,7 @@ func (w *moveTrapEffectExpirationWorldHook) SetEffectExpiration(creatureID model
 		w.expirations[creatureID] = map[string]int64{}
 	}
 	w.expirations[creatureID][tag] = expires
+	w.setCallOrder = append(w.setCallOrder, tag)
 }
 
 func moveTrapStringSliceContains(values []string, want string) bool {
@@ -1161,4 +1163,173 @@ func moveTrapStringSliceContains(values []string, want string) bool {
 		}
 	}
 	return false
+}
+
+// TestMoveTrapNakedNestedCursedContainersPreservesAllContents tests that
+// cursed items equipped directly survive TRAP_NAKED, and their entire content
+// tree also survives because the cursed container is never freed. This matches
+// C lose_all() (command10.c:406-439): only non-cursed equipped items are moved
+// to inventory and then freed; cursed equipped items stay in ready[] untouched.
+// free_obj() (files1.c:693-706) recursively frees contents but is never called
+// on surviving cursed equipment.
+func TestMoveTrapNakedNestedCursedContainersPreservesAllContents(t *testing.T) {
+	withMoveTrapRolls(t, 100)
+	loaded := moveTrapWorld(t, "6", "")
+	setMoveTrapActorStats(t, loaded, map[string]int{"dexterity": 0})
+
+	// Cursed bag A equipped at "hold" — survives because it is cursed.
+	mustAddLookObject(t, loaded, model.ObjectInstance{
+		ID:          "object:cursed-bag-a",
+		PrototypeID: "prototype:coin",
+		Location:    model.ObjectLocation{CreatureID: "creature:alice", Slot: "hold"},
+		Contents:    model.ObjectRefList{ObjectIDs: []model.ObjectInstanceID{"object:cursed-bag-b", "object:plain-item"}},
+		Properties:  map[string]string{"cursed": "true"},
+	})
+	// Cursed bag B inside A — survives because A is never freed.
+	mustAddLookObject(t, loaded, model.ObjectInstance{
+		ID:          "object:cursed-bag-b",
+		PrototypeID: "prototype:coin",
+		Location:    model.ObjectLocation{ContainerID: "object:cursed-bag-a"},
+		Contents:    model.ObjectRefList{ObjectIDs: []model.ObjectInstanceID{"object:cursed-item-c", "object:noncursed-item-d"}},
+		Properties:  map[string]string{"cursed": "true"},
+	})
+	// Cursed item C inside B — survives because B is never freed.
+	mustAddLookObject(t, loaded, model.ObjectInstance{
+		ID:          "object:cursed-item-c",
+		PrototypeID: "prototype:coin",
+		Location:    model.ObjectLocation{ContainerID: "object:cursed-bag-b"},
+		Metadata:    model.Metadata{Tags: []string{"OCURSE"}},
+	})
+	// Non-cursed item D inside B — survives because B is never freed.
+	mustAddLookObject(t, loaded, model.ObjectInstance{
+		ID:          "object:noncursed-item-d",
+		PrototypeID: "prototype:coin",
+		Location:    model.ObjectLocation{ContainerID: "object:cursed-bag-b"},
+	})
+	// Non-cursed item directly inside A — survives because A is never freed.
+	mustAddLookObject(t, loaded, model.ObjectInstance{
+		ID:          "object:plain-item",
+		PrototypeID: "prototype:coin",
+		Location:    model.ObjectLocation{ContainerID: "object:cursed-bag-a"},
+	})
+	// Non-cursed sword equipped — destroyed.
+	mustAddLookObject(t, loaded, model.ObjectInstance{
+		ID:          "object:sword",
+		PrototypeID: "prototype:coin",
+		Location:    model.ObjectLocation{CreatureID: "creature:alice", Slot: "wield"},
+	})
+
+	alice := loaded.Creatures["creature:alice"]
+	alice.Equipment = map[string]model.ObjectInstanceID{
+		"hold":  "object:cursed-bag-a",
+		"wield": "object:sword",
+	}
+	loaded.Creatures[alice.ID] = alice
+
+	world, out := dispatchMoveLine(t, loaded, "동")
+
+	// Cursed bag A and all nested contents survive.
+	if _, ok := world.Object("object:cursed-bag-a"); !ok {
+		t.Fatal("cursed bag A (equipped, cursed) was destroyed")
+	}
+	if _, ok := world.Object("object:cursed-bag-b"); !ok {
+		t.Fatal("cursed bag B (inside cursed A) was destroyed")
+	}
+	if _, ok := world.Object("object:cursed-item-c"); !ok {
+		t.Fatal("cursed item C (inside cursed B) was destroyed")
+	}
+	// Non-cursed items inside surviving cursed containers also survive.
+	if _, ok := world.Object("object:noncursed-item-d"); !ok {
+		t.Fatal("non-cursed item D (inside cursed B) was destroyed — contents of surviving cursed containers must be preserved")
+	}
+	if _, ok := world.Object("object:plain-item"); !ok {
+		t.Fatal("non-cursed plain item (inside cursed A) was destroyed — contents of surviving cursed containers must be preserved")
+	}
+	// Non-cursed equipped sword is destroyed.
+	if _, ok := world.Object("object:sword"); ok {
+		t.Fatal("non-cursed equipment survived naked trap")
+	}
+	// Verify container hierarchy preserved.
+	bagB, _ := world.Object("object:cursed-bag-b")
+	if bagB.Location.ContainerID != "object:cursed-bag-a" {
+		t.Fatalf("cursed bag B location = %s, want object:cursed-bag-a", bagB.Location.ContainerID)
+	}
+	itemC, _ := world.Object("object:cursed-item-c")
+	if itemC.Location.ContainerID != "object:cursed-bag-b" {
+		t.Fatalf("cursed item C location = %s, want object:cursed-bag-b", itemC.Location.ContainerID)
+	}
+	// Equipment refs: cursed stays, non-cursed removed.
+	actor, _ := world.Creature("creature:alice")
+	if actor.Equipment["hold"] != "object:cursed-bag-a" {
+		t.Fatalf("cursed bag A equipment ref = %s, want object:cursed-bag-a", actor.Equipment["hold"])
+	}
+	if _, ok := actor.Equipment["wield"]; ok {
+		t.Fatalf("non-cursed wield ref survived: %+v", actor.Equipment)
+	}
+	if !strings.Contains(out, "으악!!! 당신의 장비가 녹아버립니다.\n") {
+		t.Fatalf("output missing naked trap message:\n%s", out)
+	}
+}
+
+// TestMoveTrapRemoveSpellExpirationOrderMatchesCRoomC verifies that the Go
+// TRAP_RMSPL handler zeroes spell-effect expirations in the exact order that
+// C room.c (lines 903-914) assigns lasttime[LT_*].interval = 0:
+//
+//	LT_PROTE, LT_BLESS, LT_RFIRE, LT_RCOLD, LT_BRWAT, LT_SSHLD,
+//	LT_RMAGI, LT_LIGHT, LT_DINVI, LT_INVIS, LT_KNOWA, LT_DMAGI
+//
+// Go must iterate moveTrapSpellExpirationTags (trap.go:30-43) in the same
+// sequential order. This is critical because update_ply() in both C and Go
+// checks spell expirations sequentially; if the zeroing order diverged from C,
+// the tick message emission order would diverge too.
+func TestMoveTrapRemoveSpellExpirationOrderMatchesCRoomC(t *testing.T) {
+	// C room.c TRAP_RMSPL assigns lasttime[LT_*].interval = 0 in this order.
+	// Source: room.c lines 903-914.
+	wantOrder := []string{
+		"PPROTE",
+		"PBLESS",
+		"PRFIRE",
+		"PRCOLD",
+		"PBRWAT",
+		"PSSHLD",
+		"PRMAGI",
+		"PLIGHT",
+		"PDINVI",
+		"PINVIS",
+		"PKNOWA",
+		"PDMAGI",
+	}
+
+	// First verify the tag slice itself matches C order.
+	if len(moveTrapSpellExpirationTags) != len(wantOrder) {
+		t.Fatalf("moveTrapSpellExpirationTags has %d entries, want %d (C room.c TRAP_RMSPL count)",
+			len(moveTrapSpellExpirationTags), len(wantOrder))
+	}
+	for i, want := range wantOrder {
+		if moveTrapSpellExpirationTags[i] != want {
+			t.Fatalf("moveTrapSpellExpirationTags[%d] = %q, want %q (C LT_* index %d)",
+				i, moveTrapSpellExpirationTags[i], want, i)
+		}
+	}
+
+	// Then verify SetEffectExpiration is called in this exact order at runtime.
+	withMoveTrapRolls(t, 100)
+	loaded := moveTrapWorld(t, "5", "")
+	setMoveTrapActorStats(t, loaded, map[string]int{"intelligence": 0})
+	alice := loaded.Creatures["creature:alice"]
+	alice.Metadata.Tags = []string{"PPROTE", "PBLESS", "PRFIRE", "PRCOLD", "PBRWAT", "PSSHLD", "PRMAGI", "PLIGHT", "PDINVI", "PINVIS", "PKNOWA", "PDMAGI"}
+	loaded.Creatures[alice.ID] = alice
+
+	world := &moveTrapEffectExpirationWorldHook{World: state.NewWorld(loaded)}
+	_ = dispatchMoveLineWithMoveWorld(t, world, "동")
+
+	if len(world.setCallOrder) != len(wantOrder) {
+		t.Fatalf("SetEffectExpiration call count = %d, want %d", len(world.setCallOrder), len(wantOrder))
+	}
+	for i, want := range wantOrder {
+		if world.setCallOrder[i] != want {
+			t.Fatalf("SetEffectExpiration call %d = %q, want %q — Go must match C room.c TRAP_RMSPL assignment order",
+				i, world.setCallOrder[i], want)
+		}
+	}
 }
