@@ -351,6 +351,35 @@ func TestShopBuyHandlerRejectsInvalidPurchases(t *testing.T) {
 	}
 }
 
+func TestShopBuyHandlerRejectsEmptyStockRoom(t *testing.T) {
+	loaded := shopWorld(t, true)
+	stockRoom := loaded.Rooms["room:01072"]
+	stockRoom.Objects.ObjectIDs = nil
+	loaded.Rooms[stockRoom.ID] = stockRoom
+	creature := loaded.Creatures["creature:alice"]
+	creature.Stats = map[string]int{"gold": 60000}
+	loaded.Creatures[creature.ID] = creature
+	world := state.NewWorld(loaded)
+	defer world.Close()
+	handler := NewShopBuyHandler(world)
+	ctx := shopSellTestContext()
+
+	status, err := handler(ctx, ResolvedCommand{Args: []string{"목검"}, Values: []int64{1}})
+	if err != nil {
+		t.Fatalf("handler() error = %v", err)
+	}
+	if status != StatusDefault || ctx.OutputString() != "살 물건이 없습니다." {
+		t.Fatalf("status/output = %d/%q, want C command7.c:190 exact bytes", status, ctx.OutputString())
+	}
+	_, creature2, err := CurrentInventoryCreature(world, "player:alice")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if creature2.Stats["gold"] != 60000 || len(creature2.Inventory.ObjectIDs) != 0 {
+		t.Fatalf("state mutated after empty-stock rejection: gold=%d inv=%+v", creature2.Stats["gold"], creature2.Inventory.ObjectIDs)
+	}
+}
+
 func TestShopBuyHandlerRejectsTooHeavyPurchase(t *testing.T) {
 	loaded := shopBuyWorld(t, true, 60000)
 	proto := loaded.ObjectPrototypes["prototype:sword"]

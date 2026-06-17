@@ -310,10 +310,42 @@ func TestFleeHandlerFearsMessage(t *testing.T) {
 		t.Fatalf("DispatchLine() error = %v", err)
 	}
 	output := ctx.OutputString()
-	if status != StatusDefault ||
-		!strings.Contains(output, "당신은 줄행랑을 칩니다.") ||
-		!strings.Contains(output, "당신은 겁에 질린듯 얼굴이 창백하게 변해 도망을 갑니다!") {
-		t.Fatalf("status/output = %d/%q, want C normal flee message followed by fearful flee message", status, output)
+	if status != StatusDefault {
+		t.Fatalf("status = %d, want StatusDefault", status)
+	}
+	wantPrefix := "\n당신은 줄행랑을 칩니다.\n당신은 겁에 질린듯 얼굴이 창백하게 변해 도망을 갑니다!"
+	if !strings.HasPrefix(output, wantPrefix) {
+		t.Fatalf("output = %q, want exact PFEARS prefix %q (C command7.c:94+98)", output, wantPrefix)
+	}
+}
+
+func TestFleeHandlerPFEARSBypassesCooldownCheck(t *testing.T) {
+	loaded := lookWorld(t)
+	creature := loaded.Creatures["creature:alice"]
+	creature.Metadata.Tags = []string{"PFEARS"}
+	loaded.Creatures[creature.ID] = creature
+	runtime := state.NewWorld(loaded)
+	if err := runtime.SetCreatureCooldown("creature:alice", "attack", time.Now().Unix(), 10); err != nil {
+		t.Fatalf("SetCreatureCooldown() error = %v", err)
+	}
+	mustAddFleeEnemy(t, runtime)
+	dispatcher := fleeDispatcher(t, runtime, fixedRoll(1))
+
+	ctx := &Context{ActorID: "player:alice"}
+	status, err := dispatcher.DispatchLine(ctx, "도망")
+	if err != nil {
+		t.Fatalf("DispatchLine() error = %v", err)
+	}
+	output := ctx.OutputString()
+	if status != StatusDefault {
+		t.Fatalf("status = %d, want StatusDefault", status)
+	}
+	if strings.Contains(output, "기다리세요") {
+		t.Fatalf("output = %q, PFEARS should bypass cooldown like C command7.c:33", output)
+	}
+	wantPrefix := "\n당신은 줄행랑을 칩니다.\n당신은 겁에 질린듯 얼굴이 창백하게 변해 도망을 갑니다!"
+	if !strings.HasPrefix(output, wantPrefix) {
+		t.Fatalf("output = %q, want exact PFEARS prefix %q", output, wantPrefix)
 	}
 }
 
