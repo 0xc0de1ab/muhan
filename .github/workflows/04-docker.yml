@@ -70,7 +70,7 @@ jobs:
           ./muhan-server-linux-amd64 -version || true
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       # ─── GHCR 로그인 ───
       - name: Login to GHCR
