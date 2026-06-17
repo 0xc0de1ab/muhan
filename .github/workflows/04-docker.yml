@@ -106,7 +106,7 @@ jobs:
       - name: Build & Push to GHCR
         id: ghcr_push
         if: inputs.push_ghcr
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: docker/Dockerfile.release
@@ -124,7 +124,7 @@ jobs:
         id: oci_push
         if: inputs.push_oci && env.OCI_REGISTRY != '' && steps.oci_login.outcome == 'success'
         continue-on-error: true
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: docker/Dockerfile.release
