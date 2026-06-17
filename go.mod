@@ -2,6 +2,8 @@ module github.com/0xc0de1ab/muhan
 
 go 1.25.0
 
+toolchain go1.26.4
+
 require (
 	github.com/jackc/pgx/v5 v5.8.0
 	github.com/prometheus/client_golang v1.23.2
