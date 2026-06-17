@@ -605,6 +605,108 @@ func TestCraftingClassDispatcherKeys(t *testing.T) {
 	}
 }
 
+// TestApplyClassChangeMutationOrderMatchesC asserts that applyClassChangeMutation
+// mutates experience BEFORE class, matching C src/command7.c::chg_class_main
+// which does:
+//   ply_ptr->experience -= 100000;  // line 1256 — experience first
+//   ply_ptr->class = new_class;     // line 1257 — class second
+// Even when the family hook (applyClassChangeLegacyEffects) returns an error,
+// both mutations must already be applied in C's order.
+func TestApplyClassChangeMutationOrderMatchesC(t *testing.T) {
+	base := state.NewWorld(craftingClassWorld(t, model.Room{
+		ID:          "room:00610",
+		DisplayName: "수련장",
+		Metadata:    model.Metadata{Tags: []string{"train", "trainingBit4"}},
+	}, model.ClassFighter, 150000))
+	if err := base.SetCreatureStat("creature:alice", "familyFlag", 1); err != nil {
+		t.Fatalf("SetCreatureStat(familyFlag) error = %v", err)
+	}
+	if err := base.SetCreatureStat("creature:alice", "dailyExpndMax", 7); err != nil {
+		t.Fatalf("SetCreatureStat(dailyExpndMax) error = %v", err)
+	}
+
+	world := &classChangeOrderTrackingWorld{
+		World:                base,
+		familyHookErr:        errors.New("simulated family hook failure"),
+	}
+
+	player, _ := world.Player("player:alice")
+	creature, _ := world.Creature("creature:alice")
+	request := ClassChangeRequest{
+		PlayerID:     player.ID,
+		CreatureID:   creature.ID,
+		RoomID:       "room:00610",
+		CurrentClass: model.ClassFighter,
+		TargetClass:  model.ClassMage,
+		Experience:   150000,
+	}
+
+	err := applyClassChangeMutation(world, world, request)
+	if !errors.Is(err, world.familyHookErr) {
+		t.Fatalf("applyClassChangeMutation error = %v, want %v", err, world.familyHookErr)
+	}
+
+	// Verify mutation call order: experience must come before class.
+	// C: experience -= 100000 first, then class = new_class.
+	if len(world.mutationOrder) < 2 {
+		t.Fatalf("mutationOrder = %v, want at least 2 entries", world.mutationOrder)
+	}
+	expIdx := -1
+	classIdx := -1
+	for i, m := range world.mutationOrder {
+		if m == "experience" {
+			expIdx = i
+		}
+		if m == "class" {
+			classIdx = i
+		}
+	}
+	if expIdx < 0 {
+		t.Fatalf("experience mutation not recorded in %v", world.mutationOrder)
+	}
+	if classIdx < 0 {
+		t.Fatalf("class mutation not recorded in %v", world.mutationOrder)
+	}
+	if expIdx >= classIdx {
+		t.Fatalf("mutation order = %v: experience (idx %d) must come BEFORE class (idx %d), matching C chg_class_main",
+			world.mutationOrder, expIdx, classIdx)
+	}
+
+	// Verify final state despite hook failure
+	updatedCreature, _ := world.Creature("creature:alice")
+	if updatedCreature.Stats["experience"] != 50000 {
+		t.Fatalf("experience = %d, want 50000", updatedCreature.Stats["experience"])
+	}
+	if updatedCreature.Stats["class"] != model.ClassMage {
+		t.Fatalf("class = %d, want %d", updatedCreature.Stats["class"], model.ClassMage)
+	}
+}
+
+// classChangeOrderTrackingWorld wraps state.World to track the order of
+// SetCreatureStat calls for "experience" and "class", and simulates a
+// family hook failure via UpdateFamilyMemberAfterClassChange.
+type classChangeOrderTrackingWorld struct {
+	*state.World
+	mutationOrder []string
+	familyHookErr error
+}
+
+func (w *classChangeOrderTrackingWorld) SetCreatureStat(id model.CreatureID, key string, value int) error {
+	if key == "experience" || key == "class" {
+		w.mutationOrder = append(w.mutationOrder, key)
+	}
+	return w.World.SetCreatureStat(id, key, value)
+}
+
+func (w *classChangeOrderTrackingWorld) SetCreatureClass(id model.CreatureID, class int) (model.Creature, error) {
+	w.mutationOrder = append(w.mutationOrder, "class")
+	return w.World.SetCreatureClass(id, class)
+}
+
+func (w *classChangeOrderTrackingWorld) UpdateFamilyMemberAfterClassChange(name string, class int, dailyExpndMax int) error {
+	return w.familyHookErr
+}
+
 type recordingWeaponForgeStarter struct {
 	called  bool
 	status  Status

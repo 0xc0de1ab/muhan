@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/0xc0de1ab/muhan/internal/commandspec"
@@ -306,6 +307,49 @@ func TestServerLoopSuicidePendingConfirmDoesNotRunAfterDisconnect(t *testing.T) 
 	}
 	if _, ok := inputs.world.Creature("creature:alice"); !ok {
 		t.Fatal("creature was deleted after closed suicide prompt")
+	}
+}
+
+// TestServerLoopSuicideWrongPasswordReturnsToCommandMode tests that a single
+// wrong password at the suicide prompt returns the player to normal command
+// mode without disconnecting, matching C src/command5.c::suicide case 2 which
+// does: print(fd, "..."); RETURN(fd, command, 1); — a single attempt with no
+// 3-strike disconnect (unlike login which does disconnect after 3 failures).
+func TestServerLoopSuicideWrongPasswordReturnsToCommandMode(t *testing.T) {
+	inputs := withServerTestCommands(t, serverTestRuntimeInputs(t),
+		commandspec.CommandSpec{Name: "자살", Number: 76, Handler: "suicide"},
+	)
+	if err := inputs.world.SetCreatureStat("creature:alice", "level", 6); err != nil {
+		t.Fatalf("raise alice level: %v", err)
+	}
+
+	loop := newServerTestLoop(inputs)
+	commands := make(chan session.Command, 8)
+	registerServerTestSession(t, loop, "s1", commands, "player:alice")
+
+	// Start suicide prompt
+	handleServerTestLine(t, loop, "s1", "자살")
+	assertServerCommandContains(t, commands, session.Command{},
+		"당신에 관한 데이터를 완전히 삭제합니다.",
+		"당신의 현재 암호를 넣어주십시요",
+	)
+
+	// Submit wrong password — C: single attempt, return to command mode
+	handleServerTestLine(t, loop, "s1", "wrongpassword")
+	got := receiveServerCommand(t, commands)
+	if got.Close {
+		t.Fatalf("wrong password at suicide prompt disconnected session (C does not disconnect): %#v", got)
+	}
+	if !strings.Contains(got.Write, "삭제되지 않았습니다.") {
+		t.Fatalf("wrong password output = %q, want message containing 삭제되지 않았습니다.", got.Write)
+	}
+
+	// Verify player and creature still exist
+	if _, ok := inputs.world.Player("player:alice"); !ok {
+		t.Fatal("player was deleted after wrong suicide password")
+	}
+	if _, ok := inputs.world.Creature("creature:alice"); !ok {
+		t.Fatal("creature was deleted after wrong suicide password")
 	}
 }
 
