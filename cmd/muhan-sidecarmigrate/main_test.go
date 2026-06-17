@@ -182,3 +182,99 @@ func readJSONFile(t *testing.T, path string, v any) {
 		t.Fatalf("unmarshal %s: %v", path, err)
 	}
 }
+
+func TestRunExecuteActualByteRewrite(t *testing.T) {
+	root := t.TempDir()
+	playerPath := filepath.Join(root, "player", "json", "alice.json")
+	writeJSONFile(t, playerPath, state.PlayerSaveData{
+		SchemaVersion: 1,
+		Player:        model.Player{ID: "player:alice"},
+	})
+
+	beforeBytes, err := os.ReadFile(playerPath)
+	if err != nil {
+		t.Fatalf("read before: %v", err)
+	}
+
+	var stdout, stderr bytes.Buffer
+	code := run([]string{"-root", root, "-execute", "-json"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("run exit = %d, stderr=%s stdout=%s", code, stderr.String(), stdout.String())
+	}
+
+	var summary migrationSummary
+	if err := json.Unmarshal(stdout.Bytes(), &summary); err != nil {
+		t.Fatalf("summary JSON: %v\n%s", err, stdout.String())
+	}
+	if summary.Migrated != 1 {
+		t.Fatalf("migrated = %d, want 1; summary = %+v", summary.Migrated, summary)
+	}
+
+	afterBytes, err := os.ReadFile(playerPath)
+	if err != nil {
+		t.Fatalf("read after: %v", err)
+	}
+
+	if bytes.Equal(beforeBytes, afterBytes) {
+		t.Fatal("file bytes unchanged after -execute; expected on-disk rewrite")
+	}
+
+	var got state.PlayerSaveData
+	if err := json.Unmarshal(afterBytes, &got); err != nil {
+		t.Fatalf("post-execute file failed to parse: %v", err)
+	}
+	if got.SchemaVersion != state.CurrentSaveSchemaVersion {
+		t.Fatalf("post-execute schemaVersion = %d, want %d", got.SchemaVersion, state.CurrentSaveSchemaVersion)
+	}
+}
+
+func TestRunExecuteIdempotent(t *testing.T) {
+	root := t.TempDir()
+	playerPath := filepath.Join(root, "player", "json", "alice.json")
+	writeJSONFile(t, playerPath, state.PlayerSaveData{
+		SchemaVersion: 1,
+		Player:        model.Player{ID: "player:alice"},
+	})
+
+	// First -execute: should migrate 1 file.
+	var stdout1, stderr1 bytes.Buffer
+	code := run([]string{"-root", root, "-execute", "-json"}, &stdout1, &stderr1)
+	if code != 0 {
+		t.Fatalf("first run exit = %d, stderr=%s stdout=%s", code, stderr1.String(), stdout1.String())
+	}
+	var summary1 migrationSummary
+	if err := json.Unmarshal(stdout1.Bytes(), &summary1); err != nil {
+		t.Fatalf("first summary JSON: %v\n%s", err, stdout1.String())
+	}
+	if summary1.Migrated != 1 {
+		t.Fatalf("first run migrated = %d, want 1", summary1.Migrated)
+	}
+
+	bytesAfterFirst, err := os.ReadFile(playerPath)
+	if err != nil {
+		t.Fatalf("read after first: %v", err)
+	}
+
+	// Second -execute: should be a no-op.
+	var stdout2, stderr2 bytes.Buffer
+	code = run([]string{"-root", root, "-execute", "-json"}, &stdout2, &stderr2)
+	if code != 0 {
+		t.Fatalf("second run exit = %d, stderr=%s stdout=%s", code, stderr2.String(), stdout2.String())
+	}
+	var summary2 migrationSummary
+	if err := json.Unmarshal(stdout2.Bytes(), &summary2); err != nil {
+		t.Fatalf("second summary JSON: %v\n%s", err, stdout2.String())
+	}
+	if summary2.Migrated != 0 {
+		t.Fatalf("second run migrated = %d, want 0 (idempotent)", summary2.Migrated)
+	}
+
+	bytesAfterSecond, err := os.ReadFile(playerPath)
+	if err != nil {
+		t.Fatalf("read after second: %v", err)
+	}
+
+	if !bytes.Equal(bytesAfterFirst, bytesAfterSecond) {
+		t.Fatal("file bytes changed on second -execute; expected idempotent no-op")
+	}
+}

@@ -269,6 +269,60 @@ func TestSchemaMigrateSidecarsRewritesV1AndReportsFuture(t *testing.T) {
 	}
 }
 
+func TestMigrateSidecarsCorruptInputsRejected(t *testing.T) {
+	root := t.TempDir()
+	// (a) malformed JSON syntax
+	badSyntaxPath := filepath.Join(root, "player", "json", "bad_syntax.json")
+	writeRawFile(t, badSyntaxPath, []byte(`{broken json`))
+
+	// (b) wrong type for schemaVersion field (string instead of int)
+	badTypePath := filepath.Join(root, "board", "json", "bad_type.json")
+	writeRawFile(t, badTypePath, []byte(`{"schemaVersion":"not-a-number","boardDir":"info"}`))
+
+	// (c) wrong inner type: player field is a string instead of an object
+	badInnerPath := filepath.Join(root, "player", "json", "bad_inner.json")
+	writeRawFile(t, badInnerPath, []byte(`{"schemaVersion":1,"player":"should_be_struct"}`))
+
+	report, err := state.MigrateSidecars(root)
+	if err != nil {
+		t.Fatalf("MigrateSidecars top-level error: %v", err)
+	}
+
+	// All three corrupt files should appear in Errors, not be silently skipped.
+	if len(report.Errors) < 3 {
+		t.Fatalf("expected at least 3 errors, got %d: %#v", len(report.Errors), report.Errors)
+	}
+
+	// Each corrupt file path should appear in at least one error message.
+	for _, p := range []string{badSyntaxPath, badTypePath, badInnerPath} {
+		found := false
+		for _, msg := range report.Errors {
+			if strings.Contains(msg, p) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("no error mentions corrupt file %s; errors: %#v", p, report.Errors)
+		}
+	}
+
+	// No migrations should have occurred for corrupt files.
+	if report.Migrated != 0 {
+		t.Fatalf("migrated = %d, want 0 for all-corrupt corpus", report.Migrated)
+	}
+}
+
+func writeRawFile(t *testing.T, path string, data []byte) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+		t.Fatalf("mkdir %s: %v", filepath.Dir(path), err)
+	}
+	if err := os.WriteFile(path, data, 0600); err != nil {
+		t.Fatalf("write %s: %v", path, err)
+	}
+}
+
 func writeJSONFile(t *testing.T, path string, v any) {
 	t.Helper()
 	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
