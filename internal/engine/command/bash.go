@@ -134,7 +134,7 @@ func NewBashHandlerWithDeathFinalizer(world BashWorld, finalizer AttackDeathFina
 			if err := world.RecordCreatureDamage(victim.creature.ID, actor.ID, damage.ledger); err != nil {
 				return StatusDefault, err
 			}
-			if gain := bashLegacyWeaponProficiencyGain(victim.creature, damage.ledger); gain > 0 {
+			if gain := legacyWeaponProficiencyGain(victim.creature, damage.ledger); gain > 0 {
 				if _, err := incrementWeaponProficiency(world, actor, weapon, gain); err != nil {
 					return StatusDefault, err
 				}
@@ -328,22 +328,6 @@ func bashDamage(world InventoryWorld, actor model.Creature, victim model.Creatur
 		actual: actual,
 		ledger: minInt(hp, damage),
 	}
-}
-
-func bashLegacyWeaponProficiencyGain(victim model.Creature, rawDamage int) int {
-	if rawDamage <= 0 {
-		return 0
-	}
-	experience := creatureStat(victim, "experience")
-	hpMax := creatureStat(victim, "hpMax")
-	if experience <= 0 || hpMax <= 0 {
-		return 0
-	}
-	gain := rawDamage * experience / hpMax
-	if gain > experience {
-		gain = experience
-	}
-	return gain
 }
 
 func bashInitialCooldown(actor model.Creature) int64 {

@@ -128,14 +128,6 @@ func NewBackstabHandlerWithDeathFinalizer(world BackstabWorld, finalizer AttackD
 		_ = sendToPlayer(ctx, victim.creature.PlayerID, actorName+"이 당신의 옆구리를 쿡~ 찌릅니다.")
 		_ = broadcastRom2(ctx, world, room.ID, viewer.PlayerID, victim.creature.PlayerID, "\n"+actorName+"이 "+victimName+"의 옆구리를 쿡~ 찌릅니다!")
 
-		// Increment proficiency upon use!
-		incrementAmount := 1 + legacyStatBonus(creatureStat(actor, "dexterity"))/2
-		if incrementAmount < 1 {
-			incrementAmount = 1
-		}
-		actor, _ = incrementCreaturePropertyProficiency(world, actor, "proficiency/backstab", incrementAmount)
-		actor, _ = incrementWeaponProficiency(world, actor, weapon, incrementAmount)
-
 		if !wasHidden || !backstabLands(actor, victim.creature) {
 			if err := world.SetCreatureCooldown(actor.ID, "attack", now, baseCooldown*3); err != nil {
 				return StatusDefault, err
@@ -153,6 +145,14 @@ func NewBackstabHandlerWithDeathFinalizer(world BackstabWorld, finalizer AttackD
 		if !victim.hasPlayer {
 			if err := world.RecordCreatureDamage(victim.creature.ID, actor.ID, applied); err != nil {
 				return StatusDefault, err
+			}
+			// C backstab (command7.c:522-528) grants weapon proficiency via addprof
+			// on a landed hit against a monster; the backstab skill is never
+			// incremented (Go previously incremented both on every use).
+			if gain := legacyWeaponProficiencyGain(victim.creature, applied); gain > 0 {
+				if _, err := incrementWeaponProficiency(world, actor, weapon, gain); err != nil {
+					return StatusDefault, err
+				}
 			}
 		}
 

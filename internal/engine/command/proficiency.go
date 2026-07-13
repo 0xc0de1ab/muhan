@@ -24,6 +24,26 @@ func weaponProficiencyPropertyKey(world InventoryWorld, weapon model.ObjectInsta
 	return "proficiency/" + weaponType
 }
 
+// legacyWeaponProficiencyGain ports the C addprof formula shared by attack_crt
+// (command5.c:391), backstab (command7.c:526), and bash: a landed hit against a
+// monster grants (damage * experience) / hpMax proficiency, capped at the
+// victim's experience. Callers gate it on the victim being a monster.
+func legacyWeaponProficiencyGain(victim model.Creature, damage int) int {
+	if damage <= 0 {
+		return 0
+	}
+	experience := creatureStat(victim, "experience")
+	hpMax := creatureStat(victim, "hpMax")
+	if experience <= 0 || hpMax <= 0 {
+		return 0
+	}
+	gain := damage * experience / hpMax
+	if gain > experience {
+		gain = experience
+	}
+	return gain
+}
+
 func incrementCreaturePropertyProficiency(world proficiencyWorld, creature model.Creature, key string, amount int) (model.Creature, error) {
 	currentVal := 0
 	if valStr, ok := creature.Properties[key]; ok {

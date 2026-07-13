@@ -251,7 +251,7 @@ func TestBackstabHandlerRejectsInvalidInputs(t *testing.T) {
 				tt.mutate(loaded)
 			}
 			world := state.NewWorld(loaded)
-	defer world.Close()
+			defer world.Close()
 			handler := NewBackstabHandler(world)
 
 			ctx := &Context{ActorID: "player:alice"}
@@ -353,6 +353,38 @@ func TestBackstabDamageIgnoresProficiency(t *testing.T) {
 	got := backstabDamage(stubProficiencyWorld{}, trained, victim, weapon)
 	if want := 25; got != want {
 		t.Fatalf("backstabDamage = %d, want %d (weapon dice 5 x5, no proficiency bonus)", got, want)
+	}
+}
+
+// TestBackstabHandlerMonsterHitGrantsWeaponNotSkillProficiency guards the C
+// backstab proficiency gain (command7.c:522-528): a landed hit on a monster adds
+// addprof to the WEAPON proficiency only; the backstab skill is never touched
+// (the Go port previously incremented both, on every use, before the hit).
+func TestBackstabHandlerMonsterHitGrantsWeaponNotSkillProficiency(t *testing.T) {
+	withAttackRolls(t, 20, 30) // backstab lands (target 2), thief multiplier 30/10 = 3
+	loaded := backstabWorld(t, model.ClassThief)
+	alice := loaded.Creatures["creature:alice"]
+	alice.Metadata.Tags = []string{"hidden"}
+	loaded.Creatures[alice.ID] = alice
+	goblin := loaded.Creatures["creature:goblin-1"]
+	goblin.Stats["hpCurrent"] = 1000
+	goblin.Stats["hpMax"] = 1000
+	goblin.Stats["experience"] = 1000
+	loaded.Creatures[goblin.ID] = goblin
+	world := state.NewWorld(loaded)
+	defer world.Close()
+
+	ctx := &Context{ActorID: "player:alice"}
+	if _, err := NewBackstabHandler(world)(ctx, ResolvedCommand{Args: []string{"고블린"}}); err != nil {
+		t.Fatalf("handler() error = %v", err)
+	}
+	alice, _ = world.Creature("creature:alice")
+	// damage 15 (dice 5 x3), addprof = 15 * 1000 / 1000 = 15 on the dagger (type 0).
+	if got := alice.Properties["proficiency/0"]; got != "15" {
+		t.Fatalf("proficiency/0 = %q, want 15 (weapon addprof)", got)
+	}
+	if got := alice.Properties["proficiency/backstab"]; got != "" {
+		t.Fatalf("proficiency/backstab = %q, want empty (C never increments the skill)", got)
 	}
 }
 

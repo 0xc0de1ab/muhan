@@ -299,7 +299,7 @@ func TestAttackHandlerAppliesPaladinAlignmentDamageMessages(t *testing.T) {
 			alice.Stats["alignment"] = tt.alignment
 			loaded.Creatures[alice.ID] = alice
 			world := state.NewWorld(loaded)
-	defer world.Close()
+			defer world.Close()
 			dispatcher := attackTestDispatcher(t, world)
 
 			ctx := &Context{ActorID: "player:alice"}
@@ -478,7 +478,7 @@ func TestAttackHandlerPlayerGateMatchesLegacyPvPConditions(t *testing.T) {
 				tt.setupLoad(loaded)
 			}
 			world := state.NewWorld(loaded)
-	defer world.Close()
+			defer world.Close()
 			if tt.setupWorld != nil {
 				tt.setupWorld(t, world)
 			}
@@ -837,7 +837,7 @@ func TestAttackHandlerDeflectsMagicOnlyAndEnchantOnlyTargets(t *testing.T) {
 				loaded.Objects[sword.ID] = sword
 			}
 			world := state.NewWorld(loaded)
-	defer world.Close()
+			defer world.Close()
 			dispatcher := attackTestDispatcher(t, world)
 
 			ctx := &Context{ActorID: "player:alice"}
@@ -966,7 +966,7 @@ func TestAttackDamageAddsUnarmedLevelBonusForBarbarianAndAboveInvincible(t *test
 			alice.Stats["pDice"] = 4
 			loaded.Creatures[alice.ID] = alice
 			world := state.NewWorld(loaded)
-	defer world.Close()
+			defer world.Close()
 
 			attacker, _ := world.Creature("creature:alice")
 			victim, _ := world.Creature("creature:goblin-1")
@@ -1003,7 +1003,7 @@ func TestAttackDamageOmitsWeaponProficiencyForMageAndCleric(t *testing.T) {
 			swordProto.Properties = map[string]string{"type": "1", "pDice": "4"}
 			loaded.ObjectPrototypes[swordProto.ID] = swordProto
 			world := state.NewWorld(loaded)
-	defer world.Close()
+			defer world.Close()
 
 			attacker, _ := world.Creature("creature:alice")
 			victim, _ := world.Creature("creature:goblin-1")
@@ -1162,6 +1162,67 @@ func TestAttackHandlerFumbleDropsWeapon(t *testing.T) {
 	}
 }
 
+// TestAttackHandlerMonsterHitGrantsLegacyWeaponProficiency guards the C
+// attack_crt proficiency gain (command5.c:388-394): a landed melee hit against a
+// monster adds addprof = (damage * experience) / hpMax (capped at experience) to
+// the wielded weapon's proficiency.
+func TestAttackHandlerMonsterHitGrantsLegacyWeaponProficiency(t *testing.T) {
+	withAttackRolls(t, 30, 100, 100) // hit, no crit, no fumble
+	loaded := attackTestWorld(t)
+	goblin := loaded.Creatures["creature:goblin-1"]
+	goblin.Stats["hpCurrent"] = 100
+	goblin.Stats["hpMax"] = 100
+	goblin.Stats["experience"] = 100
+	loaded.Creatures[goblin.ID] = goblin
+	swordProto := loaded.ObjectPrototypes["prototype:sword"]
+	swordProto.Properties = map[string]string{"pDice": "4", "type": "1"}
+	loaded.ObjectPrototypes[swordProto.ID] = swordProto
+	world := state.NewWorld(loaded)
+	defer world.Close()
+	dispatcher := attackTestDispatcher(t, world)
+
+	ctx := &Context{ActorID: "player:alice"}
+	if _, err := dispatcher.DispatchLine(ctx, "고블린 때려"); err != nil {
+		t.Fatalf("DispatchLine() error = %v", err)
+	}
+	alice, _ := world.Creature("creature:alice")
+	// applied 4, addprof = 4 * 100 / 100 = 4.
+	if got := alice.Properties["proficiency/1"]; got != "4" {
+		t.Fatalf("proficiency/1 = %q, want 4 (addprof = applied 4 * exp 100 / hpMax 100)", got)
+	}
+}
+
+// TestAttackHandlerPlayerHitGrantsNoWeaponProficiency guards that a melee hit on
+// a PLAYER grants no proficiency — C only runs addprof inside `if(crt.type !=
+// PLAYER)` (command5.c:388).
+func TestAttackHandlerPlayerHitGrantsNoWeaponProficiency(t *testing.T) {
+	withAttackRolls(t, 30, 100, 100)
+	loaded := attackTestWorld(t)
+	room := loaded.Rooms["room:arena"]
+	room.Metadata.Tags = append(room.Metadata.Tags, "RSUVIV")
+	loaded.Rooms[room.ID] = room
+	bob := loaded.Creatures["creature:bob"]
+	bob.Stats["hpCurrent"] = 100
+	bob.Stats["hpMax"] = 100
+	bob.Stats["experience"] = 100
+	loaded.Creatures[bob.ID] = bob
+	swordProto := loaded.ObjectPrototypes["prototype:sword"]
+	swordProto.Properties = map[string]string{"pDice": "4", "type": "1"}
+	loaded.ObjectPrototypes[swordProto.ID] = swordProto
+	world := state.NewWorld(loaded)
+	defer world.Close()
+	dispatcher := attackTestDispatcher(t, world)
+
+	ctx := &Context{ActorID: "player:alice"}
+	if _, err := dispatcher.DispatchLine(ctx, "Bob 때려"); err != nil {
+		t.Fatalf("DispatchLine() error = %v", err)
+	}
+	alice, _ := world.Creature("creature:alice")
+	if got := alice.Properties["proficiency/1"]; got != "" {
+		t.Fatalf("proficiency/1 = %q, want empty (no proficiency gain against players)", got)
+	}
+}
+
 func TestAttackHandlerRejectsMissingSelfPlayerAndProtectedTargets(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -1225,7 +1286,7 @@ func TestAttackHandlerRejectsMissingSelfPlayerAndProtectedTargets(t *testing.T) 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			world := state.NewWorld(attackTestWorld(t))
-	defer world.Close()
+			defer world.Close()
 			dispatcher := attackTestDispatcher(t, world)
 
 			ctx := &Context{ActorID: tt.actorID}

@@ -690,17 +690,6 @@ func attackOneDamageRound(
 		return false, stopped, err
 	}
 
-	// Increment weapon proficiency upon use!
-	if weaponID := equippedObjectID(attacker, "wield"); !weaponID.IsZero() {
-		if weapon, ok := world.Object(weaponID); ok {
-			incrementAmount := 1 + legacyStatBonus(creatureStat(attacker, "dexterity"))/2
-			if incrementAmount < 1 {
-				incrementAmount = 1
-			}
-			attacker, _ = incrementWeaponProficiency(world, attacker, weapon, incrementAmount)
-		}
-	}
-
 	outcome := attackDamageOutcome(world, attacker, victim)
 	if !outcome.Hit {
 		ctx.WriteString("당신의 공격은 빗나갔습니다.\n")
@@ -719,6 +708,18 @@ func attackOneDamageRound(
 	if recordDamage {
 		if err := world.RecordCreatureDamage(victim.ID, attacker.ID, applied); err != nil {
 			return false, false, err
+		}
+		// C attack_crt (command5.c:388-394): a landed hit against a monster grants
+		// weapon proficiency via addprof. The weapon must still exist, so a critical
+		// shatter (world.Object false) grants nothing, matching C's ready[WIELD-1]==0.
+		if weaponID := equippedObjectID(attacker, "wield"); !weaponID.IsZero() {
+			if weapon, ok := world.Object(weaponID); ok {
+				if gain := legacyWeaponProficiencyGain(victim, applied); gain > 0 {
+					if _, err := incrementWeaponProficiency(world, attacker, weapon, gain); err != nil {
+						return false, false, err
+					}
+				}
+			}
 		}
 	}
 	swingPrefix := ""
