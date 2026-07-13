@@ -550,6 +550,10 @@ type attackDamageResult struct {
 	Damage   int
 	Hit      bool
 	Messages []string
+	// SwingMultiplier is the C attack_crt `num` value (command5.c:337-361) when it
+	// exceeds 1; the damage line renders a "(xN)" prefix in that case. Zero means
+	// no multiplier was applied.
+	SwingMultiplier int
 }
 
 func revealAttackActor(ctx *Context, world AttackWorld, roomID model.RoomID, viewer LookViewer, attacker model.Creature) error {
@@ -709,7 +713,11 @@ func attackOneDamageRound(
 			return false, false, err
 		}
 	}
-	ctx.WriteString(fmt.Sprintf("당신은 %s에게 %d만큼의 피해를 주었습니다.\n", name, applied))
+	swingPrefix := ""
+	if outcome.SwingMultiplier > 1 {
+		swingPrefix = fmt.Sprintf("(x%d) ", outcome.SwingMultiplier)
+	}
+	ctx.WriteString(fmt.Sprintf("%s당신은 %s에게 %d만큼의 피해를 주었습니다.\n", swingPrefix, name, applied))
 	dead, err = attackApplyAngelDamage(ctx, world, attacker, victim.ID, name, outcome.Damage, applied, dead, recordDamage)
 	if err != nil {
 		return false, false, err
@@ -740,7 +748,7 @@ func attackDamageOutcome(world InventoryWorld, attacker model.Creature, victim m
 				damage += weaponProficiencyDamageBonus(world, attacker, object)
 				damage += heldWeaponDamageBonus(world, attacker)
 			}
-			return attackApplyPaladinAlignment(normalizeAttackDamage(damage), attacker)
+			return attackFinalizeDamage(damage, attacker, victim)
 		}
 	}
 	damage := statsDamage(attacker) + strengthDamageBonus(attacker)
@@ -748,12 +756,67 @@ func attackDamageOutcome(world InventoryWorld, attacker model.Creature, victim m
 		damage += (attackCreatureLevel(attacker) + 3) / 4
 	}
 	if damage != 0 {
-		return attackApplyPaladinAlignment(normalizeAttackDamage(damage), attacker)
+		return attackFinalizeDamage(damage, attacker, victim)
 	}
 	if attacker.Level > 0 {
-		return attackApplyPaladinAlignment(attacker.Level, attacker)
+		return attackFinalizeDamage(attacker.Level, attacker, victim)
 	}
-	return attackApplyPaladinAlignment(1, attacker)
+	return attackFinalizeDamage(1, attacker, victim)
+}
+
+// attackFinalizeDamage applies the C attack_crt post-base-damage pipeline: the
+// DM-victim damage floor (command5.c:265 `if(crt_ptr->class >= DM) n = 0;`
+// before MAX(1,n)), the paladin alignment adjustment (command5.c:268), and the
+// class swing multiplier (command5.c:337-361 `if(num!=1) n = n * num * 0.9;`).
+func attackFinalizeDamage(damage int, attacker model.Creature, victim model.Creature) attackDamageResult {
+	if creatureClass(victim) >= model.ClassDM {
+		damage = 0
+	}
+	outcome := attackApplyPaladinAlignment(normalizeAttackDamage(damage), attacker)
+	if num := attackSwingMultiplier(attacker); num != 1 {
+		outcome.Damage = int(float64(outcome.Damage) * float64(num) * 0.9)
+		outcome.SwingMultiplier = num
+	}
+	return outcome
+}
+
+// attackSwingMultiplier ports the C attack_crt `num` value (command5.c:337-361):
+// paladins gain a level-scaled multiplier and Caretaker-or-higher classes (or
+// anyone with paladin training) roll mrand(1,8). All other cases keep num == 1.
+func attackSwingMultiplier(attacker model.Creature) int {
+	class := creatureClass(attacker)
+	num := 1
+	if class == model.ClassPaladin {
+		switch attackCreatureLevel(attacker) / 20 {
+		case 2:
+			num = attackRoll(1, 3)
+		case 3:
+			num = 2
+		case 4:
+			num = attackRoll(1, 4)
+		case 5:
+			num = 3
+		case 6:
+			num = attackRoll(1, 5)
+		case 7:
+			num = 4
+		case 8:
+			num = attackRoll(1, 5)
+		case 9:
+			num = 5
+		case 10:
+			num = attackRoll(5, 6)
+		default:
+			num = 1
+		}
+	}
+	if class >= model.ClassCaretaker || attackCreatureHasFlag(attacker, "SPALADIN", "paladinTraining") {
+		num = attackRoll(1, 8)
+		if num < 1 {
+			num = 1
+		}
+	}
+	return num
 }
 
 func attackApplyPaladinAlignment(damage int, attacker model.Creature) attackDamageResult {

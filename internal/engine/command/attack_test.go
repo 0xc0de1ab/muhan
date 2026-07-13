@@ -943,7 +943,10 @@ func TestAttackDamageAddsUnarmedLevelBonusForBarbarianAndAboveInvincible(t *test
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			withAttackRolls(t, 30)
+			// Trailing roll pins the Caretaker+ swing multiplier (attack_crt num =
+			// mrand(1,8), command5.c:355) to 1 so this test isolates the unarmed
+			// level bonus; the Barbarian case never consumes it.
+			withAttackRolls(t, 30, 1)
 			loaded := attackTestWorld(t)
 			alice := loaded.Creatures["creature:alice"]
 			alice.Equipment = nil
@@ -1001,6 +1004,77 @@ func TestAttackDamageOmitsWeaponProficiencyForMageAndCleric(t *testing.T) {
 				t.Fatalf("attackDamage() damage = %d, want 7", damage)
 			}
 		})
+	}
+}
+
+// TestAttackDamageFloorsAgainstDMVictim guards the C attack_crt DM-victim floor
+// (command5.c:265 `if(crt_ptr->class >= DM) n = 0;` before MAX(1,n)): however
+// large the base damage, a DM-class victim takes exactly 1.
+func TestAttackDamageFloorsAgainstDMVictim(t *testing.T) {
+	withAttackRolls(t, 30)
+	loaded := attackTestWorld(t)
+	goblin := loaded.Creatures["creature:goblin-1"]
+	goblin.Stats["class"] = model.ClassDM
+	loaded.Creatures[goblin.ID] = goblin
+	world := state.NewWorld(loaded)
+	defer world.Close()
+
+	attacker, _ := world.Creature("creature:alice")
+	victim, _ := world.Creature("creature:goblin-1")
+	damage, hit := attackDamage(world, attacker, victim)
+	if !hit {
+		t.Fatal("attackDamage() hit = false, want true")
+	}
+	if damage != 1 {
+		t.Fatalf("attackDamage() damage = %d, want 1 (DM-class victim damage floored)", damage)
+	}
+}
+
+// TestAttackDamageAppliesCaretakerSwingMultiplier guards the C attack_crt swing
+// multiplier for Caretaker+ classes (command5.c:355 num = mrand(1,8), then
+// command5.c:361 `n = n * num * 0.9`). Unarmed base is 7 (dice 4 + level bonus
+// (9+3)/4 = 3); num rolled as 8 gives int(7 * 8 * 0.9) = 50.
+func TestAttackDamageAppliesCaretakerSwingMultiplier(t *testing.T) {
+	withAttackRolls(t, 30, 8)
+	loaded := attackTestWorld(t)
+	alice := loaded.Creatures["creature:alice"]
+	alice.Equipment = nil
+	alice.Stats["class"] = model.ClassCaretaker
+	alice.Stats["level"] = 9
+	alice.Stats["pDice"] = 4
+	loaded.Creatures[alice.ID] = alice
+	world := state.NewWorld(loaded)
+	defer world.Close()
+
+	attacker, _ := world.Creature("creature:alice")
+	victim, _ := world.Creature("creature:goblin-1")
+	damage, hit := attackDamage(world, attacker, victim)
+	if !hit {
+		t.Fatal("attackDamage() hit = false, want true")
+	}
+	if damage != 50 {
+		t.Fatalf("attackDamage() damage = %d, want 50 (7 x8 x0.9)", damage)
+	}
+}
+
+// TestAttackHandlerShowsSwingMultiplierPrefix guards the "(xN)" prefix on the
+// damage line when the swing multiplier fires (command5.c:369).
+func TestAttackHandlerShowsSwingMultiplierPrefix(t *testing.T) {
+	withAttackRolls(t, 30, 8)
+	loaded := attackTestWorld(t)
+	alice := loaded.Creatures["creature:alice"]
+	alice.Stats["class"] = model.ClassCaretaker
+	loaded.Creatures[alice.ID] = alice
+	world := state.NewWorld(loaded)
+	defer world.Close()
+	dispatcher := attackTestDispatcher(t, world)
+
+	ctx := &Context{ActorID: "player:alice"}
+	if _, err := dispatcher.DispatchLine(ctx, "고블린 때려"); err != nil {
+		t.Fatalf("DispatchLine() error = %v", err)
+	}
+	if got := ctx.OutputString(); !strings.Contains(got, "(x8) 당신은 고블린에게") {
+		t.Fatalf("output = %q, want (x8) swing-multiplier prefix", got)
 	}
 }
 
