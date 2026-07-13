@@ -308,6 +308,54 @@ func TestBackstabHandlerCapsDamageForCaretakerClassTarget(t *testing.T) {
 	}
 }
 
+// TestBackstabLandsIgnoresProficiency guards the to-hit parity fix: C backstab
+// (command7.c:508) computes the hidden-attacker target as thaco - armor/10 + 2
+// with proficiency already folded into thaco. The command layer must NOT subtract
+// weapon or backstab proficiency (nor a dexterity/level term), so the outcome is
+// identical whether raw proficiency is zero or maxed.
+func TestBackstabLandsIgnoresProficiency(t *testing.T) {
+	previous := attackRoll
+	attackRoll = func(_, max int) int { return max } // best possible roll (20)
+	defer func() { attackRoll = previous }()
+
+	victim := model.Creature{Stats: map[string]int{"armor": 0}}
+	// thaco 20 -> target 20 - 0 + 2 = 22; the best roll (20) can never reach 22,
+	// so both attackers must miss once the fabricated proficiency terms are gone.
+	base := model.Creature{Stats: map[string]int{"class": model.ClassThief, "thaco": 20}}
+	trained := model.Creature{Stats: map[string]int{
+		"class":                model.ClassThief,
+		"thaco":                20,
+		"proficiency/backstab": 934808,
+		"proficiency/dagger":   934808,
+	}}
+
+	if backstabLands(base, victim) {
+		t.Fatalf("untrained thief unexpectedly landed (target 22 > roll 20)")
+	}
+	if backstabLands(trained, victim) {
+		t.Fatalf("trained thief landed — backstab proficiency must not lower the to-hit target")
+	}
+}
+
+// TestBackstabDamageIgnoresProficiency guards the damage parity fix: C backstab
+// (command7.c:513) is weapon dice times the class multiplier with NO proficiency
+// term. An Assassin (x5) with a pDice-5 weapon deals 25 whether raw proficiency
+// is zero or maxed — the pre-fix code added proficiency/10 twice.
+func TestBackstabDamageIgnoresProficiency(t *testing.T) {
+	weapon := model.ObjectInstance{Properties: map[string]string{"pDice": "5"}}
+	victim := model.Creature{Stats: map[string]int{"class": model.ClassFighter}}
+	trained := model.Creature{Stats: map[string]int{
+		"class":                model.ClassAssassin,
+		"proficiency/backstab": 934808,
+		"proficiency/dagger":   934808,
+	}}
+
+	got := backstabDamage(stubProficiencyWorld{}, trained, victim, weapon)
+	if want := 25; got != want {
+		t.Fatalf("backstabDamage = %d, want %d (weapon dice 5 x5, no proficiency bonus)", got, want)
+	}
+}
+
 func backstabDispatcher(t *testing.T, world *state.World) Dispatcher {
 	t.Helper()
 	registry, err := commandspec.NewRegistry([]commandspec.CommandSpec{

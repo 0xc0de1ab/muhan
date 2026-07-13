@@ -136,7 +136,7 @@ func NewBackstabHandlerWithDeathFinalizer(world BackstabWorld, finalizer AttackD
 		actor, _ = incrementCreaturePropertyProficiency(world, actor, "proficiency/backstab", incrementAmount)
 		actor, _ = incrementWeaponProficiency(world, actor, weapon, incrementAmount)
 
-		if !wasHidden || !backstabLands(actor, victim.creature, getWeaponProficiency(world, actor, weapon)) {
+		if !wasHidden || !backstabLands(actor, victim.creature) {
 			if err := world.SetCreatureCooldown(actor.ID, "attack", now, baseCooldown*3); err != nil {
 				return StatusDefault, err
 			}
@@ -261,26 +261,26 @@ func backstabCooldownBase(actor model.Creature) int64 {
 	return 2
 }
 
-func backstabLands(actor model.Creature, victim model.Creature, weaponProf int) bool {
-	backstabProf := getCreatureProficiency(actor, "proficiency/backstab")
-	dexBonus := legacyStatBonus(creatureStat(actor, "dexterity"))
-	levelDiff := (attackCreatureLevel(actor) - attackCreatureLevel(victim)) / 4
-	target := (creatureStat(actor, "thaco") - dexBonus - levelDiff - backstabProf/20 - weaponProf/20) - creatureStat(victim, "armor")/10 + 2
+// backstabLands ports the C backstab to-hit test (command7.c:508): when the
+// actor is hidden the target is simply thaco - armor/10 + 2, with proficiency
+// already folded into thaco. C adds no separate proficiency, dexterity, or
+// level term here, so neither does this.
+func backstabLands(actor model.Creature, victim model.Creature) bool {
+	target := creatureStat(actor, "thaco") - creatureStat(victim, "armor")/10 + 2
 	return attackRoll(1, 20) >= target
 }
 
+// backstabDamage ports the C backstab damage (command7.c:513): weapon dice times
+// the class multiplier (thief mrand(20,35)/10, otherwise x5). C adds no
+// proficiency term to backstab damage.
 func backstabDamage(world InventoryWorld, actor model.Creature, victim model.Creature, weapon model.ObjectInstance) int {
 	if creatureClass(victim) > model.ClassCaretaker {
 		return 1
 	}
-	backstabProf := getCreatureProficiency(actor, "proficiency/backstab")
-	weaponProf := getWeaponProficiency(world, actor, weapon)
-
 	damage := objectDamage(world, weapon)
 	if damage < 1 {
 		damage = 1
 	}
-	damage += backstabProf/10 + weaponProf/10
 	if creatureClass(actor) == model.ClassThief {
 		multiplier := attackRoll(20, 35) / 10
 		if multiplier < 1 {

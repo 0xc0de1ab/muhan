@@ -12,18 +12,6 @@ type proficiencyWorld interface {
 	SetCreatureProperty(model.CreatureID, string, string) (model.Creature, error)
 }
 
-func getCreatureProficiency(c model.Creature, key string) int {
-	if valStr, ok := c.Properties[key]; ok {
-		if val, err := strconv.Atoi(strings.TrimSpace(valStr)); err == nil {
-			return val
-		}
-	}
-	if val, ok := c.Stats[key]; ok {
-		return val
-	}
-	return 0
-}
-
 func weaponProficiencyPropertyKey(world InventoryWorld, weapon model.ObjectInstance) string {
 	weaponType, ok := objectStringProperty(world, weapon, "type")
 	if !ok {
@@ -34,14 +22,6 @@ func weaponProficiencyPropertyKey(world InventoryWorld, weapon model.ObjectInsta
 		return "proficiency/" + name
 	}
 	return "proficiency/" + weaponType
-}
-
-func getWeaponProficiency(world InventoryWorld, actor model.Creature, weapon model.ObjectInstance) int {
-	key := weaponProficiencyPropertyKey(world, weapon)
-	if key == "" {
-		return 0
-	}
-	return getCreatureProficiency(actor, key)
 }
 
 func incrementCreaturePropertyProficiency(world proficiencyWorld, creature model.Creature, key string, amount int) (model.Creature, error) {
