@@ -554,6 +554,11 @@ type attackDamageResult struct {
 	// exceeds 1; the damage line renders a "(xN)" prefix in that case. Zero means
 	// no multiplier was applied.
 	SwingMultiplier int
+	// ShatterWeapon marks that a critical hit destroyed the wielded weapon
+	// (command5.c:293 free_obj); DropWeapon marks a fumble that unequips it to the
+	// attacker's inventory (command5.c:311 add_obj_crt). The caller applies these.
+	ShatterWeapon bool
+	DropWeapon    bool
 }
 
 func revealAttackActor(ctx *Context, world AttackWorld, roomID model.RoomID, viewer LookViewer, attacker model.Creature) error {
@@ -704,6 +709,9 @@ func attackOneDamageRound(
 	for _, message := range outcome.Messages {
 		ctx.WriteString(message)
 	}
+	if err := attackApplyWeaponFate(world, attacker, outcome); err != nil {
+		return false, false, err
+	}
 	_, applied, dead, err := world.ApplyCreatureDamage(victim.ID, outcome.Damage)
 	if err != nil {
 		return false, false, err
@@ -722,13 +730,50 @@ func attackOneDamageRound(
 	if err != nil {
 		return false, false, err
 	}
-	if err := attackMaybeConsumeWieldCharge(world, attacker); err != nil {
-		return false, false, err
+	// C zeroes ready[WIELD-1] on a shatter/fumble before the shots decrement
+	// (command5.c:293,311), so the charge roll is skipped when the weapon is gone.
+	if !outcome.ShatterWeapon && !outcome.DropWeapon {
+		if err := attackMaybeConsumeWieldCharge(world, attacker); err != nil {
+			return false, false, err
+		}
 	}
 	if !dead {
 		return false, false, nil
 	}
 	return true, false, nil
+}
+
+// attackApplyWeaponFate applies a critical shatter (destroy) or a fumble drop
+// (unequip to the attacker's inventory, then recompute thaco) decided during
+// damage calculation. Both use type assertions so non-state AttackWorld doubles
+// remain valid; the shatter/drop message is already in outcome.Messages.
+func attackApplyWeaponFate(world AttackWorld, attacker model.Creature, outcome attackDamageResult) error {
+	if !outcome.ShatterWeapon && !outcome.DropWeapon {
+		return nil
+	}
+	weaponID := equippedObjectID(attacker, "wield")
+	if weaponID.IsZero() {
+		return nil
+	}
+	if outcome.ShatterWeapon {
+		if destroyer, ok := world.(interface {
+			DestroyObject(model.ObjectInstanceID) error
+		}); ok {
+			return destroyer.DestroyObject(weaponID)
+		}
+		return nil
+	}
+	if err := world.MoveObject(weaponID, model.ObjectLocation{CreatureID: attacker.ID, Slot: "inventory"}); err != nil {
+		return err
+	}
+	if recalc, ok := world.(interface {
+		RecalculateCreatureTHACO(model.CreatureID) (model.Creature, error)
+	}); ok {
+		if _, err := recalc.RecalculateCreatureTHACO(attacker.ID); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func attackDamage(world InventoryWorld, attacker model.Creature, victim model.Creature) (int, bool) {
@@ -748,7 +793,7 @@ func attackDamageOutcome(world InventoryWorld, attacker model.Creature, victim m
 				damage += weaponProficiencyDamageBonus(world, attacker, object)
 				damage += heldWeaponDamageBonus(world, attacker)
 			}
-			return attackFinalizeDamage(damage, attacker, victim)
+			return attackFinalizeDamage(world, attacker, victim, damage, &object)
 		}
 	}
 	damage := statsDamage(attacker) + strengthDamageBonus(attacker)
@@ -756,28 +801,96 @@ func attackDamageOutcome(world InventoryWorld, attacker model.Creature, victim m
 		damage += (attackCreatureLevel(attacker) + 3) / 4
 	}
 	if damage != 0 {
-		return attackFinalizeDamage(damage, attacker, victim)
+		return attackFinalizeDamage(world, attacker, victim, damage, nil)
 	}
 	if attacker.Level > 0 {
-		return attackFinalizeDamage(attacker.Level, attacker, victim)
+		return attackFinalizeDamage(world, attacker, victim, attacker.Level, nil)
 	}
-	return attackFinalizeDamage(1, attacker, victim)
+	return attackFinalizeDamage(world, attacker, victim, 1, nil)
 }
 
-// attackFinalizeDamage applies the C attack_crt post-base-damage pipeline: the
-// DM-victim damage floor (command5.c:265 `if(crt_ptr->class >= DM) n = 0;`
-// before MAX(1,n)), the paladin alignment adjustment (command5.c:268), and the
-// class swing multiplier (command5.c:337-361 `if(num!=1) n = n * num * 0.9;`).
-func attackFinalizeDamage(damage int, attacker model.Creature, victim model.Creature) attackDamageResult {
+// attackFinalizeDamage applies the C attack_crt post-base-damage pipeline in
+// order: the DM-victim damage floor (command5.c:265 `if(crt_ptr->class >= DM)
+// n = 0;` before MAX(1,n)), the paladin alignment adjustment (command5.c:268),
+// the critical/fumble stage (command5.c:280-315), and finally the class swing
+// multiplier (command5.c:337-361 `if(num!=1) n = n * num * 0.9;`).
+func attackFinalizeDamage(world InventoryWorld, attacker model.Creature, victim model.Creature, damage int, weapon *model.ObjectInstance) attackDamageResult {
 	if creatureClass(victim) >= model.ClassDM {
 		damage = 0
 	}
 	outcome := attackApplyPaladinAlignment(normalizeAttackDamage(damage), attacker)
+	attackApplyCritOrFumble(world, attacker, victim, weapon, &outcome)
 	if num := attackSwingMultiplier(attacker); num != 1 {
 		outcome.Damage = int(float64(outcome.Damage) * float64(num) * 0.9)
 		outcome.SwingMultiplier = num
 	}
 	return outcome
+}
+
+// attackApplyCritOrFumble ports the C attack_crt critical/fumble stage
+// (command5.c:278-315). C always evaluates both gate rolls' mrand(1,100) as the
+// left operand of the && chains, so the rolls are consumed on every hit (armed
+// or not); only the effects require a wielded weapon. p = mod_profic caps the
+// crit chance and floors the fumble chance at (5-p).
+func attackApplyCritOrFumble(world InventoryWorld, attacker model.Creature, victim model.Creature, weapon *model.ObjectInstance, outcome *attackDamageResult) {
+	p := 0
+	if weapon != nil {
+		p = attackModifiedWeaponProficiency(world, attacker, *weapon)
+	}
+	// Critical: mrand(1,100) <= p AND the weapon carries OALCRT (command5.c:280).
+	if attackRoll(1, 100) <= p && weapon != nil &&
+		objectHasAnyFlagOrProperty(world, *weapon, "OALCRT", "alwaysCrit", "always crit") {
+		outcome.Damage *= attackRoll(3, 6)
+		weaponName := objectDisplayName(world, *weapon)
+		victimName := attackCreatureName(victim)
+		outcome.Messages = append(outcome.Messages,
+			"당신은 "+weaponName+"으로 "+victimName+"에게 치명타를 날렸습니다.\n")
+		// C consumes the shatter-gate mrand(1,100) unconditionally here
+		// (command5.c:293); with OALCRT set the guard is always true, so the weapon
+		// shatters unless it is shatterproof (ONSHAT) or an event item (OEVENT).
+		attackRoll(1, 100)
+		if !objectHasAnyFlagOrProperty(world, *weapon, "ONSHAT", "onshat", "shatterproof") &&
+			!objectHasAnyFlagOrProperty(world, *weapon, "OEVENT", "oevent", "eventItem", "event") {
+			outcome.ShatterWeapon = true
+			outcome.Messages = append(outcome.Messages,
+				weaponName+krtext.Particle(weaponName, '1')+" 산산히 부서집니다.\n")
+		}
+		return
+	}
+	// Fumble: mrand(1,100) <= (5-p), weapon present and not cursed (command5.c:307).
+	if attackRoll(1, 100) <= (5-p) && weapon != nil &&
+		!objectHasAnyFlagOrProperty(world, *weapon, "OCURSE", "ocurse", "cursed") {
+		outcome.Damage = 0
+		outcome.DropWeapon = true
+		outcome.Messages = append(outcome.Messages, "당신은 무기를 떨어뜨렸습니다.\n")
+	}
+}
+
+// attackModifiedWeaponProficiency ports C mod_profic (player.c:1102): the ranked
+// weapon proficiency divided by a class-dependent amount, used as the critical
+// chance and (via 5-p) the fumble chance.
+func attackModifiedWeaponProficiency(world InventoryWorld, attacker model.Creature, weapon model.ObjectInstance) int {
+	class := creatureClass(attacker)
+	weaponType, ok := objectStringProperty(world, weapon, "type")
+	if !ok {
+		return 0
+	}
+	raw := attackRawWeaponProficiency(attacker, strings.TrimSpace(weaponType))
+	return model.WeaponProficiencyPercent(class, raw) / attackProficiencyDivisor(class)
+}
+
+// attackProficiencyDivisor mirrors the class switch in C mod_profic (player.c:1102).
+func attackProficiencyDivisor(class int) int {
+	switch class {
+	case model.ClassFighter, model.ClassBarbarian, model.ClassInvincible, model.ClassCaretaker:
+		return 20
+	case model.ClassRanger, model.ClassPaladin:
+		return 25
+	case model.ClassThief, model.ClassAssassin, model.ClassCleric:
+		return 30
+	default:
+		return 40
+	}
 }
 
 // attackSwingMultiplier ports the C attack_crt `num` value (command5.c:337-361):
@@ -1059,12 +1172,19 @@ func weaponProficiencyDamageBonus(world InventoryWorld, attacker model.Creature,
 	// where profic() ranks the raw accumulation to 0-100 first. Consuming the raw
 	// value directly inflates the bonus by orders of magnitude.
 	class := creatureClass(attacker)
+	return model.WeaponProficiencyPercent(class, attackRawWeaponProficiency(attacker, weaponType)) / 10
+}
+
+// attackRawWeaponProficiency returns the stored raw proficiency accumulation for
+// a weapon type, checking the numeric and named property keys in order. Callers
+// must rank it via model.WeaponProficiencyPercent before use.
+func attackRawWeaponProficiency(attacker model.Creature, weaponType string) int {
 	for _, key := range proficiencyPropertyKeys(weaponType) {
 		if value, ok := attacker.Stats[key]; ok {
-			return model.WeaponProficiencyPercent(class, value) / 10
+			return value
 		}
 		if value, ok := parseObjectInt(attacker.Properties[key]); ok {
-			return model.WeaponProficiencyPercent(class, value) / 10
+			return value
 		}
 	}
 	return 0

@@ -11,6 +11,9 @@ import (
 )
 
 func TestAttackHandlerAttacksMonsterByPrefixAndOrdinal(t *testing.T) {
+	// Pin the crit/fumble gates (attack_crt consumes mrand(1,100) twice per hit,
+	// command5.c:280,307) so the single armed swing never fumbles.
+	withAttackRolls(t, 30, 100, 100)
 	world := state.NewWorld(attackTestWorld(t))
 	defer world.Close()
 	dispatcher := attackTestDispatcher(t, world)
@@ -140,6 +143,7 @@ func TestAttackHandlerPaladinAlreadyFightingUsesEnemyListLikeLegacy(t *testing.T
 }
 
 func TestAttackHandlerSupportsCommandFirstFallback(t *testing.T) {
+	withAttackRolls(t, 30, 100, 100) // pin crit/fumble gates so the swing lands
 	world := state.NewWorld(attackTestWorld(t))
 	defer world.Close()
 	dispatcher := attackTestDispatcher(t, world)
@@ -159,6 +163,7 @@ func TestAttackHandlerSupportsCommandFirstFallback(t *testing.T) {
 }
 
 func TestAttackHandlerFinishingBlowFinalizesMonsterDeath(t *testing.T) {
+	withAttackRolls(t, 30, 100, 100) // pin crit/fumble gates so the swing lands
 	world := state.NewWorld(attackTestWorld(t))
 	defer world.Close()
 	dispatcher := attackTestDispatcher(t, world)
@@ -206,6 +211,7 @@ func TestAttackHandlerFinishingBlowFinalizesMonsterDeath(t *testing.T) {
 }
 
 func TestAttackHandlerUsesCustomDeathFinalizer(t *testing.T) {
+	withAttackRolls(t, 30, 100, 100) // pin crit/fumble gates so the swing lands
 	world := state.NewWorld(attackTestWorld(t))
 	defer world.Close()
 	called := false
@@ -271,14 +277,14 @@ func TestAttackHandlerAppliesPaladinAlignmentDamageMessages(t *testing.T) {
 		{
 			name:       "negative alignment halves damage",
 			alignment:  -1,
-			rolls:      []int{30},
+			rolls:      []int{30, 100, 100},
 			wantOutput: "당신의 악행이 양심을 괴롭힙니다.",
 			wantDamage: 2,
 		},
 		{
 			name:       "high alignment adds damage",
 			alignment:  300,
-			rolls:      []int{30, 2},
+			rolls:      []int{30, 2, 100, 100},
 			wantOutput: "당신의 선행이 능력을 배가시킵니다.",
 			wantDamage: 6,
 		},
@@ -312,7 +318,7 @@ func TestAttackHandlerAppliesPaladinAlignmentDamageMessages(t *testing.T) {
 }
 
 func TestAttackHandlerAppliesAngelExtraDamage(t *testing.T) {
-	withAttackRolls(t, 30, 1, 3)
+	withAttackRolls(t, 30, 100, 100, 1, 3)
 	loaded := attackTestWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 20
@@ -338,7 +344,7 @@ func TestAttackHandlerAppliesAngelExtraDamage(t *testing.T) {
 }
 
 func TestAttackHandlerUpDamageCanAttackTwice(t *testing.T) {
-	withAttackRolls(t, 0, 30, 30)
+	withAttackRolls(t, 0, 30, 100, 100, 30, 100, 100)
 	loaded := attackTestWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 128
@@ -464,6 +470,9 @@ func TestAttackHandlerPlayerGateMatchesLegacyPvPConditions(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Pin the crit/fumble gates so the cases that land deal deterministic
+			// damage; rejected cases never reach the swing and leave them unconsumed.
+			withAttackRolls(t, 30, 100, 100)
 			loaded := attackTestWorld(t)
 			if tt.setupLoad != nil {
 				tt.setupLoad(loaded)
@@ -530,7 +539,7 @@ func TestAttackHandlerRejectsCharmedPlayerBeforeRevealLikeLegacy(t *testing.T) {
 }
 
 func TestAttackHandlerRemovesStaleTargetCharmReferenceLikeLegacy(t *testing.T) {
-	withAttackRolls(t, 30)
+	withAttackRolls(t, 30, 100, 100)
 	loaded := attackTestWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"PCHAOS"}
@@ -567,6 +576,8 @@ func TestAttackHandlerRemovesStaleTargetCharmReferenceLikeLegacy(t *testing.T) {
 }
 
 func TestAttackHandlerPlayerTargetDeathClampsHPWithoutMonsterFinalize(t *testing.T) {
+	// Pin the crit/fumble gates so the single armed swing lands deterministically.
+	withAttackRolls(t, 30, 100, 100)
 	loaded := attackTestWorld(t)
 	room := loaded.Rooms["room:arena"]
 	room.Metadata.Tags = append(room.Metadata.Tags, "RSUVIV")
@@ -600,7 +611,7 @@ func TestAttackHandlerPlayerTargetDeathClampsHPWithoutMonsterFinalize(t *testing
 }
 
 func TestAttackHandlerRevealsHiddenInvisibleActor(t *testing.T) {
-	withAttackRolls(t, 30)
+	withAttackRolls(t, 30, 100, 100)
 	loaded := attackTestWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"hidden", "PHIDDN", "invisible", "PINVIS", "dmInvisible", "PDMINV"}
@@ -650,7 +661,7 @@ func TestAttackHandlerRevealsHiddenInvisibleActor(t *testing.T) {
 }
 
 func TestAttackHandlerDoesNotRevealDMInvisibleActorLikeLegacy(t *testing.T) {
-	withAttackRolls(t, 30)
+	withAttackRolls(t, 30, 100, 100)
 	loaded := attackTestWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Metadata.Tags = []string{"hidden", "PHIDDN", "dmInvisible", "PDMINV"}
@@ -724,7 +735,7 @@ func TestAttackHandlerSpentWieldStopsAttackAndUnequips(t *testing.T) {
 }
 
 func TestAttackHandlerSpentWieldCanStopSecondUpDamageAttack(t *testing.T) {
-	withAttackRolls(t, 0, 30, 0)
+	withAttackRolls(t, 0, 30, 100, 100, 0)
 	loaded := attackTestWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Level = 128
@@ -761,7 +772,7 @@ func TestAttackHandlerSpentWieldCanStopSecondUpDamageAttack(t *testing.T) {
 }
 
 func TestAttackHandlerWieldChargeCanDecreaseAfterHit(t *testing.T) {
-	withAttackRolls(t, 30, 0)
+	withAttackRolls(t, 30, 100, 100, 0)
 	loaded := attackTestWorld(t)
 	sword := loaded.Objects["object:sword"]
 	sword.Properties = map[string]string{"shotsCurrent": "2"}
@@ -805,7 +816,7 @@ func TestAttackHandlerDeflectsMagicOnlyAndEnchantOnlyTargets(t *testing.T) {
 			name:             "enchant only with adjusted weapon",
 			targetTags:       []string{"magicOrEnchantedOnly"},
 			weaponProperties: map[string]string{"adjustment": "1"},
-			rolls:            []int{30},
+			rolls:            []int{30, 100, 100},
 			wantOutput:       "고블린에게 4만큼의 피해",
 			wantHP:           5,
 		},
@@ -845,7 +856,7 @@ func TestAttackHandlerDeflectsMagicOnlyAndEnchantOnlyTargets(t *testing.T) {
 }
 
 func TestAttackDamageUsesHitRollArmorDiceStrengthAndProficiency(t *testing.T) {
-	withAttackRolls(t, 8, 6, 5)
+	withAttackRolls(t, 8, 6, 5, 100, 100)
 	loaded := attackTestWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats["thaco"] = 20
@@ -902,7 +913,7 @@ func TestAttackDamageAppliesFearAndBlindHitPenalty(t *testing.T) {
 }
 
 func TestAttackDamageAddsHeldWeaponTenthDamage(t *testing.T) {
-	withAttackRolls(t, 30)
+	withAttackRolls(t, 30, 100, 100)
 	loaded := attackTestWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Equipment["held"] = "object:dagger"
@@ -946,7 +957,7 @@ func TestAttackDamageAddsUnarmedLevelBonusForBarbarianAndAboveInvincible(t *test
 			// Trailing roll pins the Caretaker+ swing multiplier (attack_crt num =
 			// mrand(1,8), command5.c:355) to 1 so this test isolates the unarmed
 			// level bonus; the Barbarian case never consumes it.
-			withAttackRolls(t, 30, 1)
+			withAttackRolls(t, 30, 100, 100, 1)
 			loaded := attackTestWorld(t)
 			alice := loaded.Creatures["creature:alice"]
 			alice.Equipment = nil
@@ -981,7 +992,7 @@ func TestAttackDamageOmitsWeaponProficiencyForMageAndCleric(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			withAttackRolls(t, 30)
+			withAttackRolls(t, 30, 100, 100)
 			loaded := attackTestWorld(t)
 			alice := loaded.Creatures["creature:alice"]
 			alice.Stats["class"] = tt.class
@@ -1011,7 +1022,7 @@ func TestAttackDamageOmitsWeaponProficiencyForMageAndCleric(t *testing.T) {
 // (command5.c:265 `if(crt_ptr->class >= DM) n = 0;` before MAX(1,n)): however
 // large the base damage, a DM-class victim takes exactly 1.
 func TestAttackDamageFloorsAgainstDMVictim(t *testing.T) {
-	withAttackRolls(t, 30)
+	withAttackRolls(t, 30, 100, 100)
 	loaded := attackTestWorld(t)
 	goblin := loaded.Creatures["creature:goblin-1"]
 	goblin.Stats["class"] = model.ClassDM
@@ -1035,7 +1046,7 @@ func TestAttackDamageFloorsAgainstDMVictim(t *testing.T) {
 // command5.c:361 `n = n * num * 0.9`). Unarmed base is 7 (dice 4 + level bonus
 // (9+3)/4 = 3); num rolled as 8 gives int(7 * 8 * 0.9) = 50.
 func TestAttackDamageAppliesCaretakerSwingMultiplier(t *testing.T) {
-	withAttackRolls(t, 30, 8)
+	withAttackRolls(t, 30, 100, 100, 8)
 	loaded := attackTestWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Equipment = nil
@@ -1060,7 +1071,7 @@ func TestAttackDamageAppliesCaretakerSwingMultiplier(t *testing.T) {
 // TestAttackHandlerShowsSwingMultiplierPrefix guards the "(xN)" prefix on the
 // damage line when the swing multiplier fires (command5.c:369).
 func TestAttackHandlerShowsSwingMultiplierPrefix(t *testing.T) {
-	withAttackRolls(t, 30, 8)
+	withAttackRolls(t, 30, 100, 100, 8)
 	loaded := attackTestWorld(t)
 	alice := loaded.Creatures["creature:alice"]
 	alice.Stats["class"] = model.ClassCaretaker
@@ -1075,6 +1086,79 @@ func TestAttackHandlerShowsSwingMultiplierPrefix(t *testing.T) {
 	}
 	if got := ctx.OutputString(); !strings.Contains(got, "(x8) 당신은 고블린에게") {
 		t.Fatalf("output = %q, want (x8) swing-multiplier prefix", got)
+	}
+}
+
+// TestAttackHandlerCriticalHitShattersWeapon guards the C attack_crt critical
+// stage (command5.c:280-306): when mrand(1,100) <= mod_profic and the weapon
+// carries OALCRT, damage is multiplied by mrand(3,6) and the weapon shatters
+// (destroyed) unless it is shatterproof or an event item.
+func TestAttackHandlerCriticalHitShattersWeapon(t *testing.T) {
+	// hit 30, crit gate 1 (<= p=1), crit multiplier mrand(3,6)=3, shatter gate 50.
+	withAttackRolls(t, 30, 1, 3, 50)
+	loaded := attackTestWorld(t)
+	alice := loaded.Creatures["creature:alice"]
+	alice.Stats["proficiency/1"] = 1024 // Fighter rank 20 -> mod_profic p = 1
+	loaded.Creatures[alice.ID] = alice
+	goblin := loaded.Creatures["creature:goblin-1"]
+	goblin.Stats["hpCurrent"] = 40
+	goblin.Stats["hpMax"] = 40
+	loaded.Creatures[goblin.ID] = goblin
+	swordProto := loaded.ObjectPrototypes["prototype:sword"]
+	swordProto.Properties = map[string]string{"pDice": "4", "type": "1", "OALCRT": "1"}
+	loaded.ObjectPrototypes[swordProto.ID] = swordProto
+	world := state.NewWorld(loaded)
+	defer world.Close()
+	dispatcher := attackTestDispatcher(t, world)
+
+	ctx := &Context{ActorID: "player:alice"}
+	if _, err := dispatcher.DispatchLine(ctx, "고블린 때려"); err != nil {
+		t.Fatalf("DispatchLine() error = %v", err)
+	}
+	out := ctx.OutputString()
+	if !strings.Contains(out, "치명타를 날렸습니다") || !strings.Contains(out, "산산히 부서집니다") {
+		t.Fatalf("output = %q, want critical and shatter messages", out)
+	}
+	// base 6 (dice 4 + profic rank 20/10 = 2), crit x3 = 18; goblin 40-18 = 22.
+	goblin, _ = world.Creature("creature:goblin-1")
+	if got, want := goblin.Stats["hpCurrent"], 22; got != want {
+		t.Fatalf("goblin hp = %d, want %d", got, want)
+	}
+	if _, ok := world.Object("object:sword"); ok {
+		t.Fatalf("weapon still exists, want shattered (destroyed)")
+	}
+}
+
+// TestAttackHandlerFumbleDropsWeapon guards the C attack_crt fumble stage
+// (command5.c:307-314): when mrand(1,100) <= (5 - mod_profic) the swing deals no
+// damage and the weapon is unequipped to the attacker's inventory.
+func TestAttackHandlerFumbleDropsWeapon(t *testing.T) {
+	// hit 30, crit gate 50 (no OALCRT anyway), fumble gate 3 (<= 5-0).
+	withAttackRolls(t, 30, 50, 3)
+	loaded := attackTestWorld(t)
+	world := state.NewWorld(loaded)
+	defer world.Close()
+	dispatcher := attackTestDispatcher(t, world)
+
+	ctx := &Context{ActorID: "player:alice"}
+	if _, err := dispatcher.DispatchLine(ctx, "고블린 때려"); err != nil {
+		t.Fatalf("DispatchLine() error = %v", err)
+	}
+	out := ctx.OutputString()
+	if !strings.Contains(out, "당신은 무기를 떨어뜨렸습니다") || !strings.Contains(out, "고블린에게 0만큼의 피해") {
+		t.Fatalf("output = %q, want fumble message and zero damage", out)
+	}
+	goblin, _ := world.Creature("creature:goblin-1")
+	if got, want := goblin.Stats["hpCurrent"], 9; got != want {
+		t.Fatalf("goblin hp = %d, want untouched %d", got, want)
+	}
+	alice, _ := world.Creature("creature:alice")
+	if got := alice.Equipment["wield"]; got != "" {
+		t.Fatalf("alice wield = %q, want empty after fumble", got)
+	}
+	sword, ok := world.Object("object:sword")
+	if !ok || sword.Location.CreatureID != "creature:alice" || sword.Location.Slot != "inventory" {
+		t.Fatalf("sword location = %+v (ok=%v), want alice inventory", sword.Location, ok)
 	}
 }
 

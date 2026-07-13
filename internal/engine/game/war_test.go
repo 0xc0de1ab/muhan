@@ -430,7 +430,10 @@ func TestFamilyWarCombatFatalAttackLeavesWarPairUnscored(t *testing.T) {
 		PlayerID:    "player:alice",
 		RoomID:      "room:war",
 		Equipment:   map[string]model.ObjectInstanceID{"wield": "object:sword"},
-		Stats:       map[string]int{"class": model.ClassFighter, "familyFlag": 1, "familyID": 2, "hpCurrent": 20, "hpMax": 20, "thaco": 0},
+		// Maxed weapon proficiency ranks mod_profic to 5, so 5-p = 0 and the melee
+		// fumble gate (command5.c:307) can never fire — keeps this cross-package test
+		// deterministic without access to the command package's attackRoll seam.
+		Stats: map[string]int{"class": model.ClassFighter, "familyFlag": 1, "familyID": 2, "hpCurrent": 20, "hpMax": 20, "thaco": 0, "proficiency/1": 934808},
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -448,7 +451,7 @@ func TestFamilyWarCombatFatalAttackLeavesWarPairUnscored(t *testing.T) {
 		ID:          "prototype:sword",
 		Kind:        model.ObjectKindWeapon,
 		DisplayName: "전쟁검",
-		Properties:  map[string]string{"pDice": "3"},
+		Properties:  map[string]string{"pDice": "3", "type": "1"},
 	}); err != nil {
 		t.Fatal(err)
 	}
