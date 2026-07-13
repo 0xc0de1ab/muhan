@@ -867,8 +867,12 @@ func TestAttackDamageUsesHitRollArmorDiceStrengthAndProficiency(t *testing.T) {
 	if !hit {
 		t.Fatal("attackDamage() hit = false, want true")
 	}
-	if damage != 17 {
-		t.Fatalf("attackDamage() damage = %d, want 17", damage)
+	// C attack_crt (command5.c:241) adds profic(ply, weapon->type)/10. Raw
+	// proficiency 20 is far below the Fighter table's first rank threshold (768),
+	// so profic() ranks it to 0% and contributes 0 damage — dice(15) + str + 0.
+	// (The pre-fix code used raw 20/10 = 2 here; see combat proficiency bug.)
+	if damage != 15 {
+		t.Fatalf("attackDamage() damage = %d, want 15", damage)
 	}
 }
 

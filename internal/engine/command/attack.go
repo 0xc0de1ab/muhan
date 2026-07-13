@@ -729,7 +729,7 @@ func attackDamage(world InventoryWorld, attacker model.Creature, victim model.Cr
 }
 
 func attackDamageOutcome(world InventoryWorld, attacker model.Creature, victim model.Creature) attackDamageResult {
-	if !attackHits(world, attacker, victim) {
+	if !attackHits(attacker, victim) {
 		return attackDamageResult{}
 	}
 	class := creatureClass(attacker)
@@ -773,15 +773,11 @@ func attackApplyPaladinAlignment(damage int, attacker model.Creature) attackDama
 	return outcome
 }
 
-func attackHits(world InventoryWorld, attacker model.Creature, victim model.Creature) bool {
+func attackHits(attacker model.Creature, victim model.Creature) bool {
+	// C attack_crt (command5.c:232-237) uses the precomputed thaco, which already
+	// folds weapon proficiency in once via compute_thaco -> mod_profic. There is no
+	// second proficiency term here (Go previously double-subtracted raw proficiency).
 	thaco := creatureStat(attacker, "thaco")
-	if !attackClassIgnoresWeaponProficiency(creatureClass(attacker)) {
-		if weaponID := equippedObjectID(attacker, "wield"); !weaponID.IsZero() {
-			if weapon, ok := world.Object(weaponID); ok {
-				thaco -= getWeaponProficiency(world, attacker, weapon) / 20
-			}
-		}
-	}
 	target := thaco - creatureStat(victim, "armor")/10
 	if attackCreatureHasFlag(attacker, "fear", "fearful", "PFEARS") {
 		target += 2
@@ -996,12 +992,16 @@ func weaponProficiencyDamageBonus(world InventoryWorld, attacker model.Creature,
 	if weaponType == "" {
 		return 0
 	}
+	// C attack_crt (command5.c:241): damage bonus is profic(ply, weapon->type)/10,
+	// where profic() ranks the raw accumulation to 0-100 first. Consuming the raw
+	// value directly inflates the bonus by orders of magnitude.
+	class := creatureClass(attacker)
 	for _, key := range proficiencyPropertyKeys(weaponType) {
 		if value, ok := attacker.Stats[key]; ok {
-			return value / 10
+			return model.WeaponProficiencyPercent(class, value) / 10
 		}
 		if value, ok := parseObjectInt(attacker.Properties[key]); ok {
-			return value / 10
+			return model.WeaponProficiencyPercent(class, value) / 10
 		}
 	}
 	return 0
