@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"testing"
 
@@ -9,6 +10,33 @@ import (
 	"github.com/0xc0de1ab/muhan/internal/world/model"
 	"github.com/0xc0de1ab/muhan/internal/world/state"
 )
+
+// TestParseBankLegacyAtolClampsOverflow guards the C atol/strtol overflow clamp:
+// an out-of-range magnitude saturates at LONG_MAX/LONG_MIN rather than wrapping,
+// so a >18-digit deposit/withdraw amount is rejected (amount > gold) instead of
+// wrapping to a small positive value that would slip through.
+func TestParseBankLegacyAtolClampsOverflow(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  int
+	}{
+		{"normal", "12345", 12345},
+		{"negative", "-42", -42},
+		{"plus sign", "+7", 7},
+		{"stops at non-digit", "100냥", 100},
+		{"positive overflow clamps", "18446744073709551617", math.MaxInt64},
+		{"huge positive clamps", "99999999999999999999999", math.MaxInt64},
+		{"negative overflow clamps", "-18446744073709551617", math.MinInt64},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := parseBankLegacyAtol(tt.input); got != tt.want {
+				t.Fatalf("parseBankLegacyAtol(%q) = %d, want %d", tt.input, got, tt.want)
+			}
+		})
+	}
+}
 
 func TestBankBalanceHandler(t *testing.T) {
 	world := state.NewWorld(bankTestWorld(t, true, true))

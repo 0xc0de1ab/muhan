@@ -3,6 +3,7 @@ package command
 import (
 	"fmt"
 	"log"
+	"math"
 	"strings"
 
 	"github.com/0xc0de1ab/muhan/internal/krtext"
@@ -836,14 +837,25 @@ func parseBankLegacyAtol(text string) int {
 	case '+':
 		text = text[1:]
 	}
-	value := 0
+	// C atol delegates to strtol, which CLAMPS an out-of-range magnitude to
+	// LONG_MAX/LONG_MIN rather than wrapping. Without this, a >18-digit amount
+	// wraps mod 2^64 in Go and can land on a small positive value that slips past
+	// the "amount > gold/balance" guard C would reject.
+	var value int64
 	for _, r := range text {
 		if r < '0' || r > '9' {
 			break
 		}
-		value = value*10 + int(r-'0')
+		d := int64(r - '0')
+		if value > (math.MaxInt64-d)/10 {
+			if sign < 0 {
+				return math.MinInt64
+			}
+			return math.MaxInt64
+		}
+		value = value*10 + d
 	}
-	return sign * value
+	return int(int64(sign) * value)
 }
 
 func bankBulkTarget(target string) (all bool, filter string, ok bool) {
