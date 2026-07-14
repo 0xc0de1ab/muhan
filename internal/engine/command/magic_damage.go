@@ -244,7 +244,11 @@ func magicBasicOffensiveRestrictionMessage(actor model.Creature, magicPower int)
 	return ""
 }
 
-func magicBasicOffensiveRevealInvisibility(ctx *Context, world StatusWorld, actor model.Creature) (model.Creature, error) {
+// magicStripCasterInvisible clears the caster's PINVIS (creature tag, player tag,
+// and stat form) and reports whether they were invisible. Callers print the spell-
+// specific reveal lines — this mirrors the bare F_CLR(PINVIS) that offensive_spell
+// and fear/blind/silence perform when an invisible caster casts.
+func magicStripCasterInvisible(ctx *Context, world StatusWorld, actor model.Creature) (model.Creature, bool, error) {
 	playerID := magicBasicOffensiveActorPlayerID(ctx, actor)
 	wasInvisible := creatureHasAnyFlag(actor, "PINVIS", "pinvis", "invisible")
 	if !playerID.IsZero() {
@@ -253,7 +257,7 @@ func magicBasicOffensiveRevealInvisibility(ctx *Context, world StatusWorld, acto
 		}
 	}
 	if !wasInvisible {
-		return actor, nil
+		return actor, false, nil
 	}
 
 	if updater, ok := world.(interface {
@@ -261,7 +265,7 @@ func magicBasicOffensiveRevealInvisibility(ctx *Context, world StatusWorld, acto
 	}); ok {
 		updated, err := updater.UpdateCreatureTags(actor.ID, nil, []string{"PINVIS", "pinvis", "invisible"})
 		if err != nil {
-			return actor, err
+			return actor, true, err
 		}
 		actor = updated
 	}
@@ -270,7 +274,7 @@ func magicBasicOffensiveRevealInvisibility(ctx *Context, world StatusWorld, acto
 			UpdatePlayerTags(model.PlayerID, []string, []string) (model.Player, error)
 		}); ok {
 			if _, err := updater.UpdatePlayerTags(playerID, nil, []string{"PINVIS", "pinvis", "invisible"}); err != nil {
-				return actor, err
+				return actor, true, err
 			}
 		}
 	}
@@ -279,7 +283,7 @@ func magicBasicOffensiveRevealInvisibility(ctx *Context, world StatusWorld, acto
 			SetCreatureStat(model.CreatureID, string, int) error
 		}); ok {
 			if err := setter.SetCreatureStat(actor.ID, "PINVIS", 0); err != nil {
-				return actor, err
+				return actor, true, err
 			}
 			actor.Stats["PINVIS"] = 0
 		}
@@ -287,10 +291,31 @@ func magicBasicOffensiveRevealInvisibility(ctx *Context, world StatusWorld, acto
 	if refreshed, ok := world.Creature(actor.ID); ok {
 		actor = refreshed
 	}
+	return actor, true, nil
+}
 
+func magicBasicOffensiveRevealInvisibility(ctx *Context, world StatusWorld, actor model.Creature) (model.Creature, error) {
+	actor, wasInvisible, err := magicStripCasterInvisible(ctx, world, actor)
+	if err != nil || !wasInvisible {
+		return actor, err
+	}
 	ctx.WriteString("\n당신의 모습이 원래대로 돌아왔습니다.\n")
 	actorName := attackCreatureName(actor)
 	_ = roomBroadcast(ctx, actor.RoomID, "\n"+actorName+krtext.Particle(actorName, '1')+" 모습이 나타납니다.\n")
+	return actor, nil
+}
+
+// magicEffectRevealDebuffCaster clears the caster's PINVIS when they cast a debuff
+// (fear/blind/silence) while invisible, printing the C reveal lines
+// (magic8.c:217/329/467). No-op when the caster is not invisible.
+func magicEffectRevealDebuffCaster(ctx *Context, world StatusWorld, actor model.Creature) (model.Creature, error) {
+	actor, wasInvisible, err := magicStripCasterInvisible(ctx, world, actor)
+	if err != nil || !wasInvisible {
+		return actor, err
+	}
+	ctx.WriteString("당신의 모습이 드러납니다.")
+	actorName := attackCreatureName(actor)
+	_ = roomBroadcast(ctx, actor.RoomID, "\n"+actorName+"의 모습이 나타나기 시작합니다.")
 	return actor, nil
 }
 

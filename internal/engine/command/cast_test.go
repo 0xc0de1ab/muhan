@@ -591,6 +591,45 @@ func TestCastHandlerFearSpellFailConsumesPrepaidCost(t *testing.T) {
 	}
 }
 
+// TestCastHandlerFearRevealsCasterAndAddsMonsterAggro guards #13 (fear/blind/
+// silence reveal an invisible caster, magic8.c:329) and #14 (a monster target
+// gains the caster as an enemy, magic8.c:426).
+func TestCastHandlerFearRevealsCasterAndAddsMonsterAggro(t *testing.T) {
+	useSpellFailRoll(t, 0)
+	loaded := castWorld(t, "room:dojo", 15)
+	actor := loaded.Creatures["creature:alice"]
+	actor.Metadata.Tags = []string{"SFEARS", "PINVIS"}
+	loaded.Creatures[actor.ID] = actor
+	player := loaded.Players["player:alice"]
+	player.Metadata.Tags = []string{"PINVIS"}
+	loaded.Players[player.ID] = player
+	mustAddLookCreature(t, loaded, model.Creature{
+		ID:          "creature:goblin",
+		Kind:        model.CreatureKindMonster,
+		DisplayName: "고블린",
+		RoomID:      "room:dojo",
+		Stats:       map[string]int{"hpCurrent": 40, "hpMax": 40},
+	})
+	runtime := state.NewWorld(loaded)
+
+	ctx := &Context{ActorID: "player:alice"}
+	if _, err := NewCastHandler(runtime, nil)(ctx, ResolvedCommand{Args: []string{"공포", "고블린"}}); err != nil {
+		t.Fatalf("handler() error = %v", err)
+	}
+	// #13: invisible caster revealed.
+	if !strings.Contains(ctx.OutputString(), "당신의 모습이 드러납니다") {
+		t.Fatalf("fear did not reveal invisible caster: %q", ctx.OutputString())
+	}
+	updated, _ := runtime.Creature("creature:alice")
+	if hasAnyNormalizedFlag(updated.Metadata.Tags, "PINVIS", "invisible") {
+		t.Fatalf("caster PINVIS not cleared after fear: %v", updated.Metadata.Tags)
+	}
+	// #14: monster target gained the caster as an enemy.
+	if enemies, _ := runtime.CreatureEnemies("creature:goblin"); len(enemies) == 0 {
+		t.Fatal("monster did not gain the caster as an enemy after fear")
+	}
+}
+
 func TestCastHandlerRmGongUsesLegacyCostAndClass(t *testing.T) {
 	useSpellFailRoll(t, 0)
 	loaded := castWorld(t, "room:dojo", 100)

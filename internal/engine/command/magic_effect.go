@@ -1829,6 +1829,12 @@ func magicEffectSilence(
 		return false, nil
 	}
 
+	// C silence (magic8.c:467) reveals an invisible caster before failing/applying.
+	actor, err := magicEffectRevealDebuffCaster(ctx, world, actor)
+	if err != nil {
+		return false, err
+	}
+
 	// C silence (magic8.c:474-481) rolls no mrand on CAST (fixed dur 3600) and one
 	// per scroll/other path. Use a switch so the cast path draws zero and the others
 	// draw exactly one, matching C's RNG consumption (the previous code always rolled
@@ -1909,6 +1915,10 @@ func magicEffectSilence(
 		return false, err
 	}
 	magicEffectSetCooldown(world, target.creature.ID, "silenced", dur)
+	// C silence (magic8.c:558): a monster target gains the caster as an enemy.
+	if !target.hasPlayer {
+		RegisterSpellAggro(world, target.creature.ID, actor.ID)
+	}
 
 	targetName := attackCreatureName(target.creature)
 	ctx.WriteString(fmt.Sprintf("\n당신은 잽싸게 쫓아가 %s의 목을 치면서 \n봉합구 주문을 외웁니다.\n그는 입을 벌려 말을 하려 하지만 목소리가 들이지 않습니다.\n", targetName))
@@ -1940,6 +1950,12 @@ func magicEffectBlind(
 	if creatureClass(actor) < model.ClassSubDM {
 		ctx.WriteString("당신은 사용할 권한이 없는 주문입니다.")
 		return false, nil
+	}
+
+	// C blind (magic8.c:217) reveals an invisible caster before failing/applying.
+	actor, err := magicEffectRevealDebuffCaster(ctx, world, actor)
+	if err != nil {
+		return false, err
 	}
 
 	if err := magicEffectPrepayCastMP(world, actor, how, 15); err != nil {
@@ -2000,6 +2016,10 @@ func magicEffectBlind(
 	if err := magicEffectUpdateTags(world, target, tags, nil); err != nil {
 		return false, err
 	}
+	// C blind (magic8.c:293): a monster target gains the caster as an enemy.
+	if !target.hasPlayer {
+		RegisterSpellAggro(world, target.creature.ID, actor.ID)
+	}
 
 	targetName := attackCreatureName(target.creature)
 	ctx.WriteString(fmt.Sprintf("당신의 손가락을 %s의 눈을 향하고서 실명 \n주문를 외웁니다.\n검은안개같은 기운이 손가락에서 나와 그의 눈을\n찌르자 괴성을 지릅니다. 악~~ 내눈..\n", targetName))
@@ -2027,6 +2047,12 @@ func magicEffectFear(
 			ctx.WriteString("당신은 아직 그런 주문을 터득하지 못했습니다.")
 			return false, nil
 		}
+	}
+
+	// C fear (magic8.c:329) reveals an invisible caster before rolling/failing.
+	var err error
+	if actor, err = magicEffectRevealDebuffCaster(ctx, world, actor); err != nil {
+		return false, err
 	}
 
 	// C fear (magic8.c:335-343) rolls exactly one mrand per path. Compute dur with
@@ -2115,6 +2141,10 @@ func magicEffectFear(
 		return false, err
 	}
 	magicEffectSetCooldown(world, target.creature.ID, "fearful", dur)
+	// C fear (magic8.c:426): a monster target gains the caster as an enemy.
+	if !target.hasPlayer {
+		RegisterSpellAggro(world, target.creature.ID, actor.ID)
+	}
 
 	ctx.WriteString(fmt.Sprintf("당신은 지옥구술을 %s에게 던졌습니다.\n구슬이 펑하고 터지면서 공포의 기운이 그를 둘러쌉니다.\n악~~~ 저리가~~ 갑자기 그가 괴성을 지르면서 공포에\n떨기 시작합니다.\n", targetName))
 	_ = broadcastRom2(ctx, world, actor.RoomID, actor.PlayerID, target.player.ID, fmt.Sprintf("\n%s%s %s에게 지옥구술을 던졌습니다.\n구슬이 펑하고 터지자 갑자기 그가 괴성을 지릅니다. 악~~~ 저리가~~\n그는 공포에 떨지만 당신의 눈에는 아무것도 보이지 않습니다.\n", actorName, krtext.Particle(actorName, '1'), targetName))
