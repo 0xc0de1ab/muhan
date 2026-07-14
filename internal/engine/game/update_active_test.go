@@ -3988,3 +3988,99 @@ func TestUpdateActiveMonsters_FullAggro_Retaliate_Pursuit_Recalc_DeathClear(t *t
 		t.Log("pursuit logic triggered successfully")
 	}
 }
+
+// pursuitTestWorld builds a monster in r1 hating "전사", with the player in the
+// adjacent r2. dex values are chosen by callers to force the escape roll one way:
+// threshold = 15 - playerDex + monsterDex; mrand(1,50) > threshold means escape.
+func pursuitTestWorld(t *testing.T, monsterDex, playerDex int, monsterTags, playerTags []string) (*mockUpdateActiveWorld, model.Creature, model.Room) {
+	t.Helper()
+	world := newMockUpdateActiveWorld()
+	monster := model.Creature{
+		ID: "m:pursue", RoomID: "r1", DisplayName: "추적자",
+		Stats:    map[string]int{"hpCurrent": 100, "hpMax": 100, "dexterity": monsterDex},
+		Metadata: model.Metadata{Tags: monsterTags},
+	}
+	world.creatures[monster.ID] = monster
+	world.enemies[monster.ID] = []string{"전사"}
+	pc := model.Creature{
+		ID: "pc:pursue", RoomID: "r2", DisplayName: "전사",
+		Stats:    map[string]int{"hpCurrent": 100, "hpMax": 100, "dexterity": playerDex},
+		Metadata: model.Metadata{Tags: playerTags},
+	}
+	world.creatures[pc.ID] = pc
+	ply := model.Player{ID: "p:pursue", CreatureID: pc.ID, RoomID: "r2", DisplayName: "전사"}
+	world.players[ply.ID] = ply
+	room1 := model.Room{ID: "r1", Exits: []model.Exit{{Name: "동", ToRoomID: "r2"}}}
+	world.rooms["r1"] = room1
+	world.rooms["r2"] = model.Room{ID: "r2", PlayerIDs: []model.PlayerID{ply.ID}}
+	return world, monster, room1
+}
+
+// TestAttemptPursuitCatchesClumsyPlayer: threshold 15-5+40 = 50, so mrand(1,50)
+// can never exceed it — the pursuer always catches a much clumsier player.
+func TestAttemptPursuitCatchesClumsyPlayer(t *testing.T) {
+	world, monster, room1 := pursuitTestWorld(t, 40, 5, nil, nil)
+	if !attemptPursuit(world, monster, room1) {
+		t.Fatal("attemptPursuit = false, want true (clumsy player caught)")
+	}
+	if got := world.creatures[monster.ID].RoomID; got != "r2" {
+		t.Fatalf("monster room = %q, want r2 (pursued)", got)
+	}
+	if len(world.broadcastRooms["r1"]) == 0 || len(world.broadcastRooms["r2"]) == 0 {
+		t.Fatalf("expected pursuit broadcasts in both rooms")
+	}
+}
+
+// TestAttemptPursuitNimblePlayerEscapes: threshold 15-25+3 = -7, so mrand(1,50)
+// always exceeds it — a nimble player shakes a clumsy pursuer. Aggro is retained
+// because the hated player is still adjacent (C keeps first_enm).
+func TestAttemptPursuitNimblePlayerEscapes(t *testing.T) {
+	world, monster, room1 := pursuitTestWorld(t, 3, 25, nil, nil)
+	if !attemptPursuit(world, monster, room1) {
+		t.Fatal("attemptPursuit = false, want true (target adjacent, aggro retained)")
+	}
+	if got := world.creatures[monster.ID].RoomID; got != "r1" {
+		t.Fatalf("monster room = %q, want r1 (escape roll blocked the chase)", got)
+	}
+	if len(world.broadcastRooms["r1"]) != 0 {
+		t.Fatalf("expected no pursuit broadcast on escape")
+	}
+}
+
+// TestAttemptPursuitInvisiblePlayerExemptForNonFollower: a non-MFOLLO monster
+// without see-invisible does not chase an invisible player (command2.c:607-613),
+// even though the dex roll would otherwise catch them.
+func TestAttemptPursuitInvisiblePlayerExemptForNonFollower(t *testing.T) {
+	world, monster, room1 := pursuitTestWorld(t, 40, 5, nil, []string{"PINVIS"})
+	if !attemptPursuit(world, monster, room1) {
+		t.Fatal("attemptPursuit = false, want true (target adjacent, aggro retained)")
+	}
+	if got := world.creatures[monster.ID].RoomID; got != "r1" {
+		t.Fatalf("monster room = %q, want r1 (invisible player not chased)", got)
+	}
+}
+
+// TestAttemptPursuitFollowerChasesInvisiblePlayer: an MFOLLO monster ignores the
+// invisibility exemption and chases even an invisible player.
+func TestAttemptPursuitFollowerChasesInvisiblePlayer(t *testing.T) {
+	world, monster, room1 := pursuitTestWorld(t, 40, 5, []string{"MFOLLO"}, []string{"PINVIS"})
+	if !attemptPursuit(world, monster, room1) {
+		t.Fatal("attemptPursuit = false, want true (follower chases)")
+	}
+	if got := world.creatures[monster.ID].RoomID; got != "r2" {
+		t.Fatalf("monster room = %q, want r2 (MFOLLO chases invisible)", got)
+	}
+}
+
+// TestAttemptPursuitNoAdjacentHatedReturnsFalse: with no hated player adjacent
+// the monster's aggro should be decayed (caller clears it).
+func TestAttemptPursuitNoAdjacentHatedReturnsFalse(t *testing.T) {
+	world, monster, room1 := pursuitTestWorld(t, 40, 5, nil, nil)
+	world.enemies[monster.ID] = []string{"다른사람"} // player "전사" is not hated
+	if attemptPursuit(world, monster, room1) {
+		t.Fatal("attemptPursuit = true, want false (no hated player adjacent)")
+	}
+	if got := world.creatures[monster.ID].RoomID; got != "r1" {
+		t.Fatalf("monster room = %q, want r1 (no pursuit)", got)
+	}
+}

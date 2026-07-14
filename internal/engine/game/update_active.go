@@ -788,14 +788,21 @@ func findCurrentEnemy(world UpdateActiveWorld, room model.Room, c model.Creature
 	return model.Player{}, false
 }
 
-// attemptPursuit implements basic 추적 AI: if no hated target in current room,
-// check adjacent rooms (via model exits) for a hated player and move monster there
-// with broadcast. Returns true if pursued/moved.
+// attemptPursuit ports the C move() cross-room chase gates (command2.c:604-641):
+// a monster whose hated enemy has left follows it into an adjacent room unless an
+// invisibility exemption or the dexterity escape roll blocks the chase.
+//
+// The return value tells the caller whether to retain the monster's aggro. C
+// keeps first_enm whenever the hated player is still adjacent (it merely skips the
+// chase when a gate blocks it), so a blocked-but-present target returns true; only
+// when no hated player is adjacent at all does it return false, letting the caller
+// decay the aggro.
 func attemptPursuit(world UpdateActiveWorld, c model.Creature, room model.Room) bool {
 	enemies, _ := world.CreatureEnemies(c.ID)
 	if len(enemies) == 0 {
 		return false
 	}
+	keepAggro := false
 	for _, ex := range room.Exits {
 		toRoom, ok := world.Room(ex.ToRoomID)
 		if !ok {
@@ -815,18 +822,44 @@ func attemptPursuit(world UpdateActiveWorld, c model.Creature, room model.Room) 
 					continue
 				}
 			}
-			for _, enm := range enemies {
-				if pc.DisplayName == enm {
-					// pursue into this exit
-					if err := world.MoveCreatureToRoom(c.ID, toRoom.ID); err == nil {
-						mPart := krtext.Particle(c.DisplayName, '1')
-						pPart := krtext.Particle(pl.DisplayName, '3')
-						_ = world.BroadcastRoom(room.ID, "", fmt.Sprintf("\n%s%s %s%s 쫓아갑니다.\n", c.DisplayName, mPart, pl.DisplayName, pPart))
-						_ = world.BroadcastRoom(toRoom.ID, "", fmt.Sprintf("\n%s%s %s%s 따라 들어옵니다.\n", c.DisplayName, mPart, pl.DisplayName, pPart))
-						return true
-					}
+			if !pursuitCreatureIsEnemy(pc, enemies) {
+				continue
+			}
+			// A hated player is adjacent: keep aggro even if a gate blocks this chase.
+			keepAggro = true
+
+			// Invisibility exemption (command2.c:607-613): non-follower monsters (or
+			// DM-followers) do not chase invisible players unless they can see the
+			// invisible; DM-invisible players are never chased by them.
+			if !creatureHasAnyFlag(c, "MFOLLO") || creatureHasAnyFlag(c, "MDMFOL", "dmFollow") {
+				if (!creatureHasAnyFlag(c, "MDINVI", "detectInvisible") && creatureHasAnyFlag(pc, "PINVIS", "invisible")) ||
+					creatureHasAnyFlag(pc, "PDMINV", "dmInvisible") {
+					continue
 				}
 			}
+
+			// Dexterity escape roll (command2.c:623): a nimble player can shake a
+			// clumsier pursuer.
+			if mrand(1, 50) > 15-pc.Stats["dexterity"]+c.Stats["dexterity"] {
+				continue
+			}
+
+			if err := world.MoveCreatureToRoom(c.ID, toRoom.ID); err == nil {
+				mPart := krtext.Particle(c.DisplayName, '1')
+				pPart := krtext.Particle(pl.DisplayName, '3')
+				_ = world.BroadcastRoom(room.ID, "", fmt.Sprintf("\n%s%s %s%s 쫓아갑니다.\n", c.DisplayName, mPart, pl.DisplayName, pPart))
+				_ = world.BroadcastRoom(toRoom.ID, "", fmt.Sprintf("\n%s%s %s%s 따라 들어옵니다.\n", c.DisplayName, mPart, pl.DisplayName, pPart))
+				return true
+			}
+		}
+	}
+	return keepAggro
+}
+
+func pursuitCreatureIsEnemy(pc model.Creature, enemies []string) bool {
+	for _, enm := range enemies {
+		if pc.DisplayName == enm {
+			return true
 		}
 	}
 	return false
