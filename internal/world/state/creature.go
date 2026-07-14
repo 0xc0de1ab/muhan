@@ -2,8 +2,8 @@ package state
 
 import (
 	"fmt"
-	"maps"
 	"github.com/0xc0de1ab/muhan/internal/world/model"
+	"maps"
 	"strconv"
 	"strings"
 )
@@ -108,7 +108,7 @@ func (w *World) CloneObjectToCreatureInventory(sourceID model.ObjectInstanceID, 
 		return "", fmt.Errorf("clone object %q: target creature %q not found", sourceID, creatureID)
 	}
 
-	cloneID, err := w.cloneObjectSourceToLocationLocked(sourceID, model.ObjectLocation{CreatureID: creatureID, Slot: "inventory"})
+	cloneID, err := w.cloneObjectSourceToLocationLocked(sourceID, model.ObjectLocation{CreatureID: creatureID, Slot: "inventory"}, false)
 	if err != nil {
 		return "", fmt.Errorf("clone object %q: %w", sourceID, err)
 	}
@@ -153,7 +153,11 @@ func (w *World) PurchaseObjectToCreatureInventory(sourceID model.ObjectInstanceI
 		return "", gold, false, nil
 	}
 
-	newID, err = w.cloneObjectSourceToLocationLocked(sourceID, model.ObjectLocation{CreatureID: creatureID, Slot: "inventory"})
+	// Shops must not re-roll the ORENCH random enchant on purchase: C buy copies
+	// the depot object as-is and C purchase load_obj's a raw template, neither
+	// rolling rand_enchant (command7.c:169-217, command10.c:492+). Rolling here
+	// would both diverge per-purchase and enable buy/sell/rebuy enchant farming.
+	newID, err = w.cloneObjectSourceToLocationLocked(sourceID, model.ObjectLocation{CreatureID: creatureID, Slot: "inventory"}, true)
 	if err != nil {
 		return "", gold, false, fmt.Errorf("purchase object %q: %w", sourceID, err)
 	}

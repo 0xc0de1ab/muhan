@@ -2,8 +2,8 @@ package state
 
 import (
 	"fmt"
-	"maps"
 	"github.com/0xc0de1ab/muhan/internal/world/model"
+	"maps"
 	"slices"
 	"strings"
 )
@@ -92,15 +92,20 @@ func (w *World) nextObjectCloneIDLocked(sourceID model.ObjectInstanceID) model.O
 	}
 }
 
-func (w *World) cloneObjectSourceToLocationLocked(sourceID model.ObjectInstanceID, location model.ObjectLocation) (model.ObjectInstanceID, error) {
+// cloneObjectSourceToLocationLocked clones a live object or materializes a
+// prototype into location. skipRandomEnchant suppresses the ORENCH roll for
+// callers that must not re-roll (the shop buy / monster purchase paths: C buy
+// copies the depot object as-is and C purchase load_obj's a template, neither
+// rolling rand_enchant — command7.c:169-217, command10.c:492+).
+func (w *World) cloneObjectSourceToLocationLocked(sourceID model.ObjectInstanceID, location model.ObjectLocation, skipRandomEnchant bool) (model.ObjectInstanceID, error) {
 	if _, ok := w.objects[sourceID]; ok {
-		return w.cloneObjectTreeToLocationLocked(sourceID, location, map[model.ObjectInstanceID]struct{}{})
+		return w.cloneObjectTreeToLocationLocked(sourceID, location, map[model.ObjectInstanceID]struct{}{}, skipRandomEnchant)
 	}
 	protoID, ok := w.prototypeIDFromCloneSourceLocked(sourceID)
 	if !ok {
 		return "", fmt.Errorf("source object or prototype not found")
 	}
-	return w.createObjectFromPrototypeLocked(protoID, location)
+	return w.createObjectFromPrototypeLocked(protoID, location, skipRandomEnchant)
 }
 
 func (w *World) prototypeIDFromCloneSourceLocked(sourceID model.ObjectInstanceID) (model.PrototypeID, bool) {
@@ -117,13 +122,13 @@ func (w *World) prototypeIDFromCloneSourceLocked(sourceID model.ObjectInstanceID
 	return "", false
 }
 
-func (w *World) createObjectFromPrototypeLocked(protoID model.PrototypeID, location model.ObjectLocation) (model.ObjectInstanceID, error) {
+func (w *World) createObjectFromPrototypeLocked(protoID model.PrototypeID, location model.ObjectLocation, skipRandomEnchant bool) (model.ObjectInstanceID, error) {
 	proto, ok := w.prototypes[protoID]
 	if !ok {
 		return "", fmt.Errorf("prototype %q not found", protoID)
 	}
 	if templateID, ok := w.prototypeTemplateObjectIDLocked(proto); ok {
-		return w.cloneObjectTreeToLocationLocked(templateID, location, map[model.ObjectInstanceID]struct{}{})
+		return w.cloneObjectTreeToLocationLocked(templateID, location, map[model.ObjectInstanceID]struct{}{}, skipRandomEnchant)
 	}
 
 	objectID := w.nextObjectCloneIDLocked(model.ObjectInstanceID(protoID))
@@ -137,7 +142,9 @@ func (w *World) createObjectFromPrototypeLocked(protoID model.PrototypeID, locat
 			Tags: slices.Clone(proto.Metadata.Tags),
 		},
 	}
-	w.applyRandomEnchantIfNeededLocked(&object)
+	if !skipRandomEnchant {
+		w.applyRandomEnchantIfNeededLocked(&object)
+	}
 	if err := object.Validate(); err != nil {
 		return "", err
 	}
@@ -160,7 +167,7 @@ func (w *World) prototypeTemplateObjectIDLocked(proto model.ObjectPrototype) (mo
 	return "", false
 }
 
-func (w *World) cloneObjectTreeToLocationLocked(sourceID model.ObjectInstanceID, location model.ObjectLocation, seen map[model.ObjectInstanceID]struct{}) (model.ObjectInstanceID, error) {
+func (w *World) cloneObjectTreeToLocationLocked(sourceID model.ObjectInstanceID, location model.ObjectLocation, seen map[model.ObjectInstanceID]struct{}, skipRandomEnchant bool) (model.ObjectInstanceID, error) {
 	if _, ok := seen[sourceID]; ok {
 		return "", fmt.Errorf("object tree cycle at %q", sourceID)
 	}
@@ -174,7 +181,9 @@ func (w *World) cloneObjectTreeToLocationLocked(sourceID model.ObjectInstanceID,
 	clone.ID = w.nextObjectCloneIDLocked(sourceID)
 	clone.Location = location
 	clone.Contents = model.ObjectRefList{}
-	w.applyRandomEnchantIfNeededLocked(&clone)
+	if !skipRandomEnchant {
+		w.applyRandomEnchantIfNeededLocked(&clone)
+	}
 	if err := clone.Validate(); err != nil {
 		delete(seen, sourceID)
 		return "", err
@@ -183,7 +192,7 @@ func (w *World) cloneObjectTreeToLocationLocked(sourceID model.ObjectInstanceID,
 	w.objects[clone.ID] = clone
 	w.addObjectToHolderLocked(clone.ID, clone.Location)
 	for _, childID := range source.Contents.ObjectIDs {
-		if _, err := w.cloneObjectTreeToLocationLocked(childID, model.ObjectLocation{ContainerID: clone.ID}, seen); err != nil {
+		if _, err := w.cloneObjectTreeToLocationLocked(childID, model.ObjectLocation{ContainerID: clone.ID}, seen, skipRandomEnchant); err != nil {
 			w.deleteObjectTreeLocked(clone.ID, map[model.ObjectInstanceID]struct{}{})
 			delete(seen, sourceID)
 			return "", fmt.Errorf("clone child %q: %w", childID, err)

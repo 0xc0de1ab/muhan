@@ -2,8 +2,8 @@ package state
 
 import (
 	"fmt"
-	"maps"
 	"github.com/0xc0de1ab/muhan/internal/world/model"
+	"maps"
 	"slices"
 	"strconv"
 	"strings"
@@ -226,7 +226,7 @@ func (w *World) spawnRoomPermanentObjectGroupLocked(roomID model.RoomID, misc in
 		}
 	}
 	for i := 0; i < wanted-current; i++ {
-		objectID, err := w.createObjectFromPrototypeLocked(protoID, model.ObjectLocation{RoomID: roomID})
+		objectID, err := w.createObjectFromPrototypeLocked(protoID, model.ObjectLocation{RoomID: roomID}, false)
 		if err != nil {
 			continue
 		}

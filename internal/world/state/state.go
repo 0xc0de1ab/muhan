@@ -290,11 +290,16 @@ type roomPermanentGroup struct {
 	count int
 }
 
+// enchantRoll produces the 1..100 random-enchant roll. It is a package var so
+// tests can force a deterministic outcome (mirrors the command package's
+// attackRoll seam).
+var enchantRoll = func() int { return rand.Intn(100) + 1 }
+
 func (w *World) applyRandomEnchantIfNeededLocked(object *model.ObjectInstance) {
 	if object == nil || !w.objectHasRandomEnchantLocked(*object) {
 		return
 	}
-	w.applyLegacyRandomEnchantRollLocked(object, rand.Intn(100)+1)
+	w.applyLegacyRandomEnchantRollLocked(object, enchantRoll())
 }
 
 func boolInt(value bool) int {
@@ -1041,41 +1046,97 @@ func (w *World) QueueSave(playerID model.PlayerID, bankID model.BankID) {
 }
 
 func (w *World) lockDomains(players, rooms, creatures, objects, banks, families, misc bool) {
-	if misc { w.miscMu.Lock() }
-	if families { w.familiesMu.Lock() }
-	if banks { w.banksMu.Lock() }
-	if objects { w.objectsMu.Lock() }
-	if creatures { w.creaturesMu.Lock() }
-	if rooms { w.roomsMu.Lock() }
-	if players { w.playersMu.Lock() }
+	if misc {
+		w.miscMu.Lock()
+	}
+	if families {
+		w.familiesMu.Lock()
+	}
+	if banks {
+		w.banksMu.Lock()
+	}
+	if objects {
+		w.objectsMu.Lock()
+	}
+	if creatures {
+		w.creaturesMu.Lock()
+	}
+	if rooms {
+		w.roomsMu.Lock()
+	}
+	if players {
+		w.playersMu.Lock()
+	}
 }
 
 func (w *World) unlockDomains(players, rooms, creatures, objects, banks, families, misc bool) {
-	if players { w.playersMu.Unlock() }
-	if rooms { w.roomsMu.Unlock() }
-	if creatures { w.creaturesMu.Unlock() }
-	if objects { w.objectsMu.Unlock() }
-	if banks { w.banksMu.Unlock() }
-	if families { w.familiesMu.Unlock() }
-	if misc { w.miscMu.Unlock() }
+	if players {
+		w.playersMu.Unlock()
+	}
+	if rooms {
+		w.roomsMu.Unlock()
+	}
+	if creatures {
+		w.creaturesMu.Unlock()
+	}
+	if objects {
+		w.objectsMu.Unlock()
+	}
+	if banks {
+		w.banksMu.Unlock()
+	}
+	if families {
+		w.familiesMu.Unlock()
+	}
+	if misc {
+		w.miscMu.Unlock()
+	}
 }
 
 func (w *World) rLockDomains(players, rooms, creatures, objects, banks, families, misc bool) {
-	if misc { w.miscMu.RLock() }
-	if families { w.familiesMu.RLock() }
-	if banks { w.banksMu.RLock() }
-	if objects { w.objectsMu.RLock() }
-	if creatures { w.creaturesMu.RLock() }
-	if rooms { w.roomsMu.RLock() }
-	if players { w.playersMu.RLock() }
+	if misc {
+		w.miscMu.RLock()
+	}
+	if families {
+		w.familiesMu.RLock()
+	}
+	if banks {
+		w.banksMu.RLock()
+	}
+	if objects {
+		w.objectsMu.RLock()
+	}
+	if creatures {
+		w.creaturesMu.RLock()
+	}
+	if rooms {
+		w.roomsMu.RLock()
+	}
+	if players {
+		w.playersMu.RLock()
+	}
 }
 
 func (w *World) rUnlockDomains(players, rooms, creatures, objects, banks, families, misc bool) {
-	if players { w.playersMu.RUnlock() }
-	if rooms { w.roomsMu.RUnlock() }
-	if creatures { w.creaturesMu.RUnlock() }
-	if objects { w.objectsMu.RUnlock() }
-	if banks { w.banksMu.RUnlock() }
-	if families { w.familiesMu.RUnlock() }
-	if misc { w.miscMu.RUnlock() }
+	if players {
+		w.playersMu.RUnlock()
+	}
+	if rooms {
+		w.roomsMu.RUnlock()
+	}
+	if creatures {
+		w.creaturesMu.RUnlock()
+	}
+	if objects {
+		w.objectsMu.RUnlock()
+	}
+	if banks {
+		w.banksMu.RUnlock()
+	}
+	if families {
+		w.familiesMu.RUnlock()
+	}
+	if misc {
+		w.miscMu.RUnlock()
+	}
 }
