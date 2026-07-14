@@ -151,29 +151,21 @@ func StripTerminalControls(b []byte) []byte {
 	}
 	var out []byte
 	for i := 0; i < len(b); {
-		switch b[i] {
-		case 0x9b:
-			end := csiEnd(b, i+1)
-			if end < 0 {
-				return appendControlCopy(out, b, i, i+1)
-			}
-			if out == nil {
-				out = make([]byte, 0, len(b))
-				out = append(out, b[:i]...)
-			}
-			i = end
-			continue
-		case 0x1b:
-			if i+1 < len(b) && b[i+1] == '[' {
-				end := csiEnd(b, i+2)
-				if end >= 0 {
-					if out == nil {
-						out = make([]byte, 0, len(b))
-						out = append(out, b[:i]...)
-					}
-					i = end
-					continue
+		// Only the 7-bit ESC '[' CSI form is stripped: the legacy C server writes
+		// colour codes as ESC[...m (mtype.h ANSI macro, `%c[...m` with 27 == ESC),
+		// and ESC (0x1b) is never a CP949 lead or trail byte, so this can never
+		// truncate Korean text. The 8-bit CSI introducer 0x9b is intentionally NOT
+		// stripped: 0x9b is a valid CP949 lead byte (see the 0x9bXX Hangul rows in
+		// the legacy kstbl.h), so treating it as a control silently drops real
+		// characters — and the C server never emits an 8-bit CSI anyway.
+		if b[i] == 0x1b && i+1 < len(b) && b[i+1] == '[' {
+			if end := csiEnd(b, i+2); end >= 0 {
+				if out == nil {
+					out = make([]byte, 0, len(b))
+					out = append(out, b[:i]...)
 				}
+				i = end
+				continue
 			}
 		}
 		if out != nil {
@@ -194,14 +186,6 @@ func csiEnd(b []byte, start int) int {
 		}
 	}
 	return -1
-}
-
-func appendControlCopy(out []byte, b []byte, start, end int) []byte {
-	if out == nil {
-		out = make([]byte, 0, len(b))
-		out = append(out, b[:start]...)
-	}
-	return append(out, b[start:end]...)
 }
 
 func conversionError(ctx Context, op string, offset int, input []byte, err error) error {

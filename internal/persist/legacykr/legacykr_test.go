@@ -16,12 +16,27 @@ func TestDecodeEUCKR(t *testing.T) {
 }
 
 func TestDecodeEUCKRStripsPersistedTerminalControls(t *testing.T) {
-	got, err := DecodeEUCKR([]byte{0x9b, '=', '1', '3', 'F', 0xB9, 0xF8, 0xB0, 0xB3})
+	// The C server writes colour codes as the 7-bit ESC '[' CSI form (ESC[1;33m).
+	got, err := DecodeEUCKR([]byte{0x1b, '[', '1', ';', '3', '3', 'm', 0xB9, 0xF8, 0xB0, 0xB3})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if got != "번개" {
 		t.Fatalf("DecodeEUCKR with controls = %q, want 번개", got)
+	}
+}
+
+// TestDecodeEUCKRPreservesCP949LeadByte0x9b guards against treating 0x9b as an
+// 8-bit CSI introducer: 0x9b is a valid CP949 lead byte (the 0x9bXX Hangul rows
+// in the legacy kstbl.h), and 0x9b61 decodes to "쌳". The old stripper deleted it
+// because 0x61 falls in the CSI final-byte range.
+func TestDecodeEUCKRPreservesCP949LeadByte0x9b(t *testing.T) {
+	got, err := DecodeEUCKR([]byte{0x9b, 0x61, 0xB9, 0xF8, 0xB0, 0xB3})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "쌳번개" {
+		t.Fatalf("DecodeEUCKR = %q, want 쌳번개 (0x9b-led CP949 char must survive)", got)
 	}
 }
 
