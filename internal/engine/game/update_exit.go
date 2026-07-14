@@ -11,7 +11,7 @@ import (
 type UpdateExitWorld interface {
 	GetRoom(id model.RoomID) (model.Room, bool)
 	SetExitFlag(roomID model.RoomID, exitName string, flag string, enabled bool) (model.Exit, error)
-	BroadcastRoom(roomID model.RoomID, message string) error
+	BroadcastAll(message string) error
 }
 
 type UpdateTimeWorld interface {
@@ -105,7 +105,10 @@ func UpdateTimedExits(world UpdateExitWorld, t int64) {
 		}
 
 		if msg != "" {
-			_ = world.BroadcastRoom(actualRoomID, "\n"+msg)
+			// C update_exit (update.c:1154) fires this via broadcast() — MUD-wide to
+			// every session — not a room-scoped message. The default reminder
+			// ("자주 저장들 하세요.") is meant for all logged-in players.
+			_ = world.BroadcastAll("\n" + msg)
 		}
 
 		// Toggle global toggle state

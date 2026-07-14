@@ -96,15 +96,10 @@ type setFlagCall struct {
 	Enabled  bool
 }
 
-type broadcastRoomCall struct {
-	RoomID  model.RoomID
-	Message string
-}
-
 type mockExitWorld struct {
 	rooms      map[model.RoomID]model.Room
 	setFlags   []setFlagCall
-	broadcasts []broadcastRoomCall
+	broadcasts []string
 }
 
 func (m *mockExitWorld) GetRoom(id model.RoomID) (model.Room, bool) {
@@ -152,11 +147,8 @@ func (m *mockExitWorld) SetExitFlag(roomID model.RoomID, exitName string, flag s
 	return model.Exit{}, fmt.Errorf("exit not found")
 }
 
-func (m *mockExitWorld) BroadcastRoom(roomID model.RoomID, message string) error {
-	m.broadcasts = append(m.broadcasts, broadcastRoomCall{
-		RoomID:  roomID,
-		Message: message,
-	})
+func (m *mockExitWorld) BroadcastAll(message string) error {
+	m.broadcasts = append(m.broadcasts, message)
 	return nil
 }
 
@@ -194,10 +186,10 @@ func TestUpdateTimedExits(t *testing.T) {
 		}
 
 		if len(world.broadcasts) != 1 {
-			t.Fatalf("expected 1 room broadcast, got %d", len(world.broadcasts))
+			t.Fatalf("expected 1 broadcast, got %d", len(world.broadcasts))
 		}
-		if world.broadcasts[0] != (broadcastRoomCall{RoomID: "room:02655", Message: "\n자주 저장들 하세요."}) {
-			t.Errorf("unexpected broadcast message: %+v", world.broadcasts[0])
+		if world.broadcasts[0] != "\n자주 저장들 하세요." {
+			t.Errorf("unexpected broadcast message: %q", world.broadcasts[0])
 		}
 
 		// Now check state swap
@@ -229,10 +221,10 @@ func TestUpdateTimedExits(t *testing.T) {
 		}
 
 		if len(world.broadcasts) != 1 {
-			t.Fatalf("expected 1 room broadcast, got %d", len(world.broadcasts))
+			t.Fatalf("expected 1 broadcast, got %d", len(world.broadcasts))
 		}
-		if world.broadcasts[0] != (broadcastRoomCall{RoomID: "room:02655", Message: "\n자주 저장들 하세요."}) {
-			t.Errorf("unexpected broadcast message: %+v", world.broadcasts[0])
+		if world.broadcasts[0] != "\n자주 저장들 하세요." {
+			t.Errorf("unexpected broadcast message: %q", world.broadcasts[0])
 		}
 
 		// Now state should swap back
