@@ -51,15 +51,15 @@ func TestTurnHandlerFinalizesMonsterDeath(t *testing.T) {
 	loaded.Creatures[mouse.ID] = mouse
 	world := state.NewWorld(loaded)
 	defer world.Close()
-	handler := NewTurnHandler(world, fixedRoll(1))
+	handler := NewTurnHandler(world, turnRolls(t, 1, 100))
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := handler(ctx, ResolvedCommand{Args: []string{"생쥐"}, Values: []int64{1}})
 	if err != nil {
 		t.Fatalf("handler() error = %v", err)
 	}
-	if status != StatusDefault || !strings.Contains(ctx.OutputString(), "혼을 소멸시켰습니다") {
-		t.Fatalf("status/output = %d/%q, want death message", status, ctx.OutputString())
+	if status != StatusDefault || !strings.Contains(ctx.OutputString(), "혼을 소멸시켜 버렸습니다") {
+		t.Fatalf("status/output = %d/%q, want instant-disintegrate death message", status, ctx.OutputString())
 	}
 	if _, ok := world.Creature("creature:mouse"); ok {
 		t.Fatal("dead turn target still exists in world")
@@ -78,7 +78,7 @@ func TestTurnHandlerUsesCustomDeathFinalizer(t *testing.T) {
 	world := state.NewWorld(loaded)
 	defer world.Close()
 	called := false
-	handler := NewTurnHandlerWithDeathFinalizer(world, fixedRoll(1), func(_ *Context, attacker model.Creature, victim model.Creature) error {
+	handler := NewTurnHandlerWithDeathFinalizer(world, turnRolls(t, 1, 100), func(_ *Context, attacker model.Creature, victim model.Creature) error {
 		called = true
 		if attacker.ID != "creature:alice" || victim.ID != "creature:mouse" {
 			t.Fatalf("finalizer attacker/victim = %q/%q, want alice/mouse", attacker.ID, victim.ID)
@@ -285,7 +285,7 @@ func TestTurnHandlerInvincibleDamageUsesLegacyClassFormula(t *testing.T) {
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
 	defer world.Close()
-	handler := NewTurnHandler(world, turnRolls(t, 1, 5))
+	handler := NewTurnHandler(world, turnRolls(t, 1, 1, 5)) // resist, instant-kill roll (C always consumes), damage
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := handler(ctx, ResolvedCommand{Args: []string{"고블린"}, Values: []int64{1}})
@@ -312,7 +312,7 @@ func TestTurnHandlerCaretakerDamageUsesLegacyClassFormula(t *testing.T) {
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
 	defer world.Close()
-	handler := NewTurnHandler(world, turnRolls(t, 1, 3))
+	handler := NewTurnHandler(world, turnRolls(t, 1, 1, 3)) // resist, instant-kill roll, damage
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := handler(ctx, ResolvedCommand{Args: []string{"고블린"}, Values: []int64{1}})
@@ -339,7 +339,7 @@ func TestTurnHandlerBulsaDamageKeepsLegacyDanglingElseResult(t *testing.T) {
 	loaded.Creatures[goblin.ID] = goblin
 	world := state.NewWorld(loaded)
 	defer world.Close()
-	handler := NewTurnHandler(world, turnRolls(t, 1))
+	handler := NewTurnHandler(world, turnRolls(t, 1, 1, 1)) // resist, instant-kill roll, BULSA wasted mrand(1,class)
 
 	ctx := &Context{ActorID: "player:alice"}
 	status, err := handler(ctx, ResolvedCommand{Args: []string{"고블린"}, Values: []int64{1}})

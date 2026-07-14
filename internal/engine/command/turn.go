@@ -209,26 +209,32 @@ func turnChance(actor model.Creature, target model.Creature) int {
 }
 
 func turnInstantDisintegrates(actor model.Creature, target model.Creature, rng SearchRollFunc) bool {
-	return turnCreatureTurnable(target) && rng(1, 100) > 90-legacyStatBonus(creatureStat(actor, "piety"))
+	// C (magic3.c:267) evaluates mrand FIRST — it is the left operand of the &&, so
+	// the roll is consumed even against a non-undead target; MUNDED is only checked
+	// afterward. Roll unconditionally so the RNG stream stays in step with C.
+	roll := rng(1, 100) > 90-legacyStatBonus(creatureStat(actor, "piety"))
+	return roll && turnCreatureTurnable(target)
 }
 
 func turnDamage(actor model.Creature, target model.Creature, rng SearchRollFunc) int {
 	hpCurrent := creatureStat(target, "hpCurrent")
 	hpUnit := hpCurrent / 30
 	class := creatureClass(actor)
-	var damage int
-	switch class {
-	case model.ClassCaretaker:
-		damage = rng(3, class) * hpUnit
-	case model.ClassInvincible:
-		damage = rng(5, class) * hpUnit
+	// C turn (magic3.c:279-286) is a fall-through if-chain: `if(class>=BULSA)` rolls
+	// mrand(1,class) but the trailing `else` (of the CARETAKER branch) then overwrites
+	// dmg with hpcur/3, so BULSA/SUB_DM/DM consume a wasted roll and deal hpcur/3.
+	// C applies no floor afterward — 0 damage is allowed (hpUnit is 0 below 30 HP).
+	switch {
+	case class >= model.ClassBulsa:
+		_ = rng(1, class) // rolled then discarded by C's overwrite; consume to match RNG
+		return hpCurrent / 3
+	case class == model.ClassCaretaker:
+		return rng(3, class) * hpUnit
+	case class == model.ClassInvincible:
+		return rng(5, class) * hpUnit
 	default:
-		damage = hpCurrent / 3
+		return hpCurrent / 3
 	}
-	if damage < 1 {
-		return 1
-	}
-	return damage
 }
 
 func revealTurnActor(ctx *Context, world TurnWorld, roomID model.RoomID, viewer LookViewer, actor model.Creature) error {

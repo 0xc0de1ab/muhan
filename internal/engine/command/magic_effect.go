@@ -1031,9 +1031,14 @@ func magicEffectBefuddleSelfDuration(actor model.Creature, how int) int {
 }
 
 func magicEffectBefuddleTargetDuration(actor model.Creature, target magicEffectTarget, how int) int {
-	dur := mrand(1, 5) + mrand(1, 5)
+	// C befuddle (magic3.c:804-809) rolls dice(2,6,0) on CAST and dice(2,5,0)
+	// otherwise — two draws per path. Branch so the cast path does not also roll the
+	// non-cast 2d5 first (which wasted two draws and desynced the RNG stream).
+	var dur int
 	if how == howCast {
 		dur = legacyStatBonus(creatureStat(actor, "intelligence")) + mrand(1, 6) + mrand(1, 6)
+	} else {
+		dur = mrand(1, 5) + mrand(1, 5)
 	}
 	if (target.hasPlayer && magicEffectTargetHasAnyFlag(target, "PRMAGI", "resistMagic")) ||
 		(!target.hasPlayer && magicEffectTargetHasAnyFlag(target, "MRMAGI", "MRBEFD", "resistMagic", "befuddleResistance")) {
@@ -1824,11 +1829,18 @@ func magicEffectSilence(
 		return false, nil
 	}
 
-	dur := 300 + mrand(1, 15)*10
-	if how == howCast {
+	// C silence (magic8.c:474-481) rolls no mrand on CAST (fixed dur 3600) and one
+	// per scroll/other path. Use a switch so the cast path draws zero and the others
+	// draw exactly one, matching C's RNG consumption (the previous code always rolled
+	// mrand(1,15) first, wasting a draw on cast and doubling it on scroll).
+	var dur int
+	switch how {
+	case howCast:
 		dur = 3600
-	} else if how == howScroll {
+	case howScroll:
 		dur = 300 + mrand(1, 15)*10 + legacyStatBonus(creatureStat(actor, "intelligence"))*75
+	default:
+		dur = 300 + mrand(1, 15)*10
 	}
 
 	if err := magicEffectPrepayCastMP(world, actor, how, 12); err != nil {
@@ -2017,11 +2029,18 @@ func magicEffectFear(
 		}
 	}
 
-	dur := 600 + mrand(1, 30)*10
-	if how == howCast {
+	// C fear (magic8.c:335-343) rolls exactly one mrand per path. Compute dur with
+	// a single roll per branch so the shared RNG stream stays in step with C (the
+	// previous code always rolled mrand(1,30) first, then re-rolled for cast/scroll,
+	// consuming an extra draw).
+	var dur int
+	switch how {
+	case howCast:
 		dur = 600 + mrand(1, 30)*10 + legacyStatBonus(creatureStat(actor, "intelligence"))*150
-	} else if how == howScroll {
+	case howScroll:
 		dur = 600 + mrand(1, 15)*10 + legacyStatBonus(creatureStat(actor, "intelligence"))*50
+	default:
+		dur = 600 + mrand(1, 30)*10
 	}
 
 	if err := magicEffectPrepayCastMP(world, actor, how, 15); err != nil {
