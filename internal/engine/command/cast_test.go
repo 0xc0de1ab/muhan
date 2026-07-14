@@ -630,6 +630,35 @@ func TestCastHandlerFearRevealsCasterAndAddsMonsterAggro(t *testing.T) {
 	}
 }
 
+// TestCastHandlerRestoreAllowsLowMPAndUnlearned guards #9 (C restore has no MP
+// gate — it refills MP) and #19 (C restore has no SRESTO learned check); the only
+// gate is class >= INVINCIBLE, enforced in the effect.
+func TestCastHandlerRestoreAllowsLowMPAndUnlearned(t *testing.T) {
+	useSpellFailRoll(t, 0)
+	previousRoll := attackRoll
+	attackRoll = func(min, _ int) int { return min } // restore success roll mrand(1,100)=1 < 60
+	defer func() { attackRoll = previousRoll }()
+	loaded := castWorld(t, "room:dojo", 5) // mpCurrent 5, below the old 20 gate
+	actor := loaded.Creatures["creature:alice"]
+	actor.Stats["class"] = model.ClassCaretaker // >= INVINCIBLE, can self-cast
+	actor.Stats["mpMax"] = 50
+	actor.Metadata.Tags = nil // no SRESTO learned
+	loaded.Creatures[actor.ID] = actor
+	runtime := state.NewWorld(loaded)
+
+	ctx := &Context{ActorID: "player:alice"}
+	if _, err := NewCastHandler(runtime, nil)(ctx, ResolvedCommand{Args: []string{"도주천"}}); err != nil {
+		t.Fatalf("handler() error = %v", err)
+	}
+	if out := ctx.OutputString(); strings.Contains(out, "도력이 부족") || strings.Contains(out, "터득하지 못했") {
+		t.Fatalf("restore blocked by an MP/learned gate C does not have: %q", out)
+	}
+	updated, _ := runtime.Creature("creature:alice")
+	if got := updated.Stats["mpCurrent"]; got != 50 {
+		t.Fatalf("mpCurrent = %d, want 50 (restore refills MP)", got)
+	}
+}
+
 func TestCastHandlerRmGongUsesLegacyCostAndClass(t *testing.T) {
 	useSpellFailRoll(t, 0)
 	loaded := castWorld(t, "room:dojo", 100)

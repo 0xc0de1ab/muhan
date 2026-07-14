@@ -262,7 +262,10 @@ func castUnlearnedMessage(power int) string {
 func castEffectHandlesLearnedCheck(power int) bool {
 	switch power {
 	case magicPowerRecall, magicPowerMagicTrack, magicPowerFullHeal, magicPowerRemoveDisease, magicPowerRemoveBlindness,
-		magicPowerLocatePlayer, magicPowerDrainExp, magicPowerRoomVigor, magicPowerObjectSend, magicPowerRmGong:
+		magicPowerLocatePlayer, magicPowerDrainExp, magicPowerRoomVigor, magicPowerObjectSend, magicPowerRmGong,
+		// C restore (magic3.c:580) has no S_ISSET learned check; it is gated only on
+		// class >= INVINCIBLE (enforced in the effect).
+		magicPowerRestore:
 		return true
 	default:
 		return false
@@ -271,7 +274,11 @@ func castEffectHandlesLearnedCheck(power int) bool {
 
 func castEffectHandlesMPCheck(power int) bool {
 	switch power {
-	case magicPowerLocatePlayer, magicPowerDrainExp, magicPowerRoomVigor, magicPowerObjectSend, magicPowerRmGong:
+	case magicPowerLocatePlayer, magicPowerDrainExp, magicPowerRoomVigor, magicPowerObjectSend, magicPowerRmGong,
+		// C restore (magic3.c:580) has no MP-availability gate — it refills MP, so a
+		// low-MP caster must be allowed. Its only gate (class >= INVINCIBLE) lives in
+		// the effect.
+		magicPowerRestore:
 		return true
 	default:
 		return false
