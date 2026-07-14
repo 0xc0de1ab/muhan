@@ -1257,6 +1257,35 @@ func TestCastHandlerFullHealUsesCLegacyGatesAndDailyLimit(t *testing.T) {
 	}
 }
 
+// TestCastHandlerFullHealDailyCapTracksLevel guards #8: C init_ply recomputes the
+// daily full-heal cap from the current level, so it grows with level; Go must not
+// freeze it at a stored first-cast value.
+func TestCastHandlerFullHealDailyCapTracksLevel(t *testing.T) {
+	useSpellFailRoll(t, 0)
+	loaded := castWorld(t, "room:dojo", 50)
+	actor := loaded.Creatures["creature:alice"]
+	actor.Level = 60
+	actor.Stats["class"] = model.ClassCleric
+	actor.Stats["level"] = 60
+	actor.Stats["hpCurrent"] = 3
+	actor.Stats["hpMax"] = 10
+	actor.Metadata.Tags = []string{"SFHEAL"}
+	actor.Properties = nil // fresh: no stored cap/uses
+	loaded.Creatures[actor.ID] = actor
+	runtime := state.NewWorld(loaded)
+
+	ctx := &Context{ActorID: "player:alice"}
+	if _, err := NewCastHandler(runtime, nil)(ctx, ResolvedCommand{Args: []string{"완치"}}); err != nil {
+		t.Fatalf("handler() error = %v", err)
+	}
+	// level 60 cap = 10 + (((60+3)/4)-5)/3 = 13; first use leaves 12. A cap frozen
+	// at the base 10 would leave 9.
+	updated, _ := runtime.Creature("creature:alice")
+	if got := updated.Properties["dailyFullHealCur"]; got != "12" {
+		t.Fatalf("dailyFullHealCur = %q, want 12 (cap must track current level 60)", got)
+	}
+}
+
 func TestCastHandlerFullHealCaretakerTargetCostsHundredMP(t *testing.T) {
 	loaded := castWorld(t, "room:dojo", 100)
 	mustAddLookPlayer(t, loaded, model.Player{

@@ -878,14 +878,12 @@ func decrementDailyFullHealLimit(world StatusWorld, caster model.Creature) (bool
 		maxUses = 10
 	}
 
+	// C init_ply (player.c:63) recomputes daily[DL_FHEAL].max from the player's
+	// CURRENT level at every login, so the cap grows with level. Always derive it
+	// from the current level rather than freezing a stored value at first cast.
 	dailyMax := maxUses
 	if creatureClass(caster) >= model.ClassCaretaker {
 		dailyMax = 0
-	}
-	if valStr, ok := caster.Properties["dailyFullHealMax"]; ok {
-		if val, err := strconv.Atoi(valStr); err == nil {
-			dailyMax = val
-		}
 	}
 
 	now := timeNow().In(seoulLocation())
@@ -902,7 +900,10 @@ func decrementDailyFullHealLimit(world StatusWorld, caster model.Creature) (bool
 			dailyCur = val
 		}
 	}
-	if now.Year() != lastTime.Year() || now.YearDay() != lastTime.YearDay() {
+	// C dec_daily (misc.c:502) resets only when the day-of-year differs; it ignores
+	// the year (tm_yday only). Do not also reset across a year boundary on the same
+	// day-of-year.
+	if now.YearDay() != lastTime.YearDay() {
 		dailyCur = dailyMax
 	}
 	if dailyCur <= 0 {
@@ -915,9 +916,6 @@ func decrementDailyFullHealLimit(world StatusWorld, caster model.Creature) (bool
 	})
 	if !ok {
 		return true, nil
-	}
-	if _, err := updater.SetCreatureProperty(caster.ID, "dailyFullHealMax", strconv.Itoa(dailyMax)); err != nil {
-		return false, err
 	}
 	if _, err := updater.SetCreatureProperty(caster.ID, "dailyFullHealCur", strconv.Itoa(dailyCur)); err != nil {
 		return false, err
