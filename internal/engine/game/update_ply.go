@@ -2109,7 +2109,9 @@ func normalizeFlagName(name string) string {
 	return name
 }
 
-func mrand(min, max int) int {
+// mrand is a package var so tests can install a deterministic sequence for
+// RNG-gated logic (e.g. the move()/go() pursuit dexterity roll).
+var mrand = func(min, max int) int {
 	if max <= min {
 		return min
 	}

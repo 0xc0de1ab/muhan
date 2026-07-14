@@ -174,6 +174,17 @@ func WithWorld(world *state.World) Option {
 					return nil
 				}
 			}
+			if world.UpdateTimedExitsFunc == nil {
+				world.UpdateTimedExitsFunc = func(t int64) error {
+					UpdateTimedExits(world, t)
+					return nil
+				}
+			}
+			if world.PursueAfterMoveFunc == nil {
+				world.PursueAfterMoveFunc = func(playerID model.PlayerID, fromRoomID model.RoomID, handler string, now int64) ([]string, error) {
+					return PursuePlayerAfterMove(&loopUpdateActiveWorld{l: l, w: world}, playerID, fromRoomID, handler, now)
+				}
+			}
 			if world.UpdateShutdownFunc == nil {
 				world.UpdateShutdownFunc = func(t int64) error {
 					UpdateShutdown(&loopShutdownWorld{l: l, w: world}, t)

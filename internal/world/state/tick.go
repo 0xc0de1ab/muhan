@@ -3,6 +3,8 @@ package state
 import (
 	"fmt"
 	"os"
+
+	"github.com/0xc0de1ab/muhan/internal/world/model"
 )
 
 var exitFunc = os.Exit
@@ -147,6 +149,20 @@ func (w *World) UpdateTimedExits(t int64) error {
 		return fn(t)
 	}
 	return nil
+}
+
+// PursueAfterMove runs the synchronous move()/go() monster chase hook (if wired)
+// after a player has moved out of fromRoomID. It reads the hook under a brief
+// lock and invokes it unlocked, since the hook re-enters the world through the
+// normal locking methods.
+func (w *World) PursueAfterMove(playerID model.PlayerID, fromRoomID model.RoomID, handler string, now int64) ([]string, error) {
+	w.rLockDomains(true, true, true, true, true, true, true)
+	fn := w.PursueAfterMoveFunc
+	w.rUnlockDomains(true, true, true, true, true, true, true)
+	if fn != nil {
+		return fn(playerID, fromRoomID, handler, now)
+	}
+	return nil, nil
 }
 
 func (w *World) UpdateShutdown(t int64) error {

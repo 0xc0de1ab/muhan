@@ -35,6 +35,12 @@ type MoveCreatureToRoomWorld interface {
 	MoveCreatureToRoom(model.CreatureID, model.RoomID) error
 }
 
+// movePursuitWorld exposes the synchronous monster-chase hook (C move()/go()
+// first_mon loop). Implemented by *state.World and wired in the game loop.
+type movePursuitWorld interface {
+	PursueAfterMove(model.PlayerID, model.RoomID, string, int64) ([]string, error)
+}
+
 type moveCreatureTagWorld interface {
 	UpdateCreatureTags(model.CreatureID, []string, []string) (model.Creature, error)
 }
@@ -108,6 +114,7 @@ func NewMoveHandler(world MoveWorld) Handler {
 			return StatusDefault, err
 		}
 		moveDMFollowersAfterMove(ctx, world, viewer, currentRoom, exit, resolved.Spec.Handler)
+		moveMonsterPursuitAfterMove(ctx, world, playerID, currentRoom.ID, resolved.Spec.Handler)
 
 		viewer, room, err := CurrentRoom(world, viewer)
 		if err != nil {
@@ -589,6 +596,25 @@ func moveDMFollowersAfterMove(ctx *Context, world MoveWorld, viewer LookViewer, 
 		}
 		_ = roomBroadcast(ctx, origin.ID, moveDMFollowerDepartMessage(follower, exit.Name, handler))
 		_ = mover.MoveCreatureToRoom(follower.ID, exit.ToRoomID)
+	}
+}
+
+// moveMonsterPursuitAfterMove triggers the C move()/go() synchronous chase: after
+// the mover has left fromRoomID, hostile monsters left behind may follow into the
+// new room. It writes the mover's "…이 당신을 따라옵니다." lines; the old-room
+// notices are broadcast by the hook. No-op when the world lacks the hook (tests
+// with a bare MoveWorld) or the mover is unresolved.
+func moveMonsterPursuitAfterMove(ctx *Context, world MoveWorld, playerID model.PlayerID, fromRoomID model.RoomID, handler string) {
+	pursuer, ok := world.(movePursuitWorld)
+	if !ok || playerID.IsZero() || fromRoomID.IsZero() {
+		return
+	}
+	messages, err := pursuer.PursueAfterMove(playerID, fromRoomID, handler, timeNow().Unix())
+	if err != nil {
+		return
+	}
+	for _, msg := range messages {
+		ctx.WriteString(msg)
 	}
 }
 

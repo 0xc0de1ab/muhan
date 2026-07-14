@@ -3969,118 +3969,233 @@ func TestUpdateActiveMonsters_FullAggro_Retaliate_Pursuit_Recalc_DeathClear(t *t
 		t.Error("clear on death did not prune name from hatred lists")
 	}
 
-	// Basic pursuit: hated in adj room, no in current -> move + broadcast
+	// C fidelity: the periodic update never chases. A monster whose hated enemy
+	// left to an adjacent room (and whose own room now has no player) is not ticked
+	// at all, so it stays put with its aggro intact — cross-room chasing is handled
+	// synchronously by PursuePlayerAfterMove (see the pursuit tests below).
 	world2 := newMockUpdateActiveWorld()
 	m2 := model.Creature{ID: "m:p", RoomID: "r1", DisplayName: "추적자", Stats: map[string]int{"hpCurrent": 100, "hpMax": 100, "dexterity": 20}}
 	world2.activeCreatures = []model.Creature{m2}
 	world2.creatures[m2.ID] = m2
 	world2.enemies[m2.ID] = []string{"전사"}
-	world2.rooms["r1"] = model.Room{ID: "r1", Exits: []model.Exit{{Name: "동", ToRoomID: "r2"}}}
+	world2.rooms["r1"] = model.Room{ID: "r1", CreatureIDs: []model.CreatureID{m2.ID}, Exits: []model.Exit{{Name: "동", ToRoomID: "r2"}}}
 	world2.rooms["r2"] = model.Room{ID: "r2", PlayerIDs: []model.PlayerID{ply.ID}}
 	world2.players[ply.ID] = ply
 	world2.creatures[pPC.ID] = pPC
 	world2.activeSessions = []ActiveSession{{ID: "s", ActorID: string(ply.ID)}}
 
 	UpdateActiveMonsters(world2, tVal+10)
-	m2u, _ := world2.Creature(m2.ID)
-	if m2u.RoomID == "r2" || len(world2.broadcastRooms["r1"]) > 0 {
-		// pursuit exercised (move or bcast)
-		t.Log("pursuit logic triggered successfully")
+	if m2u, _ := world2.Creature(m2.ID); m2u.RoomID != "r1" {
+		t.Fatalf("loop pursuit: monster room = %q, want r1 (periodic update must not chase)", m2u.RoomID)
+	}
+	if len(world2.broadcastRooms["r1"]) != 0 {
+		t.Fatalf("loop pursuit: unexpected chase broadcast %v", world2.broadcastRooms["r1"])
+	}
+	if en, _ := world2.CreatureEnemies(m2.ID); len(en) != 1 {
+		t.Fatalf("loop pursuit: aggro not retained while player online, enemies=%v", en)
 	}
 }
 
-// pursuitTestWorld builds a monster in r1 hating "전사", with the player in the
-// adjacent r2. dex values are chosen by callers to force the escape roll one way:
-// threshold = 15 - playerDex + monsterDex; mrand(1,50) > threshold means escape.
-func pursuitTestWorld(t *testing.T, monsterDex, playerDex int, monsterTags, playerTags []string) (*mockUpdateActiveWorld, model.Creature, model.Room) {
+// pursuitAfterMoveWorld builds a monster left behind in the old room "r1" that
+// hates "전사", with the mover already relocated to the new room "r2" (as it is
+// when the move command calls the pursuit hook). Callers pick dexterities so the
+// escape roll resolves deterministically with the installed mrand value: the chase
+// is shaken when mrand(1,50) > dexBase - playerDex + monsterDex (dexBase 15 for
+// move, 10 for go).
+func pursuitAfterMoveWorld(t *testing.T, monsterDex, playerDex int, monsterTags, playerTags []string) (*mockUpdateActiveWorld, model.PlayerID) {
 	t.Helper()
 	world := newMockUpdateActiveWorld()
 	monster := model.Creature{
-		ID: "m:pursue", RoomID: "r1", DisplayName: "추적자",
+		ID: "m:pursue", RoomID: "r1", Kind: model.CreatureKindMonster, DisplayName: "추적자",
 		Stats:    map[string]int{"hpCurrent": 100, "hpMax": 100, "dexterity": monsterDex},
 		Metadata: model.Metadata{Tags: monsterTags},
 	}
 	world.creatures[monster.ID] = monster
 	world.enemies[monster.ID] = []string{"전사"}
 	pc := model.Creature{
-		ID: "pc:pursue", RoomID: "r2", DisplayName: "전사",
+		ID: "pc:pursue", RoomID: "r2", Kind: model.CreatureKindPlayer, DisplayName: "전사",
 		Stats:    map[string]int{"hpCurrent": 100, "hpMax": 100, "dexterity": playerDex},
 		Metadata: model.Metadata{Tags: playerTags},
 	}
 	world.creatures[pc.ID] = pc
 	ply := model.Player{ID: "p:pursue", CreatureID: pc.ID, RoomID: "r2", DisplayName: "전사"}
 	world.players[ply.ID] = ply
-	room1 := model.Room{ID: "r1", Exits: []model.Exit{{Name: "동", ToRoomID: "r2"}}}
-	world.rooms["r1"] = room1
+	world.rooms["r1"] = model.Room{ID: "r1", CreatureIDs: []model.CreatureID{monster.ID}, Exits: []model.Exit{{Name: "동", ToRoomID: "r2"}}}
 	world.rooms["r2"] = model.Room{ID: "r2", PlayerIDs: []model.PlayerID{ply.ID}}
-	return world, monster, room1
+	world.activeSessions = []ActiveSession{{ID: "s", ActorID: string(ply.ID)}}
+	return world, ply.ID
 }
 
-// TestAttemptPursuitCatchesClumsyPlayer: threshold 15-5+40 = 50, so mrand(1,50)
-// can never exceed it — the pursuer always catches a much clumsier player.
-func TestAttemptPursuitCatchesClumsyPlayer(t *testing.T) {
-	world, monster, room1 := pursuitTestWorld(t, 40, 5, nil, nil)
-	if !attemptPursuit(world, monster, room1) {
-		t.Fatal("attemptPursuit = false, want true (clumsy player caught)")
+// withGamePursuitRolls installs a deterministic mrand sequence for the duration of
+// the test (falling back to min once exhausted) and restores the original after.
+func withGamePursuitRolls(t *testing.T, values ...int) {
+	t.Helper()
+	orig := mrand
+	i := 0
+	mrand = func(min, max int) int {
+		if i < len(values) {
+			v := values[i]
+			i++
+			return v
+		}
+		return min
 	}
-	if got := world.creatures[monster.ID].RoomID; got != "r2" {
+	t.Cleanup(func() { mrand = orig })
+}
+
+// TestPursueAfterMoveCatchesClumsyPlayer: threshold 15-5+40 = 50; a roll of 1 is
+// well under it, so the pursuer catches a much clumsier mover and follows in.
+func TestPursueAfterMoveCatchesClumsyPlayer(t *testing.T) {
+	withGamePursuitRolls(t, 1)
+	world, playerID := pursuitAfterMoveWorld(t, 40, 5, nil, nil)
+	msgs, err := PursuePlayerAfterMove(world, playerID, "r1", "move", 1000)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := world.creatures["m:pursue"].RoomID; got != "r2" {
 		t.Fatalf("monster room = %q, want r2 (pursued)", got)
 	}
-	if len(world.broadcastRooms["r1"]) == 0 || len(world.broadcastRooms["r2"]) == 0 {
-		t.Fatalf("expected pursuit broadcasts in both rooms")
+	if len(msgs) != 1 || !strings.Contains(msgs[0], "당신을 따라옵니다") {
+		t.Fatalf("mover follow message = %v", msgs)
+	}
+	if b := strings.Join(world.broadcastRooms["r1"], ""); !strings.Contains(b, "따라갑니다") {
+		t.Fatalf("old-room follow broadcast = %q", b)
 	}
 }
 
-// TestAttemptPursuitNimblePlayerEscapes: threshold 15-25+3 = -7, so mrand(1,50)
-// always exceeds it — a nimble player shakes a clumsy pursuer. Aggro is retained
-// because the hated player is still adjacent (C keeps first_enm).
-func TestAttemptPursuitNimblePlayerEscapes(t *testing.T) {
-	world, monster, room1 := pursuitTestWorld(t, 3, 25, nil, nil)
-	if !attemptPursuit(world, monster, room1) {
-		t.Fatal("attemptPursuit = false, want true (target adjacent, aggro retained)")
+// TestPursueAfterMoveNimblePlayerEscapes: threshold 15-25+3 = -7; any roll exceeds
+// it, so a nimble mover shakes a clumsy pursuer. Aggro is retained (still online).
+func TestPursueAfterMoveNimblePlayerEscapes(t *testing.T) {
+	withGamePursuitRolls(t, 1)
+	world, playerID := pursuitAfterMoveWorld(t, 3, 25, nil, nil)
+	msgs, _ := PursuePlayerAfterMove(world, playerID, "r1", "move", 1000)
+	if got := world.creatures["m:pursue"].RoomID; got != "r1" {
+		t.Fatalf("monster room = %q, want r1 (escape roll shook the chase)", got)
 	}
-	if got := world.creatures[monster.ID].RoomID; got != "r1" {
-		t.Fatalf("monster room = %q, want r1 (escape roll blocked the chase)", got)
+	if len(msgs) != 0 || len(world.broadcastRooms["r1"]) != 0 {
+		t.Fatalf("expected no follow output on escape, msgs=%v bcast=%v", msgs, world.broadcastRooms["r1"])
 	}
-	if len(world.broadcastRooms["r1"]) != 0 {
-		t.Fatalf("expected no pursuit broadcast on escape")
-	}
-}
-
-// TestAttemptPursuitInvisiblePlayerExemptForNonFollower: a non-MFOLLO monster
-// without see-invisible does not chase an invisible player (command2.c:607-613),
-// even though the dex roll would otherwise catch them.
-func TestAttemptPursuitInvisiblePlayerExemptForNonFollower(t *testing.T) {
-	world, monster, room1 := pursuitTestWorld(t, 40, 5, nil, []string{"PINVIS"})
-	if !attemptPursuit(world, monster, room1) {
-		t.Fatal("attemptPursuit = false, want true (target adjacent, aggro retained)")
-	}
-	if got := world.creatures[monster.ID].RoomID; got != "r1" {
-		t.Fatalf("monster room = %q, want r1 (invisible player not chased)", got)
+	if en, _ := world.CreatureEnemies("m:pursue"); len(en) != 1 {
+		t.Fatalf("aggro not retained after escape, enemies=%v", en)
 	}
 }
 
-// TestAttemptPursuitFollowerChasesInvisiblePlayer: an MFOLLO monster ignores the
-// invisibility exemption and chases even an invisible player.
-func TestAttemptPursuitFollowerChasesInvisiblePlayer(t *testing.T) {
-	world, monster, room1 := pursuitTestWorld(t, 40, 5, []string{"MFOLLO"}, []string{"PINVIS"})
-	if !attemptPursuit(world, monster, room1) {
-		t.Fatal("attemptPursuit = false, want true (follower chases)")
+// TestPursueAfterMoveInvisibleExemptForNonFollower: a non-MFOLLO monster without
+// see-invisible does not follow an invisible mover (command2.c:607-613), even
+// though the dex roll would otherwise catch them.
+func TestPursueAfterMoveInvisibleExemptForNonFollower(t *testing.T) {
+	withGamePursuitRolls(t, 1)
+	world, playerID := pursuitAfterMoveWorld(t, 40, 5, nil, []string{"PINVIS"})
+	_, _ = PursuePlayerAfterMove(world, playerID, "r1", "move", 1000)
+	if got := world.creatures["m:pursue"].RoomID; got != "r1" {
+		t.Fatalf("monster room = %q, want r1 (invisible mover not chased)", got)
 	}
-	if got := world.creatures[monster.ID].RoomID; got != "r2" {
+}
+
+// TestPursueAfterMoveFollowerChasesInvisible: an MFOLLO monster skips the
+// invisibility exemption and follows even an invisible mover.
+func TestPursueAfterMoveFollowerChasesInvisible(t *testing.T) {
+	withGamePursuitRolls(t, 1)
+	world, playerID := pursuitAfterMoveWorld(t, 40, 5, []string{"MFOLLO"}, []string{"PINVIS"})
+	_, _ = PursuePlayerAfterMove(world, playerID, "r1", "move", 1000)
+	if got := world.creatures["m:pursue"].RoomID; got != "r2" {
 		t.Fatalf("monster room = %q, want r2 (MFOLLO chases invisible)", got)
 	}
 }
 
-// TestAttemptPursuitNoAdjacentHatedReturnsFalse: with no hated player adjacent
-// the monster's aggro should be decayed (caller clears it).
-func TestAttemptPursuitNoAdjacentHatedReturnsFalse(t *testing.T) {
-	world, monster, room1 := pursuitTestWorld(t, 40, 5, nil, nil)
-	world.enemies[monster.ID] = []string{"다른사람"} // player "전사" is not hated
-	if attemptPursuit(world, monster, room1) {
-		t.Fatal("attemptPursuit = true, want false (no hated player adjacent)")
+// TestPursueAfterMoveNotEnemyNoChase: a monster that does not hate the mover stays.
+func TestPursueAfterMoveNotEnemyNoChase(t *testing.T) {
+	withGamePursuitRolls(t, 1)
+	world, playerID := pursuitAfterMoveWorld(t, 40, 5, nil, nil)
+	world.enemies["m:pursue"] = []string{"다른사람"}
+	msgs, _ := PursuePlayerAfterMove(world, playerID, "r1", "move", 1000)
+	if got := world.creatures["m:pursue"].RoomID; got != "r1" {
+		t.Fatalf("monster room = %q, want r1 (mover not hated)", got)
 	}
-	if got := world.creatures[monster.ID].RoomID; got != "r1" {
-		t.Fatalf("monster room = %q, want r1 (no pursuit)", got)
+	if len(msgs) != 0 {
+		t.Fatalf("expected no follow message, got %v", msgs)
+	}
+}
+
+// TestPursueAfterMoveGoRequiresFollower: under the go() path a "loose" monster
+// (not MFOLLO) never pursues (command6.c:330-333), even with a guaranteed catch
+// roll; an MFOLLO monster does.
+func TestPursueAfterMoveGoRequiresFollower(t *testing.T) {
+	t.Run("loose monster does not pursue on go", func(t *testing.T) {
+		withGamePursuitRolls(t, 1)
+		world, playerID := pursuitAfterMoveWorld(t, 40, 5, nil, nil)
+		PursuePlayerAfterMove(world, playerID, "r1", "go", 1000)
+		if got := world.creatures["m:pursue"].RoomID; got != "r1" {
+			t.Fatalf("go loose: monster room = %q, want r1", got)
+		}
+	})
+	t.Run("follower pursues on go", func(t *testing.T) {
+		withGamePursuitRolls(t, 1)
+		world, playerID := pursuitAfterMoveWorld(t, 40, 5, []string{"MFOLLO"}, nil)
+		PursuePlayerAfterMove(world, playerID, "r1", "go", 1000)
+		if got := world.creatures["m:pursue"].RoomID; got != "r2" {
+			t.Fatalf("go follower: monster room = %q, want r2", got)
+		}
+	})
+}
+
+// TestPursueAfterMoveGoDexThresholdStricterThanMove: with identical dexterities the
+// move() threshold is 15 and the go() threshold is 10, so a roll of 13 catches the
+// mover under move() but is shaken under go() — proving go() uses the stricter 10.
+func TestPursueAfterMoveGoDexThresholdStricterThanMove(t *testing.T) {
+	t.Run("move catches at roll 13", func(t *testing.T) {
+		withGamePursuitRolls(t, 13)
+		world, playerID := pursuitAfterMoveWorld(t, 0, 0, []string{"MFOLLO"}, nil)
+		PursuePlayerAfterMove(world, playerID, "r1", "move", 1000)
+		if got := world.creatures["m:pursue"].RoomID; got != "r2" {
+			t.Fatalf("move: monster room = %q, want r2 (13 <= 15 catches)", got)
+		}
+	})
+	t.Run("go escapes at roll 13", func(t *testing.T) {
+		withGamePursuitRolls(t, 13)
+		world, playerID := pursuitAfterMoveWorld(t, 0, 0, []string{"MFOLLO"}, nil)
+		PursuePlayerAfterMove(world, playerID, "r1", "go", 1000)
+		if got := world.creatures["m:pursue"].RoomID; got != "r1" {
+			t.Fatalf("go: monster room = %q, want r1 (13 > 10 escapes)", got)
+		}
+	})
+}
+
+// TestPursueAfterMovePermanentDropsFlag: a permanent monster that follows the mover
+// out of its home room loses MPERMT (C move() F_CLR(MPERMT) after die_perm_crt).
+func TestPursueAfterMovePermanentDropsFlag(t *testing.T) {
+	withGamePursuitRolls(t, 1)
+	world, playerID := pursuitAfterMoveWorld(t, 40, 5, []string{"MPERMT"}, nil)
+	PursuePlayerAfterMove(world, playerID, "r1", "move", 1000)
+	m := world.creatures["m:pursue"]
+	if m.RoomID != "r2" {
+		t.Fatalf("monster room = %q, want r2", m.RoomID)
+	}
+	for _, tag := range m.Metadata.Tags {
+		if tag == "MPERMT" || tag == "permanent" {
+			t.Fatalf("MPERMT not cleared after following out: %v", m.Metadata.Tags)
+		}
+	}
+}
+
+// TestAnyEnemyOnline: aggro is kept while the hated player is logged in and dropped
+// once they log off (C update_active end_enm_crt vs del_enm_crt).
+func TestAnyEnemyOnline(t *testing.T) {
+	world := newMockUpdateActiveWorld()
+	pc := model.Creature{ID: "pc", DisplayName: "전사", Stats: map[string]int{"hpCurrent": 1}}
+	world.creatures[pc.ID] = pc
+	ply := model.Player{ID: "p", CreatureID: pc.ID, DisplayName: "전사"}
+	world.players[ply.ID] = ply
+	mon := model.Creature{ID: "m", Kind: model.CreatureKindMonster, DisplayName: "몹"}
+	world.creatures[mon.ID] = mon
+	world.enemies[mon.ID] = []string{"전사"}
+
+	world.activeSessions = []ActiveSession{{ID: "s", ActorID: string(ply.ID)}}
+	if !anyEnemyOnline(world, mon) {
+		t.Fatal("anyEnemyOnline = false, want true while hated player logged in")
+	}
+	world.activeSessions = nil
+	if anyEnemyOnline(world, mon) {
+		t.Fatal("anyEnemyOnline = true, want false after hated player logged off")
 	}
 }

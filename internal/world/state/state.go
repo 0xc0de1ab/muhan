@@ -85,20 +85,25 @@ type World struct {
 	UpdateTimeClockFunc      func(t int64) error
 	UpdateTimedExitsFunc     func(t int64) error
 	UpdateShutdownFunc       func(t int64) error
-	RecalculateACFunc        func(model.CreatureID) error
-	RecalculateTHACOFunc     func(model.CreatureID) error
-	dbRoot                   string
-	shutdownLTime            int64
-	shutdownInterval         int64
-	lastShutdownUpdate       int64
-	lastActiveUpdate         int64
-	lastPlayerUpdate         int64
-	lastRandomUpdate         int64
-	lastTimeUpdate           int64
-	lastExitUpdate           int64
-	legacyTime               int64
-	randomUpdateInterval     int64
-	txInterval               int64
+	// PursueAfterMoveFunc lets a player-move command trigger the C move()/go()
+	// synchronous monster chase (old-room monsters with aggro follow the mover
+	// into the new room). Returns the player-facing "follows you" lines. Wired in
+	// the game loop; nil when unwired (no pursuit).
+	PursueAfterMoveFunc  func(playerID model.PlayerID, fromRoomID model.RoomID, handler string, now int64) ([]string, error)
+	RecalculateACFunc    func(model.CreatureID) error
+	RecalculateTHACOFunc func(model.CreatureID) error
+	dbRoot               string
+	shutdownLTime        int64
+	shutdownInterval     int64
+	lastShutdownUpdate   int64
+	lastActiveUpdate     int64
+	lastPlayerUpdate     int64
+	lastRandomUpdate     int64
+	lastTimeUpdate       int64
+	lastExitUpdate       int64
+	legacyTime           int64
+	randomUpdateInterval int64
+	txInterval           int64
 
 	// B: Dirty tracking for efficient persistence (player/bank last change time).
 	// Protected by dedicated dirtyMu (not world.mu) to:

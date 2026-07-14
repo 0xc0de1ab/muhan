@@ -55,6 +55,44 @@ func TestMoveHandlerDispatchesLegacyGoAndRendersDestination(t *testing.T) {
 	}
 }
 
+// TestMoveHandlerWritesMonsterPursuitFollowMessage verifies the command-side
+// wiring of the synchronous chase: after the player moves, NewMoveHandler invokes
+// the PursueAfterMove hook with the origin room + handler and writes the returned
+// "…이 당신을 따라옵니다." lines to the mover.
+func TestMoveHandlerWritesMonsterPursuitFollowMessage(t *testing.T) {
+	world := state.NewWorld(lookWorld(t))
+	defer world.Close()
+
+	var gotFrom model.RoomID
+	var gotHandler string
+	world.PursueAfterMoveFunc = func(playerID model.PlayerID, fromRoomID model.RoomID, handler string, now int64) ([]string, error) {
+		gotFrom = fromRoomID
+		gotHandler = handler
+		return []string{"\n늑대가 당신을 따라옵니다."}, nil
+	}
+
+	dispatcher := Dispatcher{
+		Registry: mustRegistry(t, []commandspec.CommandSpec{
+			{Name: "가", Number: 30, Handler: "go"},
+		}),
+		Handlers: map[string]Handler{"go": NewMoveHandler(world)},
+	}
+
+	ctx := &Context{ActorID: "player:alice"}
+	if _, err := dispatcher.DispatchLine(ctx, "동 가"); err != nil {
+		t.Fatalf("DispatchLine() error = %v", err)
+	}
+	if gotHandler != "go" {
+		t.Fatalf("hook handler = %q, want go", gotHandler)
+	}
+	if gotFrom != "room:plaza" {
+		t.Fatalf("hook fromRoom = %q, want room:plaza (origin)", gotFrom)
+	}
+	if out := ctx.OutputString(); !strings.Contains(out, "늑대가 당신을 따라옵니다") {
+		t.Fatalf("pursuit follow message missing from output:\n%s", out)
+	}
+}
+
 func TestMoveHandlerRequiresDirection(t *testing.T) {
 	world := state.NewWorld(lookWorld(t))
 	defer world.Close()

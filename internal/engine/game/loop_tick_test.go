@@ -189,6 +189,33 @@ func TestLoopWithWorldWiresDefaultTimeClock(t *testing.T) {
 	}
 }
 
+// TestLoopWithWorldWiresDefaultTimedExits guards the wiring hole where
+// UpdateTimedExitsFunc was omitted from the WithWorld default block, leaving the
+// hourly timed-exit toggle/broadcast (C update.c:54 update_exit) dormant in
+// production. WithWorld must default it like the other periodic hooks.
+func TestLoopWithWorldWiresDefaultTimedExits(t *testing.T) {
+	world := state.NewWorld(nil)
+	dispatcher := enginecmd.Dispatcher{Registry: testRegistry(t)}
+	_ = NewLoop(dispatcher, WithWorld(world))
+
+	if world.UpdateTimedExitsFunc == nil {
+		t.Fatal("WithWorld did not wire a default UpdateTimedExitsFunc; hourly timed-exit feature stays dormant")
+	}
+}
+
+// TestLoopWithWorldWiresDefaultPursueAfterMove guards the synchronous move()/go()
+// monster-chase hook: without a default the move command's PursueAfterMove call is
+// a no-op and cross-room pursuit never happens.
+func TestLoopWithWorldWiresDefaultPursueAfterMove(t *testing.T) {
+	world := state.NewWorld(nil)
+	dispatcher := enginecmd.Dispatcher{Registry: testRegistry(t)}
+	_ = NewLoop(dispatcher, WithWorld(world))
+
+	if world.PursueAfterMoveFunc == nil {
+		t.Fatal("WithWorld did not wire a default PursueAfterMoveFunc; synchronous monster pursuit stays disabled")
+	}
+}
+
 func TestLoopRunTicker(t *testing.T) {
 	// Verify that Run handles ticker ticks asynchronously
 	world := state.NewWorld(nil)
