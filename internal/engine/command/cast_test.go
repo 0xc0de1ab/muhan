@@ -326,6 +326,57 @@ func TestCastHandlerOffensiveSpellKillFinalizesMonsterAndAwardsXP(t *testing.T) 
 	}
 }
 
+// TestCastHandlerOffensiveSpellBlocksOnlyZoneMaker guards the #2 divergence: C
+// cast() bars only class 0 (ZONEMAKER) from offensive spells, not FIGHTER.
+func TestCastHandlerOffensiveSpellBlocksOnlyZoneMaker(t *testing.T) {
+	loaded := castWorld(t, "room:dojo", 3)
+	actor := loaded.Creatures["creature:alice"]
+	actor.Stats["class"] = model.ClassZoneMaker
+	actor.Metadata.Tags = []string{"SHURTS"}
+	loaded.Creatures[actor.ID] = actor
+	runtime := state.NewWorld(loaded)
+
+	ctx := &Context{ActorID: "player:alice"}
+	if _, err := NewCastHandler(runtime, nil)(ctx, ResolvedCommand{Args: []string{"삭풍", "x"}}); err != nil {
+		t.Fatalf("handler() error = %v", err)
+	}
+	if !strings.Contains(ctx.OutputString(), "공격주문을 쓸 수 없는 직업") {
+		t.Fatalf("ZONEMAKER (class 0) should be barred from offensive spells, got: %q", ctx.OutputString())
+	}
+}
+
+// TestCastHandlerClearsHiddenBeforeOffensiveClassCheck guards the #7 divergence:
+// C clears PHIDDN (magic1.c:88) after the cooldown gate but before the offensive/
+// MP/learned checks, so a cast that fails one of those still reveals the caster.
+func TestCastHandlerClearsHiddenBeforeOffensiveClassCheck(t *testing.T) {
+	loaded := castWorld(t, "room:dojo", 3)
+	actor := loaded.Creatures["creature:alice"]
+	actor.Stats["class"] = model.ClassZoneMaker
+	actor.Metadata.Tags = []string{"SHURTS", "PHIDDN"}
+	loaded.Creatures[actor.ID] = actor
+	player := loaded.Players["player:alice"]
+	player.Metadata.Tags = []string{"PHIDDN"}
+	loaded.Players[player.ID] = player
+	runtime := state.NewWorld(loaded)
+
+	ctx := &Context{ActorID: "player:alice"}
+	if _, err := NewCastHandler(runtime, nil)(ctx, ResolvedCommand{Args: []string{"삭풍", "x"}}); err != nil {
+		t.Fatalf("handler() error = %v", err)
+	}
+	// Cast is blocked (ZONEMAKER) yet the hidden flag must be cleared.
+	if !strings.Contains(ctx.OutputString(), "공격주문을 쓸 수 없는 직업") {
+		t.Fatalf("expected offensive-class block message, got: %q", ctx.OutputString())
+	}
+	updated, _ := runtime.Creature("creature:alice")
+	if hasAnyNormalizedFlag(updated.Metadata.Tags, "PHIDDN", "hidden") {
+		t.Fatalf("creature PHIDDN not cleared on blocked cast: %v", updated.Metadata.Tags)
+	}
+	updatedPlayer, _ := runtime.Player("player:alice")
+	if hasAnyNormalizedFlag(updatedPlayer.Metadata.Tags, "PHIDDN", "hidden") {
+		t.Fatalf("player PHIDDN not cleared on blocked cast: %v", updatedPlayer.Metadata.Tags)
+	}
+}
+
 func TestCastHandlerTeleportSpellFailConsumesMPSilently(t *testing.T) {
 	useSpellFailRoll(t, 99)
 	loaded := castWorld(t, "room:dojo", 20)
@@ -746,7 +797,9 @@ func TestCastHandlerRejectsInvalidCastStates(t *testing.T) {
 	}
 }
 
-func TestCastHandlerFighterOffensiveSpellRejectedExactBytes(t *testing.T) {
+// TestCastHandlerFighterOffensiveSpellAllowed: C cast() (magic1.c:92) bars only
+// class 0 (ZONEMAKER) from offensive spells; a FIGHTER reaches the spell effect.
+func TestCastHandlerFighterOffensiveSpellAllowed(t *testing.T) {
 	loaded := castWorld(t, "room:dojo", 20)
 	actor := loaded.Creatures["creature:alice"]
 	actor.Stats["class"] = model.ClassFighter
@@ -763,12 +816,14 @@ func TestCastHandlerFighterOffensiveSpellRejectedExactBytes(t *testing.T) {
 	if err != nil {
 		t.Fatalf("handler() error = %v", err)
 	}
-	want := "당신은 공격주문을 쓸 수 없는 직업을 갖고 있습니다."
-	if status != StatusDefault || ctx.OutputString() != want {
-		t.Fatalf("status/output = %d/%q, want exact %q", status, ctx.OutputString(), want)
+	if status != StatusDefault {
+		t.Fatalf("status = %d, want StatusDefault", status)
 	}
-	if called {
-		t.Fatal("effect was called despite fighter offensive rejection")
+	if strings.Contains(ctx.OutputString(), "공격주문을 쓸 수 없는 직업") {
+		t.Fatalf("Fighter wrongly blocked from offensive spell: %q", ctx.OutputString())
+	}
+	if !called {
+		t.Fatal("effect was not called for Fighter offensive spell")
 	}
 }
 

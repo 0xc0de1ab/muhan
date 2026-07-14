@@ -255,8 +255,10 @@ func TestMagicCastingCycleAndCooldowns(t *testing.T) {
 		t.Fatalf("Fighter cast failed: %v", err)
 	}
 	outputDave := ctxDave.OutputString()
-	if !strings.Contains(outputDave, "공격주문을 쓸 수 없는 직업") {
-		t.Errorf("expected Fighter offensive spell restriction message, got: %q", outputDave)
+	// C cast() (magic1.c:92) bars only class 0 (ZONEMAKER) from offensive spells;
+	// FIGHTER (class 4) is a caster class and must NOT hit the restriction message.
+	if strings.Contains(outputDave, "공격주문을 쓸 수 없는 직업") {
+		t.Errorf("Fighter must not be blocked from offensive spells (C bars only class 0), got: %q", outputDave)
 	}
 }
 

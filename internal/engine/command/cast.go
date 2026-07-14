@@ -72,11 +72,6 @@ func NewCastHandler(world CastWorld, effect CastEffectFunc) Handler {
 			ctx.WriteString("주술을 출수 하는데 실패 하셨습니다.")
 			return StatusDefault, nil
 		}
-		if current := creatureStat(creature, "mpCurrent"); current < spell.cost && !castEffectHandlesMPCheck(spell.power) {
-			ctx.WriteString(castNotEnoughMPMessage(spell.power))
-			return StatusDefault, nil
-		}
-
 		class := creatureClass(creature)
 		now := timeNow().Unix()
 		if class != model.ClassDM && class != model.ClassSubDM {
@@ -90,8 +85,25 @@ func NewCastHandler(world CastWorld, effect CastEffectFunc) Handler {
 			}
 		}
 
+		// C cast() clears PHIDDN here (magic1.c:88): after the please_wait cooldown
+		// gate but before the offensive-class / MP / learned checks, so a cast that
+		// fails any of those still reveals a hidden caster. C skips the clear only
+		// when the cooldown gate itself blocks the cast (returns before F_CLR).
+		player, creature, err = clearCommandActorHidden(world, player, creature)
+		if err != nil {
+			return StatusDefault, err
+		}
+
+		if current := creatureStat(creature, "mpCurrent"); current < spell.cost && !castEffectHandlesMPCheck(spell.power) {
+			ctx.WriteString(castNotEnoughMPMessage(spell.power))
+			return StatusDefault, nil
+		}
+
 		if _, isOffensive := magicEffectDamageDiceForPower(spell.power); isOffensive {
-			if class == model.ClassFighter {
+			// C cast() (magic1.c:92) bars only the unclassed ZONEMAKER (class 0) from
+			// offensive spells; FIGHTER (검사, class 4) is a real caster class with its
+			// own spell_fail case (magic8.c) and may cast them (at low success).
+			if class == model.ClassZoneMaker {
 				ctx.WriteString("당신은 공격주문을 쓸 수 없는 직업을 갖고 있습니다.")
 				return StatusDefault, nil
 			}
@@ -105,11 +117,6 @@ func NewCastHandler(world CastWorld, effect CastEffectFunc) Handler {
 				ctx.WriteString(castUnlearnedMessage(spell.power))
 				return StatusDefault, nil
 			}
-		}
-
-		player, creature, err = clearCommandActorHidden(world, player, creature)
-		if err != nil {
-			return StatusDefault, err
 		}
 
 		success, err := effect(ctx, world, creature, effectResolved, spell.power)
