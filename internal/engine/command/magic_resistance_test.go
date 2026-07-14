@@ -106,6 +106,24 @@ func TestApplyMagicResistanceDamage(t *testing.T) {
 	}
 }
 
+// TestSpellFailConsumesRollForDefaultClass guards #17: C spell_fail (magic8.c:811)
+// draws mrand(1,100) before the class switch, so even the always-succeeding default
+// classes (DM/Caretaker/Bulsa/Invincible/SubDM/ZoneMaker) consume one roll.
+func TestSpellFailConsumesRollForDefaultClass(t *testing.T) {
+	calls := 0
+	prev := spellFailRandIntn
+	spellFailRandIntn = func(int) int { calls++; return 0 }
+	defer func() { spellFailRandIntn = prev }()
+
+	dm := model.Creature{Stats: map[string]int{"class": model.ClassDM, "level": 50, "intelligence": 15}}
+	if spellFail(dm) {
+		t.Fatal("DM (default class) spellFail must always succeed")
+	}
+	if calls != 1 {
+		t.Fatalf("spellFail consumed %d rolls for a default class, want 1 (C draws mrand before the switch)", calls)
+	}
+}
+
 func TestRegisterSpellAggro(t *testing.T) {
 	victim := model.CreatureID("creature:goblin")
 	attacker := model.CreatureID("creature:alice")

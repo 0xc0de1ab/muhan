@@ -56,6 +56,11 @@ func RegisterSpellAggro(world interface{}, victimID, attackerID model.CreatureID
 // On fail, caller should typically consume MP (as in C) and skip effect.
 // Matches player-visible fail message and rates for all classes.
 func spellFail(actor model.Creature) bool {
+	// C spell_fail (magic8.c:811) draws mrand(1,100) BEFORE the class switch, so the
+	// roll is consumed for every class — including the default branch (DM/Caretaker/
+	// Bulsa/Invincible/SubDM/ZoneMaker) that always succeeds. Roll first to keep the
+	// shared RNG stream in step with C.
+	n := spellFailRandIntn(100) + 1
 	class := creatureClass(actor)
 	level := getCreatureLevel(actor)
 	intel := creatureStat(actor, "intelligence")
@@ -80,11 +85,9 @@ func spellFail(actor model.Creature) bool {
 	case model.ClassThief:
 		chance = (((level+3)/4)+bns)*6 + 22
 	default:
-		// DM/caretaker etc always succeed per C default:0
+		// DM/caretaker etc always succeed per C default:0 (roll already consumed).
 		return false
 	}
-	// mrand(1,100)
-	n := spellFailRandIntn(100) + 1
 	if n > chance {
 		return true // fail
 	}

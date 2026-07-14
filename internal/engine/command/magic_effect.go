@@ -924,7 +924,10 @@ func magicEffectBefuddle(
 	}
 
 	targetArg := getArg(resolved, 1)
-	if targetArg == "" || targetArg == "나" {
+	// C befuddle (magic3.c:744) self-casts only when there is NO target argument
+	// (cmnd->num == 2). "혼동 나" is a target name that find_crt normally fails to
+	// resolve, so do not treat "나" as a self-cast.
+	if targetArg == "" {
 		dur := magicEffectBefuddleSelfDuration(actor, how)
 		magicEffectSetCooldown(world, actor.ID, "attack", dur)
 		if how == howPotion {

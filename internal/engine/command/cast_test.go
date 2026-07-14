@@ -659,6 +659,26 @@ func TestCastHandlerRestoreAllowsLowMPAndUnlearned(t *testing.T) {
 	}
 }
 
+// TestCastHandlerBefuddleNaTargetsCreatureNotSelf guards #20: C befuddle self-casts
+// only with no target argument (cmnd->num == 2); "혼동 나" is a target name that
+// find_crt fails to resolve, not a self-cast.
+func TestCastHandlerBefuddleNaTargetsCreatureNotSelf(t *testing.T) {
+	useSpellFailRoll(t, 0)
+	loaded := castWorld(t, "room:dojo", 10)
+	actor := loaded.Creatures["creature:alice"]
+	actor.Metadata.Tags = []string{"SBEFUD"}
+	loaded.Creatures[actor.ID] = actor
+	runtime := state.NewWorld(loaded)
+
+	ctx := &Context{ActorID: "player:alice"}
+	if _, err := NewCastHandler(runtime, nil)(ctx, ResolvedCommand{Args: []string{"혼동", "나"}}); err != nil {
+		t.Fatalf("handler() error = %v", err)
+	}
+	if !strings.Contains(ctx.OutputString(), "존재하지 않습니다") {
+		t.Fatalf("'혼동 나' should target a creature named 나 and fail, not self-cast; got: %q", ctx.OutputString())
+	}
+}
+
 func TestCastHandlerRmGongUsesLegacyCostAndClass(t *testing.T) {
 	useSpellFailRoll(t, 0)
 	loaded := castWorld(t, "room:dojo", 100)
