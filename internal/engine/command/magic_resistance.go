@@ -8,48 +8,25 @@ import (
 
 var spellFailRandIntn = rand.Intn
 
-// GetSpellResistanceTag returns the resistance tag that corresponds to the given spell's magic power.
-func GetSpellResistanceTag(magicPower int) string {
-	switch magicPower {
-	case magicPowerBurn, magicPowerFireball:
-		return "resistFire"
-	case magicPowerBlister, magicPowerWaterBolt, 15:
-		return "resistCold"
-	case magicPowerHurt, magicPowerShockbolt, magicPowerDustGust, 14:
-		return "resistMagic"
-	case magicPowerStoneCrush, magicPowerRumble:
-		return "resistAcid"
-	}
-	return ""
-}
-
-// ApplyElementalResistance checks if the target has the resistance tag corresponding to the spell
-// and applies the damage reduction formula: dmg -= (dmg * 2 * min(50, piety + intelligence)) / 100.
-func ApplyElementalResistance(target model.Creature, magicPower int, damage int) int {
-	tag := GetSpellResistanceTag(magicPower)
-	if tag == "" {
+// applyMagicResistanceDamage ports the offensive-spell magic-resistance reduction
+// from C offensive_spell (magic1.c:1261-1266). It applies UNIFORMLY to every
+// offensive spell (there is no per-element fire/cold/acid resistance in C's
+// offensive_spell): a target that resists magic takes
+//
+//	dmg -= (dmg * 2 * MIN(50, piety+intelligence)) / 100
+//
+// C gates this on PRMAGI for players and MRMAGI for monsters — two distinct bit
+// flags for the same concept applied to the two creature kinds. In the Go flag
+// model those names (with resistMagic/magicResistance) are a single alias group,
+// so a type check is unnecessary: presence of the flag is the resist condition.
+// The result is NOT floored: C lets a fully-resisted hit reach 0 damage (only the
+// pre-resistance dice roll is MAX(1, dmg)).
+func applyMagicResistanceDamage(target model.Creature, damage int) int {
+	if !creatureHasAnyFlag(target, "PRMAGI", "MRMAGI", "resistMagic", "magicResistance") {
 		return damage
 	}
 
-	var hasResist bool
-	switch tag {
-	case "resistFire":
-		hasResist = hasAnyNormalizedFlag(target.Metadata.Tags, "resistFire", "fireResistance", "PRFIRE")
-	case "resistCold":
-		hasResist = hasAnyNormalizedFlag(target.Metadata.Tags, "resistCold", "coldResistance", "PRCOLD")
-	case "resistMagic":
-		hasResist = hasAnyNormalizedFlag(target.Metadata.Tags, "resistMagic", "magicResistance", "PRMAGI", "MRMAGI")
-	case "resistAcid":
-		hasResist = hasAnyNormalizedFlag(target.Metadata.Tags, "resistAcid", "acidResistance", "PRACID", "MRACID")
-	}
-
-	if !hasResist {
-		return damage
-	}
-
-	piety := target.Stats["piety"]
-	intel := target.Stats["intelligence"]
-	sum := piety + intel
+	sum := creatureStat(target, "piety") + creatureStat(target, "intelligence")
 	if sum > 50 {
 		sum = 50
 	}
@@ -57,12 +34,10 @@ func ApplyElementalResistance(target model.Creature, magicPower int, damage int)
 		sum = 0
 	}
 
-	reduced := (damage * 2 * sum) / 100
-	damage -= reduced
-	if damage < 1 {
-		damage = 1
+	damage -= (damage * 2 * sum) / 100
+	if damage < 0 {
+		damage = 0
 	}
-
 	return damage
 }
 

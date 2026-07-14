@@ -49,125 +49,58 @@ func (m *mockAggroWorld) Room(id model.RoomID) (model.Room, bool) {
 	return model.Room{}, false
 }
 
-func TestGetSpellResistanceTag(t *testing.T) {
+func TestApplyMagicResistanceDamage(t *testing.T) {
 	tests := []struct {
-		magicPower int
-		want       string
-	}{
-		{magicPowerBurn, "resistFire"},
-		{magicPowerFireball, "resistFire"},
-		{magicPowerBlister, "resistCold"},
-		{magicPowerWaterBolt, "resistCold"},
-		{magicPowerHurt, "resistMagic"},
-		{magicPowerShockbolt, "resistMagic"},
-		{magicPowerDustGust, "resistMagic"},
-		{magicPowerStoneCrush, "resistAcid"},
-		{magicPowerRumble, "resistAcid"},
-		{999, ""},
-	}
-
-	for _, tt := range tests {
-		got := GetSpellResistanceTag(tt.magicPower)
-		if got != tt.want {
-			t.Errorf("GetSpellResistanceTag(%d) = %q, want %q", tt.magicPower, got, tt.want)
-		}
-	}
-}
-
-func TestApplyElementalResistance(t *testing.T) {
-	tests := []struct {
-		name       string
-		tags       []string
-		stats      map[string]int
-		magicPower int
-		damage     int
-		wantDamage int
+		name   string
+		tags   []string
+		stats  map[string]int
+		damage int
+		want   int
 	}{
 		{
-			name:       "No resistance tags",
-			tags:       []string{},
-			stats:      map[string]int{"piety": 20, "intelligence": 20},
-			magicPower: magicPowerFireball,
-			damage:     100,
-			wantDamage: 100,
+			name:   "no magic-resist flag takes full damage",
+			stats:  map[string]int{"piety": 20, "intelligence": 20},
+			damage: 100,
+			want:   100,
 		},
 		{
-			name:       "Has resistFire tag, normal reduction",
-			tags:       []string{"resistFire"},
-			stats:      map[string]int{"piety": 10, "intelligence": 15}, // sum = 25
-			magicPower: magicPowerFireball,
-			damage:     100,
-			wantDamage: 50, // 100 - (100 * 2 * 25) / 100 = 50
+			name:   "MRMAGI reduces (sum 25)",
+			tags:   []string{"MRMAGI"},
+			stats:  map[string]int{"piety": 10, "intelligence": 15},
+			damage: 100,
+			want:   50, // 100 - (100 * 2 * 25) / 100
 		},
 		{
-			name:       "Has resistFire tag with alias",
-			tags:       []string{"PRFIRE"},
-			stats:      map[string]int{"piety": 10, "intelligence": 15}, // sum = 25
-			magicPower: magicPowerFireball,
-			damage:     100,
-			wantDamage: 50,
+			name:   "PRMAGI reduces (sum 40) — same alias group as MRMAGI",
+			tags:   []string{"PRMAGI"},
+			stats:  map[string]int{"piety": 20, "intelligence": 20},
+			damage: 100,
+			want:   20, // 100 - (100 * 2 * 40) / 100
 		},
 		{
-			name:       "Learned resist fire spell is not active resistance",
-			tags:       []string{"SRFIRE"},
-			stats:      map[string]int{"piety": 10, "intelligence": 15},
-			magicPower: magicPowerFireball,
-			damage:     100,
-			wantDamage: 100,
+			name:   "sum capped at 50 reaches 0 damage (no floor)",
+			tags:   []string{"MRMAGI"},
+			stats:  map[string]int{"piety": 30, "intelligence": 30}, // 60 -> capped 50
+			damage: 100,
+			want:   0, // 100 - (100 * 2 * 50) / 100 = 0; C applies no floor
 		},
 		{
-			name:       "Has resistCold tag, normal reduction",
-			tags:       []string{"resistCold"},
-			stats:      map[string]int{"piety": 20, "intelligence": 20}, // sum = 40
-			magicPower: magicPowerWaterBolt,
-			damage:     100,
-			wantDamage: 20, // 100 - (100 * 2 * 40) / 100 = 20
-		},
-		{
-			name:       "Has resistMagic tag, cap at 50",
-			tags:       []string{"resistMagic"},
-			stats:      map[string]int{"piety": 30, "intelligence": 30}, // sum = 60 -> capped at 50
-			magicPower: magicPowerShockbolt,
-			damage:     100,
-			wantDamage: 1, // 100 - (100 * 2 * 50) / 100 = 0 -> minimum 1
-		},
-		{
-			name:       "Learned resist magic spell is not active resistance",
-			tags:       []string{"SRMAGI"},
-			stats:      map[string]int{"piety": 30, "intelligence": 30},
-			magicPower: magicPowerShockbolt,
-			damage:     100,
-			wantDamage: 100,
-		},
-		{
-			name:       "Has resistAcid tag, normal reduction",
-			tags:       []string{"resistAcid"},
-			stats:      map[string]int{"piety": 5, "intelligence": 5}, // sum = 10
-			magicPower: magicPowerStoneCrush,
-			damage:     50,
-			wantDamage: 40, // 50 - (50 * 2 * 10) / 100 = 40
-		},
-		{
-			name:       "No corresponding tag",
-			tags:       []string{"resistCold"},
-			stats:      map[string]int{"piety": 20, "intelligence": 20},
-			magicPower: magicPowerFireball,
-			damage:     100,
-			wantDamage: 100,
+			name:   "magic-resist stored as a stat flag",
+			stats:  map[string]int{"piety": 5, "intelligence": 5, "PRMAGI": 1},
+			damage: 50,
+			want:   40, // 50 - (50 * 2 * 10) / 100
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			target := model.Creature{
-				Metadata: model.Metadata{
-					Tags: tt.tags,
-				},
-				Stats: tt.stats,
+				Metadata: model.Metadata{Tags: tt.tags},
+				Stats:    tt.stats,
 			}
-			got := ApplyElementalResistance(target, tt.magicPower, tt.damage)
-			if got != tt.wantDamage {
-				t.Errorf("ApplyElementalResistance() = %d, want %d", got, tt.wantDamage)
+			got := applyMagicResistanceDamage(target, tt.damage)
+			if got != tt.want {
+				t.Errorf("applyMagicResistanceDamage() = %d, want %d", got, tt.want)
 			}
 		})
 	}
@@ -223,7 +156,7 @@ func TestMagicEffectApplyDamageIntegration(t *testing.T) {
 				"hpMax":        100,
 			},
 			Metadata: model.Metadata{
-				Tags: []string{"resistFire"},
+				Tags: []string{"MRMAGI"},
 			},
 		}
 

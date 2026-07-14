@@ -543,17 +543,14 @@ func TestOffensiveSpellsDiceAndResistance(t *testing.T) {
 				t.Errorf("expected Bob's enemy list to contain Alice after casting %s, got %v", s.name, enemies)
 			}
 
-			// Verify elemental resistance reduction logic directly on the creature
-			cBob.Metadata.Tags = []string{s.resistTag}
+			// Verify magic-resistance reduction directly (C offensive_spell PRMAGI,
+			// player target): reduction = (10 * 2 * 25) / 100 = 5; final = 5.
+			cBob.Metadata.Tags = []string{"PRMAGI"}
 			cBob.Stats["piety"] = 15
 			cBob.Stats["intelligence"] = 10 // sum = 25 -> 50% reduction
-
-			// Apply elemental resistance on base damage of 10
-			// Reduction = (10 * 2 * 25) / 100 = 5
-			// Expected final damage = 10 - 5 = 5
-			resDamage := ApplyElementalResistance(cBob, s.power, 10)
+			resDamage := applyMagicResistanceDamage(cBob, 10)
 			if resDamage != 5 {
-				t.Errorf("expected resistance %s to reduce damage of spell %s (power %d) to 5, got %d", s.resistTag, s.name, s.power, resDamage)
+				t.Errorf("expected PRMAGI to reduce spell %s damage of 10 to 5, got %d", s.name, resDamage)
 			}
 		})
 	}

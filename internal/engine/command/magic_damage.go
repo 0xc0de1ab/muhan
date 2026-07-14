@@ -515,7 +515,7 @@ func magicEffectApplyBasicOffensiveDamage(
 			target.creature.Stats["hpCurrent"] = 1
 		}
 	} else {
-		dmg = ApplyElementalResistance(target.creature, magicPower, dmg)
+		dmg = applyMagicResistanceDamage(target.creature, dmg)
 		var applied int
 		updatedTarget, applied, died, err = damageWorld.ApplyCreatureDamage(target.creature.ID, dmg)
 		if err != nil {

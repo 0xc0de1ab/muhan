@@ -2343,7 +2343,7 @@ func magicEffectApplyDamage(
 		damage = 1
 	}
 
-	damage = ApplyElementalResistance(target.creature, magicPower, damage)
+	damage = applyMagicResistanceDamage(target.creature, damage)
 
 	if _, _, _, err := damageWorld.ApplyCreatureDamage(target.creature.ID, damage); err != nil {
 		return false, err
