@@ -284,6 +284,48 @@ func TestCastHandlerOffensiveSpellFailConsumesMPWithoutDamage(t *testing.T) {
 	}
 }
 
+// TestCastHandlerOffensiveSpellKillFinalizesMonsterAndAwardsXP guards the
+// CRITICAL divergence where an offensive-spell kill dispatched on a phantom
+// DieCreature interface (implemented nowhere) so the monster was left in the room
+// at 0 HP with no XP/loot/removal. C offensive_spell records the damage
+// (add_enm_dmg) and calls die() on the slain monster.
+func TestCastHandlerOffensiveSpellKillFinalizesMonsterAndAwardsXP(t *testing.T) {
+	useSpellFailRoll(t, 0)
+	loaded := castWorld(t, "room:dojo", 3)
+	actor := loaded.Creatures["creature:alice"]
+	actor.Metadata.Tags = []string{"SHURTS"}
+	loaded.Creatures[actor.ID] = actor
+	mustAddLookCreature(t, loaded, model.Creature{
+		ID:          "creature:merchant",
+		Kind:        model.CreatureKindMonster,
+		DisplayName: "상인",
+		RoomID:      "room:dojo",
+		Stats:       map[string]int{"hpCurrent": 1, "hpMax": 1, "experience": 1000},
+	})
+	runtime := state.NewWorld(loaded)
+
+	ctx := &Context{ActorID: "player:alice"}
+	status, err := NewCastHandler(runtime, nil)(ctx, ResolvedCommand{Args: []string{"삭풍", "상인"}})
+	if err != nil {
+		t.Fatalf("handler() error = %v", err)
+	}
+	if status != StatusDefault {
+		t.Fatalf("status = %d, want StatusDefault", status)
+	}
+	if !strings.Contains(ctx.OutputString(), "죽였습니다") {
+		t.Fatalf("output missing kill message:\n%s", ctx.OutputString())
+	}
+	// #1: the monster is finalized (removed), not left in the room at 0 HP.
+	if _, ok := runtime.Creature("creature:merchant"); ok {
+		t.Fatal("merchant still present after spell kill; FinalizeMonsterDeath was not run")
+	}
+	// #4: the caster earned an XP share via the damage ledger (add_enm_dmg -> die()).
+	updated, _ := runtime.Creature("creature:alice")
+	if got := updated.Stats["experience"]; got <= 0 {
+		t.Fatalf("caster experience = %d, want > 0 (spell damage ledger credited on kill)", got)
+	}
+}
+
 func TestCastHandlerTeleportSpellFailConsumesMPSilently(t *testing.T) {
 	useSpellFailRoll(t, 99)
 	loaded := castWorld(t, "room:dojo", 20)

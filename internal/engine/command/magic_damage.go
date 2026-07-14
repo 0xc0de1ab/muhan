@@ -358,6 +358,15 @@ func magicBasicOffensiveRealmStatKey(realm int) string {
 	}
 }
 
+// magicKillFinalizeWorld records offensive-spell damage into the monster damage
+// ledger (C add_enm_dmg) and finalizes a monster slain by a spell (C die()):
+// XP share, corpse loot/gold drop, alignment shift, removal. Implemented by
+// *state.World; the same methods back every melee/skill kill path.
+type magicKillFinalizeWorld interface {
+	RecordCreatureDamage(victimID, attackerID model.CreatureID, damage int) error
+	FinalizeMonsterDeath(model.CreatureID) (bool, error)
+}
+
 func magicEffectApplyBasicOffensiveDamage(
 	ctx *Context,
 	world StatusWorld,
@@ -517,6 +526,17 @@ func magicEffectApplyBasicOffensiveDamage(
 		}
 
 		RegisterSpellAggro(world, target.creature.ID, actor.ID)
+		// C offensive_spell (magic1.c:1274-1276) records the spell damage into the
+		// monster's damage ledger (add_enm_dmg, with m = MIN(hpcur, dmg) = applied)
+		// so the caster earns an XP share on the kill. Monster targets only, matching
+		// C's crt_ptr->type != PLAYER guard.
+		if !target.hasPlayer {
+			if recorder, ok := world.(magicKillFinalizeWorld); ok {
+				if err := recorder.RecordCreatureDamage(target.creature.ID, actor.ID, applied); err != nil {
+					return false, err
+				}
+			}
+		}
 	}
 
 	var spellname string
@@ -623,11 +643,18 @@ func magicEffectApplyBasicOffensiveDamage(
 		ctx.WriteString("\n당신은 " + targetName + krtext.Particle(targetName, '3') + " 죽였습니다.\n")
 		_ = roomBroadcast(ctx, actor.RoomID, "\n"+actorName+krtext.Particle(actorName, '1')+" "+targetName+krtext.Particle(targetName, '3')+" 죽여버렸습니다.\n")
 
-		// Run die logic if needed
-		if dieWorld, ok := world.(interface {
-			DieCreature(model.CreatureID, model.CreatureID) error
-		}); ok {
-			_ = dieWorld.DieCreature(updatedTarget.ID, actor.ID)
+		// C offensive_spell (magic1.c:1425-1431) calls die() on the slain monster:
+		// awards XP by damage share, drops the corpse loot/gold, applies the
+		// alignment shift, and removes it. FinalizeMonsterDeath is the real finalizer
+		// (used by every melee/skill kill path); the previous DieCreature type
+		// assertion matched no world type, so spell kills were never reaped —
+		// monsters were left in the room at 0 HP with no reward.
+		if !target.hasPlayer {
+			if finalizer, ok := world.(magicKillFinalizeWorld); ok {
+				if _, err := finalizer.FinalizeMonsterDeath(updatedTarget.ID); err != nil {
+					return false, err
+				}
+			}
 		}
 	}
 
