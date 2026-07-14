@@ -140,6 +140,45 @@ func TestShopBuyHandlerBuysStockIntoInventory(t *testing.T) {
 	}
 }
 
+func TestShopBuyHandlerStripsPermanenceFlags(t *testing.T) {
+	// C buy (command7.c:213-215) clears OPERM2/OPERMT/OTEMPP on the purchased copy.
+	// Shop stock is stored room-permanent (OPERMT) in the world data, so without the
+	// strip the buyer would keep a permanence flag C removes.
+	loaded := shopBuyWorld(t, true, 60000)
+	stock := loaded.Objects["object:sword"]
+	stock.Metadata.Tags = append(stock.Metadata.Tags, "OPERMT", "OPERM2")
+	loaded.Objects[stock.ID] = stock
+	world := state.NewWorld(loaded)
+	defer world.Close()
+
+	ctx := &Context{ActorID: "player:alice"}
+	if _, err := NewShopBuyHandler(world)(ctx, ResolvedCommand{Args: []string{"목검"}, Values: []int64{1}}); err != nil {
+		t.Fatalf("handler() error = %v", err)
+	}
+	_, creature, err := CurrentInventoryCreature(world, "player:alice")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(creature.Inventory.ObjectIDs) != 1 {
+		t.Fatalf("inventory = %+v, want one purchased object", creature.Inventory.ObjectIDs)
+	}
+	purchased, ok := world.Object(creature.Inventory.ObjectIDs[0])
+	if !ok {
+		t.Fatal("missing purchased object")
+	}
+	for _, tag := range purchased.Metadata.Tags {
+		switch strings.ToUpper(strings.TrimSpace(tag)) {
+		case "OPERMT", "OPERM2", "OTEMPP":
+			t.Fatalf("purchased object retained permanence flag %q: %+v", tag, purchased.Metadata.Tags)
+		}
+	}
+	// The stock object itself keeps its flags (only the clone is scrubbed).
+	stockObj, _ := world.Object("object:sword")
+	if !hasAnyNormalizedFlag(stockObj.Metadata.Tags, "OPERMT") {
+		t.Fatalf("stock object lost its OPERMT flag: %+v", stockObj.Metadata.Tags)
+	}
+}
+
 func TestShopBuyHandlerDebitsGold(t *testing.T) {
 	world := state.NewWorld(shopBuyWorld(t, true, 60000))
 	defer world.Close()
@@ -777,6 +816,20 @@ func TestShopSellHandlerRejectsLegacyUnsupportedObjects(t *testing.T) {
 				loaded.Objects[object.ID] = object
 			},
 			want: "전당포주인이 \"그 안에 뭔가가 들어있군요.\"라고 말합니다.",
+		},
+		{
+			// C sell (command7.c:252-254): a weapon/armor with shotscur <= shotsmax/8
+			// is trash. shotscur defaults to 0 (struct field), so an item with a
+			// shotsMax but no shotsCurrent is rejected — Go must not require the
+			// shotsCurrent property to be present.
+			name: "weapon with no current shots is trash",
+			mutate: func(loaded *worldload.World) {
+				proto := loaded.ObjectPrototypes["prototype:sword"]
+				proto.Properties["type"] = "0"       // SHARP weapon
+				proto.Properties["shotsMax"] = "350" // max present, current absent (== shotscur 0)
+				loaded.ObjectPrototypes[proto.ID] = proto
+			},
+			want: "전당포주인이 \"그런 쓰레기는 안사요!\"라고 말합니다.",
 		},
 		{
 			name: "potion",

@@ -3874,7 +3874,9 @@ func serverTestRuntimeInputs(t *testing.T) runtimeInputs {
 		ID:          "prototype:sword",
 		Kind:        model.ObjectKindWeapon,
 		DisplayName: "목검",
-		Properties:  map[string]string{"type": "1", "wearFlag": "20", "value": "50000", "sDice": "6", "nDice": "4", "pDice": "1"},
+		// A real weapon carries durability (shots); with shotsCurrent > shotsMax/8
+		// it is not pawn-shop trash (C sell, command7.c:252-254).
+		Properties: map[string]string{"type": "1", "wearFlag": "20", "value": "50000", "sDice": "6", "nDice": "4", "pDice": "1", "shotsMax": "10", "shotsCurrent": "10"},
 	})
 	mustAddServerTestPrototype(t, loaded, model.ObjectPrototype{
 		ID:          "prototype:stone",

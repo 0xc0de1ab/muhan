@@ -106,7 +106,7 @@ func NewShopBuyHandler(world ShopBuyWorld) Handler {
 		if err := clearShopActorHidden(world, player, creature); err != nil {
 			return StatusDefault, err
 		}
-		_, _, affordable, err := world.PurchaseObjectToCreatureInventory(object.ID, creature.ID, price)
+		newID, _, affordable, err := world.PurchaseObjectToCreatureInventory(object.ID, creature.ID, price)
 		if err != nil {
 			return StatusDefault, fmt.Errorf("shop buy: purchase object %q: %w", object.ID, err)
 		}
@@ -114,12 +114,51 @@ func NewShopBuyHandler(world ShopBuyWorld) Handler {
 			ctx.WriteString("돈도 없으면서... 외상사절!")
 			return StatusDefault, nil
 		}
+		if err := shopStripPurchasedPermanence(world, newID); err != nil {
+			return StatusDefault, fmt.Errorf("shop buy: strip permanence %q: %w", newID, err)
+		}
 
 		queueShopPlayerSave(world, player.ID)
 		ctx.WriteString(RenderShopBuyConfirmation(name, price))
 		_ = roomBroadcast(ctx, room.ID, "\n"+commandActorDisplayName(player, creature)+"이 "+name+krtext.Particle(name, '3')+" 샀습니다.")
 		return StatusDefault, nil
 	}
+}
+
+// shopStripPurchasedPermanence mirrors C buy (command7.c:213-215), which clears
+// OPERM2/OPERMT/OTEMPP on the purchased copy so a bought item becomes a plain,
+// non-permanent object. The Go clone copies the depot stock object's tags and
+// properties verbatim, and shop stock is stored room-permanent (OPERMT), so
+// without this the buyer would keep a permanence flag C removes. Unlike room
+// pickup (get.go), buy strips all three rather than converting OPERMT->OPERM2.
+func shopStripPurchasedPermanence(world ShopBuyWorld, objectID model.ObjectInstanceID) error {
+	if objectID.IsZero() {
+		return nil
+	}
+	permTags := []string{
+		"inventoryPermanent", "permanent2", "operm2", "OPERM2",
+		"roomPermanent", "permanent", "opermt", "OPERMT",
+		"temporaryPermanent", "tempPermanent", "otempp", "OTEMPP",
+	}
+	if updater, ok := world.(interface {
+		UpdateObjectTags(model.ObjectInstanceID, []string, []string) (model.ObjectInstance, error)
+	}); ok {
+		if _, err := updater.UpdateObjectTags(objectID, nil, permTags); err != nil {
+			return err
+		}
+	}
+	if setter, ok := world.(interface {
+		SetObjectProperty(model.ObjectInstanceID, string, string) (model.ObjectInstance, error)
+	}); ok {
+		object, ok := world.Object(objectID)
+		if !ok {
+			return nil
+		}
+		if _, err := clearGetObjectProperties(setter, object, permTags...); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func shopBuyCapacityExceeded(world ShopWorld, creature model.Creature, object model.ObjectInstance) bool {
@@ -550,10 +589,15 @@ func shopSellRejectMessage(world InventoryWorld, object model.ObjectInstance) st
 }
 
 func shopSellPoorQuality(world InventoryWorld, object model.ObjectInstance, legacyType int) bool {
+	// C sell (command7.c:252-256) reads shotscur/shotsmax as struct fields that
+	// default to 0, so an absent value counts as 0. objectIntProperty returns 0
+	// when the property is missing, which reproduces that default exactly — do NOT
+	// add hasCurrent/hasMax guards, or a weapon/armor with no shots data (0/0 or
+	// 0/N) escapes the trash gate and sells for gold C never pays.
 	shotsCurrent, hasCurrent := objectIntProperty(world, object, "shotsCurrent")
-	shotsMax, hasMax := objectIntProperty(world, object, "shotsMax")
+	shotsMax, _ := objectIntProperty(world, object, "shotsMax")
 	if legacyType >= 0 && (legacyType <= legacySellTypeMissile || legacyType == legacySellTypeArmor) {
-		return hasCurrent && hasMax && shotsMax > 0 && shotsCurrent <= shotsMax/8
+		return shotsCurrent <= shotsMax/8
 	}
 	if legacyType == legacySellTypeWand || legacyType == legacySellTypeKey {
 		return !hasCurrent || shotsCurrent < 1
