@@ -331,6 +331,31 @@ func TestMonsterPurchaseHandlerBroadcastsLegacyRoomMessage(t *testing.T) {
 	}
 }
 
+// TestMonsterVendorStockIgnoresLiveInventory guards the removal of the live-
+// inventory fallback: C purchase/selection (command10.c) build the saleable list
+// exclusively from carry[] template slots. A vendor with empty carry[] sells
+// nothing, even if it holds scavenged/looted live objects — otherwise those
+// items become buyable (and infinitely clonable) where C forbids them entirely.
+func TestMonsterVendorStockIgnoresLiveInventory(t *testing.T) {
+	loaded := monsterPurchaseWorld(t)
+	vendor := loaded.Creatures["creature:vendor"]
+	delete(vendor.Stats, "carry[0]") // no carry template stock
+	vendor.Inventory = model.ObjectRefList{ObjectIDs: []model.ObjectInstanceID{"object:loot"}}
+	loaded.Creatures[vendor.ID] = vendor
+	mustAddLookObject(t, loaded, model.ObjectInstance{
+		ID:          "object:loot",
+		PrototypeID: "object:o01:1",
+		Location:    model.ObjectLocation{CreatureID: "creature:vendor", Slot: "inventory"},
+	})
+	runtime := state.NewWorld(loaded)
+	defer runtime.Close()
+
+	vend, _ := runtime.Creature("creature:vendor")
+	if stock := monsterVendorStock(runtime, vend); len(stock) != 0 {
+		t.Fatalf("monsterVendorStock = %d items, want 0 (live inventory must not be vended)", len(stock))
+	}
+}
+
 func monsterPurchaseWorld(t *testing.T) *worldload.World {
 	t.Helper()
 	loaded := worldload.NewWorld()

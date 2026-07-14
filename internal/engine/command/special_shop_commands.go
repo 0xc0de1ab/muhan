@@ -307,11 +307,15 @@ func RenderMonsterSelection(vendorName string, items []monsterVendorStockItem) s
 	return b.String()
 }
 
+// monsterVendorStock returns a vending monster's saleable list. C purchase and
+// selection (command10.c) build this EXCLUSIVELY from the carry[] template slots
+// — the monster's live held-object list is never vended. The Go port previously
+// fell back to the live inventory when carry[] was empty, which both sold items C
+// forbids and (since the fallback clones a real instance) opened an infinite-dup
+// vector for scavenged/looted items. A vendor with empty carry[] simply has
+// nothing to sell, exactly as in C.
 func monsterVendorStock(world StatusWorld, vendor model.Creature) []monsterVendorStockItem {
-	if items := monsterVendorCarryStock(world, vendor); len(items) > 0 {
-		return items
-	}
-	return monsterVendorInventoryStock(world, vendor)
+	return monsterVendorCarryStock(world, vendor)
 }
 
 func monsterVendorCarryStock(world StatusWorld, vendor model.Creature) []monsterVendorStockItem {
@@ -371,28 +375,6 @@ func legacyMonsterCarryMaxItem(vendor model.Creature) int {
 		objNum[i] = number
 	}
 	return maxitem
-}
-
-func monsterVendorInventoryStock(world StatusWorld, vendor model.Creature) []monsterVendorStockItem {
-	items := make([]monsterVendorStockItem, 0, len(vendor.Inventory.ObjectIDs))
-	seen := map[string]struct{}{}
-	for _, objectID := range vendor.Inventory.ObjectIDs {
-		object, ok := world.Object(objectID)
-		if !ok || !objectLocatedInCreatureInventory(object, vendor.ID) {
-			continue
-		}
-		key := monsterVendorInventoryStockKey(world, object)
-		if _, ok := seen[key]; ok {
-			continue
-		}
-		seen[key] = struct{}{}
-		items = append(items, monsterVendorStockItem{
-			Object: object,
-			Name:   objectDisplayName(world, object),
-			Price:  shopObjectValue(world, object),
-		})
-	}
-	return items
 }
 
 func findMonsterVendorStockItem(world StatusWorld, vendor model.Creature, target string, ordinal int64, detectInvisible bool) (monsterVendorStockItem, bool) {
@@ -474,13 +456,6 @@ func monsterPurchaseItemOrdinal(resolved ResolvedCommand) int64 {
 		return 1
 	}
 	return getOrdinal(resolved, 1)
-}
-
-func monsterVendorInventoryStockKey(world StatusWorld, object model.ObjectInstance) string {
-	if !object.PrototypeID.IsZero() {
-		return "prototype:" + string(object.PrototypeID)
-	}
-	return "name:" + objectDisplayName(world, object)
 }
 
 func legacyCarryObjectPrototypeID(number int) model.PrototypeID {
