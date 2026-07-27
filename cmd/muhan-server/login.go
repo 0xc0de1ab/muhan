@@ -258,6 +258,14 @@ func (m *serverLoginManager) handleName(id session.ID, login serverLoginState, l
 		m.sessions[id] = login
 		return loginCommand(fmt.Sprintf("\n%s%s 하시겠습니까(예/아니오)? ", name, krtext.Particle(name, '4'))), nil
 	}
+	// Existing player: reject names that are path-unsafe. A stored name with path
+	// separators or traversal tokens would become a filename component on save and
+	// several legacy paths; refuse login so it can never reach a file operation.
+	// This is the path-safety floor (not the Hangul game policy, which is
+	// creation-only), so legitimate ASCII names like test fixtures still work.
+	if loginNameIsPathUnsafe(name) {
+		return loginCommand("해당 이름으로는 접속할 수 없습니다.\n" + loginNamePrompt), nil
+	}
 	if legacyPasswordHash(m.world, player) == "" {
 		delete(m.sessions, id)
 		return loginCommand("저장된 암호 정보를 찾을 수 없습니다.\n" + loginNamePrompt), nil
@@ -835,6 +843,29 @@ func legacyCreateNameRejection(name string) string {
 		return "이름이 너무 깁니다.\n\n"
 	}
 	return "이름은 한글로 적으셔야 합니다.\n\n"
+}
+
+// loginNameIsPathUnsafe reports whether a login name contains characters that
+// would make it dangerous as a filename component (path traversal). It is the
+// security floor applied to existing-player logins: the Hangul-only game policy
+// is enforced at character creation, but an already-stored name only needs to be
+// rejected here if it could escape a directory when used as a file stem.
+func loginNameIsPathUnsafe(name string) bool {
+	if name == "" || name == "." || name == ".." || filepath.IsAbs(name) {
+		return true
+	}
+	if strings.ContainsAny(name, `/\`) {
+		return true
+	}
+	if strings.ContainsAny(name, "⁄∕⧵﹨／＼") {
+		return true
+	}
+	for _, r := range name {
+		if r < 0x20 || r == 0x7F {
+			return true
+		}
+	}
+	return filepath.Clean(name) != name
 }
 
 func legacyYes(line string) bool {

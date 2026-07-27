@@ -188,11 +188,29 @@ func writeMarriageNameFile(root string, ownerName string, partnerName string) er
 	if err != nil {
 		return err
 	}
-	path := filepath.Join(root, "player", "marriage", string(encodedOwner))
+	base := filepath.Join(root, "player", "marriage")
+	path, ok := confinedFilePath(base, string(encodedOwner))
+	if !ok {
+		return fmt.Errorf("marriage file path for %q escapes %s", ownerName, base)
+	}
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return err
 	}
 	return os.WriteFile(path, append(encodedPartner, '\n'), 0644)
+}
+
+// confinedFilePath joins base/name and returns the cleaned path only if it stays
+// within base (no path-traversal escape). It is encoding-agnostic, so it guards
+// player-name-derived paths whether the name is raw UTF-8 or EUC-KR-encoded.
+// Returns "", false when name would escape base, is absolute, or is ".".
+func confinedFilePath(base, name string) (string, bool) {
+	base = filepath.Clean(base)
+	p := filepath.Clean(filepath.Join(base, name))
+	rel, err := filepath.Rel(base, p)
+	if err != nil || rel == "." || strings.HasPrefix(rel, "..") || filepath.IsAbs(rel) {
+		return "", false
+	}
+	return p, true
 }
 
 func readMarriagePendingRequester(root string, requester model.Player) (string, bool, error) {

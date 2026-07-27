@@ -635,3 +635,51 @@ func writeRawMarriageFile(t *testing.T, root string, name string, content string
 		t.Fatal(err)
 	}
 }
+
+// TestConfinedFilePath covers the path-traversal guard shared by marriage and
+// vote file paths. A name-derived path component must never escape its base dir.
+func TestConfinedFilePath(t *testing.T) {
+	base := "/srv/muhan/player/marriage"
+	cases := []struct {
+		name string
+		in   string
+		ok   bool
+	}{
+		{"valid hangul", "무영문", true},
+		{"dotdot escape", "../../etc/cron.d/x", false},
+		{"leading dotdot", "../secret", false},
+		// filepath.Join neutralizes a leading slash, so an absolute name does not
+		// escape; it lands under base. Confined, not rejected.
+		{"absolute neutralized under base", "/etc/passwd", true},
+		{"slash inside stays under base", "a/b", true},
+		{"dot only", ".", false},
+		{"dotdot only", "..", false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			p, ok := confinedFilePath(base, c.in)
+			if ok != c.ok {
+				t.Fatalf("confinedFilePath(%q) = %q, %v; want ok=%v", c.in, p, ok, c.ok)
+			}
+			if ok && !strings.HasPrefix(p, base) {
+				t.Fatalf("confinedFilePath(%q) = %q; want under %s", c.in, p, base)
+			}
+		})
+	}
+}
+
+// TestWriteMarriageNameFileRejectsTraversal verifies a path-unsafe owner name
+// cannot write outside the marriage directory.
+func TestWriteMarriageNameFileRejectsTraversal(t *testing.T) {
+	root := t.TempDir()
+	// "../escape" EUC-KR-encodes to ASCII passthrough bytes that would traverse.
+	if err := writeMarriageNameFile(root, "../escape", "무영문"); err == nil {
+		t.Fatal("writeMarriageNameFile(../escape) = nil, want error")
+	}
+	// Confirm nothing escaped outside the player/marriage dir.
+	escapePath := filepath.Join(root, "escape")
+	if _, err := os.Stat(escapePath); !os.IsNotExist(err) {
+		t.Fatalf("traversal wrote outside marriage dir: %s exists", escapePath)
+	}
+}
+

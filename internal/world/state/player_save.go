@@ -147,8 +147,13 @@ func safeSidecarStem(kind string, name string) (string, error) {
 	if name == "" {
 		return "", fmt.Errorf("%s sidecar name is empty", kind)
 	}
-	if strings.ContainsRune(name, '\x00') {
-		return "", fmt.Errorf("%s sidecar name %q contains NUL", kind, name)
+	if len([]rune(name)) > safeSidecarStemMaxRunes {
+		return "", fmt.Errorf("%s sidecar name %q exceeds %d runes", kind, name, safeSidecarStemMaxRunes)
+	}
+	for _, r := range name {
+		if r < 0x20 || r == 0x7F || (0x80 <= r && r <= 0x9F) {
+			return "", fmt.Errorf("%s sidecar name %q contains control character", kind, name)
+		}
 	}
 	if filepath.IsAbs(name) || name == "." || name == ".." ||
 		strings.ContainsAny(name, `/\`) ||
@@ -158,6 +163,10 @@ func safeSidecarStem(kind string, name string) (string, error) {
 	}
 	return name, nil
 }
+
+// safeSidecarStemMaxRunes bounds the filename stem length well under the 255-byte
+// filesystem limit. Production Korean names are <=6 syllables; this is a safety net.
+const safeSidecarStemMaxRunes = 64
 
 // LoadPlayer attempts to load a previously saved player JSON sidecar and returns the data.
 // Used for restart restore merge.

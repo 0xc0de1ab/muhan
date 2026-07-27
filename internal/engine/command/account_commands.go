@@ -338,7 +338,15 @@ func (s *FileAliasStore) write(playerID model.PlayerID, record fileAliasRecord) 
 
 func (s *FileAliasStore) path(playerID model.PlayerID) string {
 	name := accountPlayerFileName(s.world, playerID)
-	return filepath.Join(s.root, "player", "alias", name)
+	base := filepath.Join(s.root, "player", "alias")
+	// Confine the alias path: a path-unsafe player name must not let read/write
+	// touch files outside the alias directory.
+	p := filepath.Clean(filepath.Join(base, name))
+	rel, err := filepath.Rel(base, p)
+	if err != nil || rel == "." || strings.HasPrefix(rel, "..") || filepath.IsAbs(rel) {
+		return ""
+	}
+	return p
 }
 
 func parseFileAliasRecord(text string) fileAliasRecord {

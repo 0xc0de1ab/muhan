@@ -396,3 +396,21 @@ func voteTestContext(pending *enginecmd.PendingLineHandler) *enginecmd.Context {
 	}
 	return ctx
 }
+
+// TestVoteFilePathRejectsTraversal verifies a path-unsafe vote fileName yields
+// no path, so deleteExistingVote's os.Remove can never touch a file outside the
+// vote directory.
+func TestVoteFilePathRejectsTraversal(t *testing.T) {
+	s := &voteSessionState{root: t.TempDir()}
+	for _, bad := range []string{"../escape_v", "../../etc/cron.d/x_v", ".."} {
+		s.fileName = bad
+		if got := s.voteFilePath(); got != "" {
+			t.Fatalf("voteFilePath(fileName=%q) = %q, want empty (confined)", bad, got)
+		}
+	}
+	// A confined name still resolves under the vote dir.
+	s.fileName = "무영문"
+	if got := s.voteFilePath(); got == "" {
+		t.Fatal("voteFilePath(valid) = empty, want a path under player/vote")
+	}
+}

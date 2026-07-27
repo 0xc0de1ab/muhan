@@ -557,6 +557,28 @@ func accountRuntime(t *testing.T, level int, passwordHash string) *state.World {
 	return state.NewWorld(loaded)
 }
 
+// TestFileAliasStorePathConfinesTraversal verifies a player whose stored
+// DisplayName is path-unsafe cannot direct alias read/write outside the alias
+// directory: path() returns "" so both operations no-op safely.
+func TestFileAliasStorePathConfinesTraversal(t *testing.T) {
+	loaded := worldload.NewWorld()
+	if err := loaded.AddRoom(model.Room{ID: "room:plaza", DisplayName: "광장"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := loaded.AddPlayer(model.Player{
+		ID:          "player:mallory",
+		DisplayName: "../escape",
+		CreatureID:  "creature:mallory",
+		RoomID:      "room:plaza",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	store := NewFileAliasStore(t.TempDir(), state.NewWorld(loaded))
+	if got := store.path("player:mallory"); got != "" {
+		t.Fatalf("path(unsafe name) = %q, want empty (confined)", got)
+	}
+}
+
 func accountTestContext(pending *PendingLineHandler) *Context {
 	return &Context{
 		ActorID: "player:alice",

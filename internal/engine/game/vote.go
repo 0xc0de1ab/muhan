@@ -346,7 +346,14 @@ func (s *voteSessionState) voteFilePath() string {
 	if s == nil || strings.TrimSpace(s.root) == "" || strings.TrimSpace(s.fileName) == "" {
 		return ""
 	}
-	return filepath.Join(s.root, "player", "vote", s.fileName+"_v")
+	base := filepath.Join(s.root, "player", "vote")
+	path, ok := confinedFilePath(base, s.fileName+"_v")
+	if !ok {
+		// Unconfined fileName would let os.Remove/deleteExistingVote touch a file
+		// outside the vote directory; treat it as no vote file.
+		return ""
+	}
+	return path
 }
 
 func (i voteIssueSnapshot) voteQuestionLimit() int {
