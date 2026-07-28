@@ -1,8 +1,8 @@
 # =============================================================================
-#  [04] Build Docker Image — Release 바이너리로 Docker 이미지 빌드
+#  [04] Build Docker Image — 소스에서 multi-arch 이미지 빌드
 #
-#  마지막 Release의 바이너리를 다운로드하여 Docker 이미지를 생성합니다.
-#  Go 빌드를 수행하지 않습니다.
+#  소스를 checkout 하여 linux/amd64, linux/arm64 멀티 아키텍처 이미지를 빌드하고
+#  GHCR + OCI Registry 에 push 합니다. buildx + QEMU 크로스 컴파일.
 # =============================================================================
 
 name: "[04] Build Docker Image"
@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "대상 릴리즈 버전 (비우면 최신 릴리즈 사용, 예: 0.9.0-202606.1)"
+        description: "이미지에 붙일 버전 (비우면 소스 VERSION 파일 사용, 예: 0.10.0-202606.1)"
         required: false
         type: string
       push_ghcr:
@@ -41,33 +41,23 @@ jobs:
 
       - name: Determine version
         id: version
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ -n "${{ inputs.version }}" ]; then
             VERSION="${{ inputs.version }}"
-            TAG="v${VERSION}"
           else
-            # 최신 릴리즈 태그 가져오기
-            TAG=$(gh release view --repo "${{ github.repository }}" --json tagName -q '.tagName')
-            VERSION=$(echo "$TAG" | sed 's/^v//')
+            # 소스의 VERSION 파일이 진실의 원천 (release 바이너리에 의존 X)
+            VERSION=$(cat VERSION | tr -d '[:space:]')
           fi
+          COMMIT=$(git rev-parse --short HEAD)
+          BUILD_DATE=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
-          echo "Target release: ${TAG}"
+          echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "commit=${COMMIT}" >> "$GITHUB_OUTPUT"
+          echo "build_date=${BUILD_DATE}" >> "$GITHUB_OUTPUT"
+          echo "Target: v${VERSION} (${COMMIT})"
 
-      - name: Download release binary
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          TAG="${{ steps.version.outputs.tag }}"
-          echo "Downloading binary from release ${TAG}..."
-          gh release download "${TAG}" \
-            --repo "${{ github.repository }}" \
-            --pattern "muhan-server-linux-amd64" \
-            --dir .
-          chmod +x muhan-server-linux-amd64
-          ./muhan-server-linux-amd64 -version || true
+      - name: Set up QEMU (multi-arch)
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -110,12 +100,15 @@ jobs:
         with:
           context: .
           file: docker/Dockerfile.release
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             ghcr.io/${{ github.repository }}:v${{ steps.version.outputs.version }}
             ghcr.io/${{ github.repository }}:latest
           build-args: |
-            BINARY=muhan-server-linux-amd64
+            VERSION=${{ steps.version.outputs.version }}
+            COMMIT=${{ steps.version.outputs.commit }}
+            BUILD_DATE=${{ steps.version.outputs.build_date }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -128,12 +121,15 @@ jobs:
         with:
           context: .
           file: docker/Dockerfile.release
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             ${{ env.OCI_REGISTRY }}/muhan:v${{ steps.version.outputs.version }}
             ${{ env.OCI_REGISTRY }}/muhan:latest
           build-args: |
-            BINARY=muhan-server-linux-amd64
+            VERSION=${{ steps.version.outputs.version }}
+            COMMIT=${{ steps.version.outputs.commit }}
+            BUILD_DATE=${{ steps.version.outputs.build_date }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -147,8 +143,9 @@ jobs:
             echo ""
             echo "| | 값 |"
             echo "|---|---|"
-            echo "| **릴리즈 버전** | \`v${VERSION}\` |"
-            echo "| **릴리즈 소스** | [v${VERSION}](https://github.com/${{ github.repository }}/releases/tag/v${VERSION}) |"
+            echo "| **버전** | \`v${VERSION}\` |"
+            echo "| **소스 커밋** | [\`${{ steps.version.outputs.commit }}\`](https://github.com/${{ github.repository }}/commit/${{ steps.version.outputs.commit }}) |"
+            echo "| **아키텍처** | linux/amd64, linux/arm64 |"
             echo "| **Dockerfile** | \`docker/Dockerfile.release\` |"
             echo ""
             echo "### 이미지 태그"

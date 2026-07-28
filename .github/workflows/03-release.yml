@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 env:
   GO_VERSION: "1.25.0"
@@ -20,6 +21,9 @@ jobs:
   release:
     name: Create Release
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,15 +52,14 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
-      - name: Build release binary
+      - name: Build release binaries (amd64 + arm64)
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           COMMIT=$(git rev-parse --short HEAD)
           BUILD_DATE=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
-            -ldflags="-s -w -X main.version=${VERSION} -X main.commit=${COMMIT} -X main.buildDate=${BUILD_DATE}" \
-            -o muhan-server-linux-amd64 \
-            ./cmd/muhan-server/
+          LDFLAGS="-s -w -X main.version=${VERSION} -X main.commit=${COMMIT} -X main.buildDate=${BUILD_DATE}"
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="${LDFLAGS}" -o muhan-server-linux-amd64 ./cmd/muhan-server/
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags="${LDFLAGS}" -o muhan-server-linux-arm64 ./cmd/muhan-server/
 
       - name: Generate release notes
         id: notes
@@ -129,7 +132,7 @@ jobs:
           gh release create "${{ steps.version.outputs.tag }}" \
             --title "${{ steps.version.outputs.tag }}" \
             --notes "${{ steps.notes.outputs.body }}" \
-            muhan-server-linux-amd64
+            muhan-server-linux-amd64 muhan-server-linux-arm64
 
       - name: Job Summary
         run: |
@@ -142,7 +145,22 @@ jobs:
             echo "| **버전** | \`v${VERSION}\` |"
             echo "| **태그** | \`${{ steps.version.outputs.tag }}\` |"
             echo "| **커밋** | \`$(git rev-parse --short HEAD)\` |"
-            echo "| **바이너리** | \`muhan-server-linux-amd64\` |"
+            echo "| **바이너리** | \`muhan-server-linux-amd64\`, \`muhan-server-linux-arm64\` |"
             echo ""
             echo "GitHub Release: https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.tag }}"
+            echo ""
+            echo "_[04] Docker 빌드를 자동 트리거했습니다 (multi-arch 이미지)._"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  trigger-docker:
+    name: Trigger Docker Build
+    needs: [release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger [04] Docker
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run "04-docker.yml" --repo "${{ github.repository }}" \
+            -f version="${{ needs.release.outputs.version }}"
+          echo "✅ [04] Docker triggered for v${{ needs.release.outputs.version }}"

@@ -1,17 +1,52 @@
 # =============================================================================
-#  Muhan MUD Server - Release Docker Build
+#  Muhan MUD Server - Release Docker Build (multi-arch, source build)
 #
-#  릴리즈된 바이너리를 사용하여 Docker 이미지를 생성합니다.
-#  Go 빌드를 수행하지 않고, 사전 빌드된 바이너리를 복사합니다.
+#  소스에서 Go 바이너리를 빌드하여 Docker 이미지를 생성합니다.
+#  buildx + QEMU 를 통해 linux/amd64, linux/arm64 멀티 아키텍처 매니페스트를
+#  만들 수 있습니다. 사전 빌드 바이너리에 의존하지 않으므로 각 아키텍처가
+#  자체 바이너리를 빌드합니다.
 #
-#  사용법:
+#  사용법 (단일 arch):
 #    docker build -f docker/Dockerfile.release \
-#      --build-arg BINARY=muhan-server-linux-amd64 \
-#      -t muhan-server:v0.9.0-202606.1 .
+#      --build-arg VERSION=0.10.0-202606.1 -t muhan-server:v0.10.0-202606.1 .
+#
+#  사용법 (multi-arch manifest, buildx 필요):
+#    docker buildx build -f docker/Dockerfile.release \
+#      --platform linux/amd64,linux/arm64 \
+#      --build-arg VERSION=0.10.0-202606.1 -t muhan-server:v0.10.0-202606.1 .
 # =============================================================================
 
-# ─── Stage 1: Web UI 빌드 ──────────────────────────────────────────────────
-FROM node:22-alpine AS webui-builder
+# ─── Stage 1: Go 서버 빌드 ──────────────────────────────────────────────────
+# $BUILDPLATFORM 고정 → 빌더의 네이티브 플랫폼에서 1회 실행, TARGETARCH 로 크로스
+# 컴파일. CGO_ENABLED=0 이면 순수 Go 크로스컴파일이므로 QEMU 에뮬레이션 불필요.
+FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS go-builder
+
+WORKDIR /build
+
+# 캐시 효율을 위해 의존성 파일만 먼저 복사
+COPY go.mod go.sum ./
+RUN go mod download
+
+# 버전 정보 (빌드 시 --build-arg로 주입)
+ARG VERSION=dev
+ARG COMMIT=unknown
+ARG BUILD_DATE=unknown
+ARG TARGETARCH
+
+# 소스 복사 및 빌드 (CGO_ENABLED=0 → 순수 정적, 크로스 컴파일 가능)
+COPY cmd/ ./cmd/
+COPY internal/ ./internal/
+
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build \
+    -ldflags="-s -w -X main.version=${VERSION} -X main.commit=${COMMIT} -X main.buildDate=${BUILD_DATE}" \
+    -o /muhan-server \
+    ./cmd/muhan-server/
+
+# ─── Stage 2: Web UI 빌드 ──────────────────────────────────────────────────
+# $BUILDPLATFORM 고정 → 네이티브에서 1회 빌드. Vite/esbuild 산출물은 아키텍처
+# 무관 정적 파일이므로 모든 타겟 플랫폼이 동일 산출물을 재사용한다. esbuild 가
+# QEMU 에뮬레이션에서 동작하지 않는 문제도 회피.
+FROM --platform=$BUILDPLATFORM node:22-alpine AS webui-builder
 
 WORKDIR /build
 
@@ -21,7 +56,7 @@ RUN npm ci --no-audit --no-fund
 COPY webui/ ./
 RUN npm run build
 
-# ─── Stage 2: 최종 런타임 이미지 ────────────────────────────────────────────
+# ─── Stage 3: 최종 런타임 이미지 ────────────────────────────────────────────
 FROM alpine:3.21
 
 RUN apk add --no-cache \
@@ -35,10 +70,8 @@ RUN addgroup -g ${GID} -S muhan && adduser -u ${UID} -G muhan -S muhan
 
 WORKDIR /app
 
-# 릴리즈 바이너리 복사 (빌드 컨텍스트에서)
-ARG BINARY=muhan-server-linux-amd64
-COPY ${BINARY} /app/muhan-server
-RUN chmod +x /app/muhan-server
+# Go 서버 바이너리
+COPY --from=go-builder /muhan-server /app/muhan-server
 
 # Web UI 정적 파일
 COPY --from=webui-builder /build/dist /app/webui/dist
