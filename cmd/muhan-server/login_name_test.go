@@ -5,15 +5,23 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/0xc0de1ab/muhan/internal/persist/legacycrypt"
 	"github.com/0xc0de1ab/muhan/internal/session"
 	worldload "github.com/0xc0de1ab/muhan/internal/world/load"
 	"github.com/0xc0de1ab/muhan/internal/world/model"
 	"github.com/0xc0de1ab/muhan/internal/world/state"
 )
 
-// newLoginNameTestWorld builds a minimal world containing a player whose stored
-// name is path-unsafe, so the existing-player login branch can be exercised.
+// newLoginNameTestWorld builds a minimal world containing a player whose
+// account has no stored password hash.
 func newLoginNameTestWorld(t *testing.T, playerID model.PlayerID, displayName string) *state.World {
+	t.Helper()
+	return newLoginNameTestWorldWithHash(t, playerID, displayName, "")
+}
+
+// newLoginNameTestWorldWithHash is newLoginNameTestWorld but stores hash as
+// the account's legacy password hash.
+func newLoginNameTestWorldWithHash(t *testing.T, playerID model.PlayerID, displayName string, hash string) *state.World {
 	t.Helper()
 	loaded := worldload.NewWorld()
 	if err := loaded.AddRoom(model.Room{ID: "room:plaza", DisplayName: "광장"}); err != nil {
@@ -27,72 +35,186 @@ func newLoginNameTestWorld(t *testing.T, playerID model.PlayerID, displayName st
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := loaded.AddCreature(model.Creature{
+	creature := model.Creature{
 		ID:          "creature:mallory",
 		Kind:        model.CreatureKindPlayer,
 		DisplayName: displayName,
 		PlayerID:    playerID,
 		RoomID:      "room:plaza",
-	}); err != nil {
+	}
+	if hash != "" {
+		creature.Properties = map[string]string{"legacyPasswordHash": hash}
+	}
+	if err := loaded.AddCreature(creature); err != nil {
 		t.Fatal(err)
 	}
 	return state.NewWorld(loaded)
 }
 
-// TestLoginExistingPlayerRejectsPathUnsafeName closes gap #1: a stored player
-// whose name contains a path separator / traversal token must be refused at
-// login on the EXISTING-player branch (not just the create branch), so the name
-// never becomes a filename component on save or legacy paths.
-func TestLoginExistingPlayerRejectsPathUnsafeName(t *testing.T) {
-	for _, bad := range []string{"../evil", "a/b", "..", "evil\x00x"} {
-		t.Run(bad, func(t *testing.T) {
-			world := newLoginNameTestWorld(t, model.PlayerID(bad), bad)
-			mgr := newServerLoginManager(world)
+func TestLoginNameStepIsIndistinguishable(t *testing.T) {
+	// #15 contract: the name step must answer identically whether the name
+	// belongs to an account with a password hash, an account without one, a
+	// path-unsafe stored name, or no account at all.
+	pwHash, err := legacycrypt.HashBcrypt("비밀1234")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cases := []struct {
+		name  string
+		input string
+		world func() *state.World
+	}{
+		{"registered with hash", "해시영웅", func() *state.World {
+			return newLoginNameTestWorldWithHash(t, "해시영웅", "해시영웅", pwHash)
+		}},
+		{"registered without hash", "무영문", func() *state.World {
+			return newLoginNameTestWorld(t, "무영문", "무영문")
+		}},
+		{"path-unsafe stored name", "../evil", func() *state.World {
+			return newLoginNameTestWorld(t, "../evil", "../evil")
+		}},
+		{"no account", "없는이름", func() *state.World {
+			return newLoginNameTestWorld(t, "irrelevant", "irrelevant")
+		}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			mgr := newServerLoginManager(tc.world())
 			mgr.Start(session.ID("s1"))
-			res, err := mgr.HandleLine(context.Background(), session.ID("s1"), bad)
+			res, err := mgr.HandleLine(context.Background(), session.ID("s1"), tc.input)
 			if err != nil {
-				t.Fatalf("HandleLine(%q) error = %v", bad, err)
+				t.Fatalf("HandleLine(%q) error = %v", tc.input, err)
 			}
-			got := res.Command.Write
-			if strings.Contains(got, "암호를") {
-				t.Fatalf("HandleLine(%q) advanced to password prompt %q; want name rejection", bad, got)
+			if res.Command.Write != loginPasswordPrompt {
+				t.Fatalf("HandleLine(%q) name-step write = %q; want uniform %q",
+					tc.input, res.Command.Write, loginPasswordPrompt)
 			}
-			if !strings.Contains(got, "이름") {
-				t.Fatalf("HandleLine(%q) write = %q; want a name rejection message", bad, got)
+			if res.ActorID != "" {
+				t.Fatalf("HandleLine(%q) ActorID = %q after name step; want unauthenticated", tc.input, res.ActorID)
 			}
 		})
 	}
 }
 
-// TestLoginExistingPlayerHangulNameAdvances confirms a valid Hangul existing
-// player is NOT wrongly rejected by the new check.
-func TestLoginExistingPlayerHangulNameAdvances(t *testing.T) {
-	world := newLoginNameTestWorld(t, model.PlayerID("무영문"), "무영문")
+func TestLoginPathUnsafeStoredNameCanNeverAuthenticate(t *testing.T) {
+	// The path-safety floor survives #15: the name step answers like every
+	// other name, but the account can never authenticate — attempts fail
+	// exactly like wrong passwords and never reach a file operation.
+	world := newLoginNameTestWorld(t, "../evil", "../evil")
+	mgr := newServerLoginManager(world)
+	mgr.Start(session.ID("s1"))
+	res, err := mgr.HandleLine(context.Background(), session.ID("s1"), "../evil")
+	if err != nil {
+		t.Fatalf("HandleLine error = %v", err)
+	}
+	if res.Command.Write != loginPasswordPrompt {
+		t.Fatalf("name-step write = %q; want uniform %q", res.Command.Write, loginPasswordPrompt)
+	}
+	for i := 0; i < 3; i++ {
+		res, err = mgr.HandleLine(context.Background(), session.ID("s1"), "guess")
+		if err != nil {
+			t.Fatalf("password attempt %d error = %v", i+1, err)
+		}
+		if res.ActorID != "" {
+			t.Fatalf("path-unsafe account authenticated on attempt %d", i+1)
+		}
+		if !strings.Contains(res.Command.Write, "암호가 틀립니다") {
+			t.Fatalf("attempt %d write = %q; want wrong-password failure", i+1, res.Command.Write)
+		}
+	}
+	if !res.Command.Close {
+		t.Fatal("want session closed after three failed attempts")
+	}
+}
+
+func TestLoginNoHashAccountFailsLikeWrongPassword(t *testing.T) {
+	// #15: an existing account with no stored password hash can never
+	// authenticate; the password step must behave exactly like a
+	// wrong-password attempt on a healthy account instead of announcing the
+	// missing hash.
+	world := newLoginNameTestWorld(t, "무영문", "무영문")
 	mgr := newServerLoginManager(world)
 	mgr.Start(session.ID("s1"))
 	res, err := mgr.HandleLine(context.Background(), session.ID("s1"), "무영문")
 	if err != nil {
 		t.Fatalf("HandleLine error = %v", err)
 	}
-	// No stored password hash -> "저장된 암호 정보를 찾을 수 없습니다", proving we
-	// passed the name check and reached the password-hash branch.
-	if want := "저장된 암호 정보를 찾을 수 없습니다"; !strings.Contains(res.Command.Write, want) {
-		t.Fatalf("HandleLine(valid) write = %q; want %q", res.Command.Write, want)
+	if res.Command.Write != loginPasswordPrompt {
+		t.Fatalf("name-step write = %q; want uniform %q", res.Command.Write, loginPasswordPrompt)
 	}
-}
-
-// TestLoginExistingPlayerASCIINameAdvances confirms an ASCII path-safe existing
-// name (the test-fixture convention) is NOT rejected: the gate is path-safety,
-// not the Hangul game policy.
-func TestLoginExistingPlayerASCIINameAdvances(t *testing.T) {
-	world := newLoginNameTestWorld(t, model.PlayerID("player:alice"), "player:alice")
-	mgr := newServerLoginManager(world)
-	mgr.Start(session.ID("s1"))
-	res, err := mgr.HandleLine(context.Background(), session.ID("s1"), "player:alice")
+	res, err = mgr.HandleLine(context.Background(), session.ID("s1"), "guess")
 	if err != nil {
 		t.Fatalf("HandleLine error = %v", err)
 	}
-	if strings.Contains(res.Command.Write, "접속할 수 없습니다") {
-		t.Fatalf("ASCII path-safe name wrongly rejected: %q", res.Command.Write)
+	if strings.Contains(res.Command.Write, "저장된 암호 정보") {
+		t.Fatalf("password-step write = %q; must not announce the missing hash", res.Command.Write)
+	}
+	if !strings.Contains(res.Command.Write, "암호가 틀립니다") {
+		t.Fatalf("password-step write = %q; want wrong-password failure", res.Command.Write)
+	}
+	if res.ActorID != "" {
+		t.Fatal("no-hash account authenticated; want failure")
+	}
+}
+
+func TestLoginCreateCandidateProceedsToConfirm(t *testing.T) {
+	// The creation flow still works under #15: a new name passes the name
+	// step and the password gate, then reaches the creation confirmation.
+	world := newLoginNameTestWorld(t, "irrelevant", "irrelevant")
+	mgr := newServerLoginManager(world)
+	mgr.Start(session.ID("s1"))
+	res, err := mgr.HandleLine(context.Background(), session.ID("s1"), "새영웅")
+	if err != nil {
+		t.Fatalf("HandleLine error = %v", err)
+	}
+	if res.Command.Write != loginPasswordPrompt {
+		t.Fatalf("name-step write = %q; want uniform %q", res.Command.Write, loginPasswordPrompt)
+	}
+	res, err = mgr.HandleLine(context.Background(), session.ID("s1"), "임의암호")
+	if err != nil {
+		t.Fatalf("HandleLine error = %v", err)
+	}
+	if want := "새영웅으로 하시겠습니까(예/아니오)? "; !strings.Contains(res.Command.Write, want) {
+		t.Fatalf("gate write = %q; want creation confirm %q", res.Command.Write, want)
+	}
+}
+
+func TestLoginCreateCandidateProbeCap(t *testing.T) {
+	// #15 throttle: cycling names (password gate -> confirm -> "아니오" ->
+	// next name) within one session is capped; the session is dropped after
+	// maxLoginNameProbes candidates.
+	world := newLoginNameTestWorld(t, "irrelevant", "irrelevant")
+	mgr := newServerLoginManager(world)
+	mgr.Start(session.ID("s1"))
+	for i := 0; i < maxLoginNameProbes; i++ {
+		res, err := mgr.HandleLine(context.Background(), session.ID("s1"), "새영웅")
+		if err != nil {
+			t.Fatalf("probe %d name error = %v", i, err)
+		}
+		if res.Command.Write != loginPasswordPrompt {
+			t.Fatalf("probe %d name-step write = %q", i, res.Command.Write)
+		}
+		res, err = mgr.HandleLine(context.Background(), session.ID("s1"), "임의암호")
+		if err != nil {
+			t.Fatalf("probe %d gate error = %v", i, err)
+		}
+		if !strings.Contains(res.Command.Write, "하시겠습니까(예/아니오)? ") {
+			t.Fatalf("probe %d gate write = %q; want creation confirm", i, res.Command.Write)
+		}
+		res, err = mgr.HandleLine(context.Background(), session.ID("s1"), "아니오")
+		if err != nil {
+			t.Fatalf("probe %d decline error = %v", i, err)
+		}
+	}
+	res, err := mgr.HandleLine(context.Background(), session.ID("s1"), "새영웅")
+	if err != nil {
+		t.Fatalf("overflow name error = %v", err)
+	}
+	res, err = mgr.HandleLine(context.Background(), session.ID("s1"), "임의암호")
+	if err != nil {
+		t.Fatalf("overflow gate error = %v", err)
+	}
+	if !res.Command.Close {
+		t.Fatalf("overflow gate write = %q; want the session dropped", res.Command.Write)
 	}
 }

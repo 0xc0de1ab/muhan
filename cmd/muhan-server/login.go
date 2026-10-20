@@ -25,6 +25,27 @@ const defaultListenAddr = ":4000"
 
 const loginNamePrompt = "\n당신의 이름은 무엇입니까? "
 
+// loginPasswordPrompt is the single, uniform response to every name entered
+// at the login name step (#15): whether the account exists, has no stored
+// password hash, or has a path-unsafe stored name, the next step always looks
+// identical, so the name step cannot be used to enumerate accounts.
+const loginPasswordPrompt = "암호를 넣어 주십시요: "
+
+// dummyBcryptHash is a bcrypt hash (default cost) of a random throwaway
+// password, generated once for this purpose. The password step verifies
+// against it whenever there is no real account hash to check — a name with no
+// account, or an account that must never authenticate (no stored hash, or a
+// path-unsafe stored name) — so those attempts cost the same CPU time as a
+// real bcrypt verification. Its verification result is always discarded, so
+// knowing this value grants nothing.
+const dummyBcryptHash = "$2a$10$gD4ZKiqGO.ryH5Vs0Ho7Zu3O3nvWZjP60wPGJI8cD8x14MgxAYoX."
+
+// maxLoginNameProbes caps how many new-name candidates one login session may
+// submit. Each candidate already costs a bcrypt verification; the cap stops a
+// caller from cycling names (password gate -> creation confirm -> "아니오" ->
+// next name) to enumerate accounts within a single connection.
+const maxLoginNameProbes = 10
+
 const loginNewsWaitPrompt = "\n[엔터]를 누르십시요."
 
 const legacyCreateNewFamilyBroadcast = "\n### 새로운 무한 가족입니다. 많이 지켜봐 주세요."
@@ -46,6 +67,22 @@ type serverLoginState struct {
 	sitePassword string
 	remoteHost   string
 	create       serverLoginCreateState
+	// pendingName is the name entered at the name step when no account
+	// matched it (creation candidate). Only meaningful while step is
+	// serverLoginPassword and playerID is empty.
+	pendingName string
+	// loginDenied marks an existing account that must never authenticate:
+	// one with no stored password hash, or one whose stored name is
+	// path-unsafe. The password step verifies against dummyBcryptHash and
+	// forces failure, exactly like a wrong password on a healthy account,
+	// so the account cannot be told apart from one that simply rejected
+	// the entered password. For path-unsafe names this preserves the
+	// path-safety floor: the name can never reach a file operation because
+	// login can never succeed.
+	loginDenied bool
+	// nameProbes counts creation-candidate password-gate submissions in
+	// this session (#15 throttle).
+	nameProbes int
 }
 
 type serverLoginCreateState struct {
@@ -150,6 +187,23 @@ func (m *serverLoginManager) HandleLine(ctx context.Context, id session.ID, line
 
 	switch login.step {
 	case serverLoginPassword:
+		if login.playerID == "" {
+			// Creation candidate (#15): no account exists under the
+			// pending name. Burn a dummy bcrypt verification so this step
+			// costs the same as checking a real account, then branch to
+			// the creation flow — only now, after the password step, may
+			// "new name" become observable.
+			m.mu.Unlock()
+			legacycrypt.VerifyBcrypt(line, dummyBcryptHash)
+
+			m.mu.Lock()
+			login, exists := m.sessions[id]
+			if !exists || login.step != serverLoginPassword {
+				m.mu.Unlock()
+				return game.UnauthenticatedLineResult{}, fmt.Errorf("login session expired during verification")
+			}
+			return m.handleCreateCandidate(id, login)
+		}
 		player, ok := m.world.Player(login.playerID)
 		if !ok {
 			delete(m.sessions, id)
@@ -157,10 +211,22 @@ func (m *serverLoginManager) HandleLine(ctx context.Context, id session.ID, line
 			return loginCommand("플레이어 정보를 다시 찾을 수 없습니다.\n" + loginNamePrompt), nil
 		}
 		storedHash := legacyPasswordHash(m.world, player)
+		verifyHash := storedHash
+		if login.loginDenied {
+			// Timing parity for accounts that must never authenticate
+			// (no stored hash / path-unsafe stored name): verify against
+			// the dummy hash at the same bcrypt cost, then force failure
+			// below so the attempt is indistinguishable from a wrong
+			// password on a healthy account.
+			verifyHash = dummyBcryptHash
+		}
 		m.mu.Unlock()
 
 		// Perform CPU-intensive password verify outside the lock (W-5)
-		verified := legacycrypt.Verify(line, storedHash)
+		verified := legacycrypt.Verify(line, verifyHash)
+		if login.loginDenied {
+			verified = false
+		}
 		var newHash string
 		var rehashed bool
 		if verified && !legacycrypt.IsBcryptHash(storedHash) {
@@ -248,35 +314,59 @@ func (m *serverLoginManager) handleName(id session.ID, login serverLoginState, l
 		return loginCommand("이름은 한 자 이상이어야 합니다.\n" + loginNamePrompt), nil
 	}
 
-	player, ok := m.world.Player(model.PlayerID(name))
-	if !ok {
-		if msg := legacyCreateNameRejection(name); msg != "" {
-			return loginCommand(msg + loginNamePrompt), nil
+	// Anti-enumeration (#15): the name step must not reveal whether an
+	// account exists under the entered name. Every non-empty name advances
+	// to the same password prompt; existence, missing password hashes and
+	// path-unsafe stored names only become distinguishable after the
+	// password step, where attempts are throttled and a dummy bcrypt
+	// verification keeps response timing uniform.
+	gate := serverLoginState{
+		step:        serverLoginPassword,
+		pendingName: name,
+		remoteHost:  login.remoteHost,
+		nameProbes:  login.nameProbes,
+	}
+	if player, ok := m.world.Player(model.PlayerID(name)); ok {
+		gate.playerID = player.ID
+		if loginNameIsPathUnsafe(name) || legacyPasswordHash(m.world, player) == "" {
+			gate.loginDenied = true
 		}
-		login.create = serverLoginCreateState{name: name}
-		login.step = serverLoginCreateConfirm
-		m.sessions[id] = login
-		return loginCommand(fmt.Sprintf("\n%s%s 하시겠습니까(예/아니오)? ", name, krtext.Particle(name, '4'))), nil
 	}
-	// Existing player: reject names that are path-unsafe. A stored name with path
-	// separators or traversal tokens would become a filename component on save and
-	// several legacy paths; refuse login so it can never reach a file operation.
-	// This is the path-safety floor (not the Hangul game policy, which is
-	// creation-only), so legitimate ASCII names like test fixtures still work.
-	if loginNameIsPathUnsafe(name) {
-		return loginCommand("해당 이름으로는 접속할 수 없습니다.\n" + loginNamePrompt), nil
-	}
-	if legacyPasswordHash(m.world, player) == "" {
-		delete(m.sessions, id)
-		return loginCommand("저장된 암호 정보를 찾을 수 없습니다.\n" + loginNamePrompt), nil
-	}
+	m.sessions[id] = gate
+	return loginCommand(loginPasswordPrompt), nil
+}
 
-	m.sessions[id] = serverLoginState{
-		step:       serverLoginPassword,
-		playerID:   player.ID,
-		remoteHost: login.remoteHost,
+// handleCreateCandidate runs after the password gate for a name with no
+// existing account (#15). Only at this point — after a password was entered
+// and a dummy bcrypt verification burned — may the flow reveal that the name
+// is new: invalid names get the creation policy rejection, valid names move
+// to the creation confirmation, exactly like the legacy wizard.
+func (m *serverLoginManager) handleCreateCandidate(id session.ID, login serverLoginState) (game.UnauthenticatedLineResult, error) {
+	defer m.mu.Unlock()
+
+	name := login.pendingName
+	login.pendingName = ""
+	login.nameProbes++
+	if login.nameProbes > maxLoginNameProbes {
+		// Throttle name probing within one session: each probe already cost
+		// a bcrypt verification; beyond this many candidates the session is
+		// dropped instead of letting the caller cycle names
+		// (password gate -> creation confirm -> "아니오" -> next name)
+		// indefinitely.
+		delete(m.sessions, id)
+		return game.UnauthenticatedLineResult{
+			Command: session.Command{Write: "\n접속을 끊습니다.\n\n", Close: true},
+		}, nil
 	}
-	return loginCommand("암호를 넣어 주십시요: "), nil
+	if msg := legacyCreateNameRejection(name); msg != "" {
+		login.step = serverLoginName
+		m.sessions[id] = login
+		return loginCommand(msg + loginNamePrompt), nil
+	}
+	login.create = serverLoginCreateState{name: name}
+	login.step = serverLoginCreateConfirm
+	m.sessions[id] = login
+	return loginCommand(fmt.Sprintf("\n%s%s 하시겠습니까(예/아니오)? ", name, krtext.Particle(name, '4'))), nil
 }
 
 func (m *serverLoginManager) handlePasswordAfterVerify(id session.ID, login serverLoginState, line string, verified bool, rehashed bool, newHash string) (game.UnauthenticatedLineResult, error) {
