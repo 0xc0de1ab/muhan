@@ -55,6 +55,13 @@ type Session struct {
 	closeOnce   sync.Once
 	closedEvent sync.Once
 	closed      atomic.Bool
+
+	// writeMu serializes connection-wide writes. The write deadline is a
+	// property of the connection, not of a single write: without this,
+	// readLoop and writeLoop may race in writeWithDeadline, and one
+	// goroutine's deferred deadline reset can clear a deadline the other
+	// just set, permitting that write to block indefinitely again (#13).
+	writeMu sync.Mutex
 }
 
 func New(id ID, conn net.Conn, events chan<- Event, commands <-chan Command, opts ...Option) (*Session, error) {
@@ -298,7 +305,16 @@ func writeAll(w io.Writer, data []byte) error {
 // writeWithDeadline writes data to the session connection with a bounded
 // write deadline, so a slow reader cannot stall the session writer (and,
 // through the full command channel, the game loop) indefinitely.
+//
+// The whole set-deadline/write/reset sequence runs under writeMu: a write
+// deadline belongs to the connection, not to one write, so concurrent
+// callers (readLoop and writeLoop) must not interleave. Without this, one
+// goroutine's deferred reset can clear a deadline the other just armed,
+// permitting that write to block forever — the exact condition this method
+// exists to prevent.
 func (s *Session) writeWithDeadline(data []byte) error {
+	s.writeMu.Lock()
+	defer s.writeMu.Unlock()
 	if err := s.conn.SetWriteDeadline(time.Now().Add(sessionWriteDeadline)); err != nil {
 		return err
 	}

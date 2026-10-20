@@ -260,7 +260,7 @@ func NewFollowHandler(world GroupWorld, groups *GroupMemory) enginecmd.Handler {
 					continue
 				}
 				if playerRoomID(world, model.PlayerID(activeSession.ActorID)) == actorRoom {
-					if err := send(activeSession.ID, session.Command{Write: roomOut}); err != nil {
+					if err := sendFanout(send, activeSession.ID, session.Command{Write: roomOut}); err != nil {
 						return enginecmd.StatusDefault, err
 					}
 				}
@@ -329,7 +329,7 @@ func NewLoseHandler(world GroupWorld, groups *GroupMemory) enginecmd.Handler {
 				if playerRoomID(world, model.PlayerID(activeSession.ActorID)) != actorRoom {
 					continue
 				}
-				if err := send(activeSession.ID, session.Command{Write: roomOut}); err != nil {
+				if err := sendFanout(send, activeSession.ID, session.Command{Write: roomOut}); err != nil {
 					return enginecmd.StatusDefault, err
 				}
 			}
@@ -416,7 +416,10 @@ func NewGroupTalkHandler(world GroupWorld, groups *GroupMemory) enginecmd.Handle
 				ctx.WriteString(out)
 				return nil
 			}
-			return send(activeSession.ID, session.Command{Write: out})
+			// writeToActor is only used by the group-talk fan-out, so a
+			// slow member drops its copy (#13) instead of failing the
+			// whole group message.
+			return sendFanout(send, activeSession.ID, session.Command{Write: out})
 		}
 
 		out := fmt.Sprintf("%s 그룹원들에게 \"%s\"라고 말합니다.\n", actorSubject(playerDisplayName(world, ctx.ActorID)), message)

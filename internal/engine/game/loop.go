@@ -547,6 +547,13 @@ func isNoopCommand(cmd session.Command) bool {
 	return cmd.Write == "" && cmd.Prompt == "" && !cmd.Close && cmd.SetCallback == nil
 }
 
+// closeCommandSendTimeout bounds how long sendCommand waits for room in a
+// full command channel when delivering a Close command. It is generous
+// compared with a draining queue (a slot frees within one write) yet far
+// below the session's write deadline, so the game loop never wedges behind
+// a single session's teardown.
+const closeCommandSendTimeout = 5 * time.Second
+
 func sendCommand(ctx context.Context, commands chan<- session.Command, cmd session.Command) error {
 	select {
 	case commands <- cmd:
@@ -554,7 +561,27 @@ func sendCommand(ctx context.Context, commands chan<- session.Command, cmd sessi
 	case <-ctx.Done():
 		return ctx.Err()
 	default:
+	}
+	if !cmd.Close {
 		return ErrSessionBackpressure
+	}
+	// A Close command is the session's only teardown signal (quit, account
+	// deletion, login lockout). Dropping it like an ordinary command would
+	// leave the connection registered and able to keep issuing commands:
+	// an actively draining writer may never time out on its own. Wait a
+	// bounded amount for a slot instead — a draining writer frees one
+	// almost immediately. If the wait expires unheard, the session's own
+	// write deadline still tears it down, and the error is surfaced
+	// (matching ErrSessionBackpressure via errors.Is), never silent.
+	timer := time.NewTimer(closeCommandSendTimeout)
+	defer timer.Stop()
+	select {
+	case commands <- cmd:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return fmt.Errorf("%w: close command undelivered", ErrSessionBackpressure)
 	}
 }
 

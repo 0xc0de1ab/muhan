@@ -267,7 +267,7 @@ func broadcastCallWarMessage(ctx *enginecmd.Context, sessions []ActiveSession, s
 			wroteSelf = true
 			continue
 		}
-		if err := send(activeSession.ID, session.Command{Write: message}); err != nil {
+		if err := sendFanout(send, activeSession.ID, session.Command{Write: message}); err != nil {
 			return err
 		}
 	}
