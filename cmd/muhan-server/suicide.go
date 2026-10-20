@@ -119,6 +119,20 @@ func (s serverSuicideSink) removeFamilyMember(playerName string, creature model.
 	return nil
 }
 
+// confinedPlayerPath joins parts under root and returns the path only when
+// it stays inside root. Player display/account names come from (possibly
+// legacy or corrupted) player records, so a name carrying "../" segments
+// must never steer the os.Remove sink at files outside the data root; such
+// targets are refused (and logged) instead of deleted.
+func (s serverSuicideSink) confinedPlayerPath(root string, parts ...string) (string, bool) {
+	rel := filepath.Join(parts...)
+	path, ok := serverSafeRootPath(root, rel)
+	if !ok {
+		s.logfOrDefault("[SUICIDE] WARN refusing to remove path outside root: %q", rel)
+	}
+	return path, ok
+}
+
 func (s serverSuicideSink) removePlayerFiles(playerID model.PlayerID, player model.Player) error {
 	root := strings.TrimSpace(s.root)
 	if root == "" {
@@ -131,10 +145,12 @@ func (s serverSuicideSink) removePlayerFiles(playerID model.PlayerID, player mod
 		}
 	}
 	for _, name := range serverSuicidePlayerNames(playerID, player) {
-		paths = append(paths,
-			filepath.Join(root, "player", krtext.FirstHangulBucket(name), name),
-			filepath.Join(root, "player", "json", name+".json"),
-		)
+		if path, ok := s.confinedPlayerPath(root, "player", krtext.FirstHangulBucket(name), name); ok {
+			paths = append(paths, path)
+		}
+		if path, ok := s.confinedPlayerPath(root, "player", "json", name+".json"); ok {
+			paths = append(paths, path)
+		}
 	}
 	return serverRemoveFiles(paths)
 }
@@ -154,10 +170,12 @@ func (s serverSuicideSink) removeBankFiles(playerID model.PlayerID, player model
 	}
 	paths := make([]string, 0, len(names)*2)
 	for _, name := range serverUniqueStrings(names) {
-		paths = append(paths,
-			filepath.Join(root, "player", "bank", name),
-			filepath.Join(root, "player", "bank", "json", name+".json"),
-		)
+		if path, ok := s.confinedPlayerPath(root, "player", "bank", name); ok {
+			paths = append(paths, path)
+		}
+		if path, ok := s.confinedPlayerPath(root, "player", "bank", "json", name+".json"); ok {
+			paths = append(paths, path)
+		}
 	}
 	return serverRemoveFiles(paths)
 }
