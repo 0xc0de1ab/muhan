@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 	"unicode/utf8"
@@ -166,43 +167,114 @@ func TestSessionRateLimiterThrottles(t *testing.T) {
 	// Use a tight limiter: burst=2, sustain=5, window=1s.
 	rl := newRateLimiter(2, 5, time.Second)
 	client, _, events, commands, done := startTestSessionWithOpts(t, WithRateLimiter(rl))
+	output := drainClientOutput(client)
 
-	// Drain throttle messages from the client side so writes don't block.
-	go func() {
-		buf := make([]byte, 256)
-		for {
-			if _, err := client.Read(buf); err != nil {
-				return
-			}
-		}
-	}()
-
-	// Send 5 commands rapidly. Only 2 should produce events (burst limit).
-	for i := 0; i < 5; i++ {
+	// Send 5 commands rapidly. Exactly burst (2) should produce line events;
+	// the other 3 must be rejected with a throttle notice. Asserting exact
+	// counts matters: the previous "<= burst" form also passed when every
+	// command was dropped (received == 0), which would hide a rate-limiter
+	// regression silently swallowing all player input.
+	const sent = 5
+	for i := 0; i < sent; i++ {
 		if _, err := client.Write([]byte("봐\n")); err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	// We expect at most burst (2) line events. Collect what arrives in a short window.
-	received := 0
-	timeout := time.After(500 * time.Millisecond)
-	for received < 5 {
-		select {
-		case ev := <-events:
-			if ev.Kind == EventLine {
-				received++
-			}
-		case <-timeout:
-			goto check
-		}
+	received, throttled := awaitRateLimitOutcome(events, output, 2, sent-2)
+	if received != 2 {
+		t.Fatalf("received %d line events, want exactly %d (burst)", received, 2)
 	}
-check:
-	if received > 2 {
-		t.Fatalf("received %d line events, expected at most %d (burst)", received, 2)
+	if throttled != sent-2 {
+		t.Fatalf("client received %d throttle messages, want %d", throttled, sent-2)
 	}
 
 	close(commands)
 	waitDone(t, done)
 	_ = client.Close()
+}
+
+func TestSessionDefaultRateLimiterWiring(t *testing.T) {
+	// Production wiring (cmd/muhan-server) constructs sessions with no
+	// rate-limiter option, so New must install the default limiter and the
+	// DefaultBurstRate must actually be enforced end to end. This guards
+	// against the defaults silently becoming no-ops (e.g. limiter left nil
+	// or burst wired to a different constant).
+	client, _, events, commands, done := startTestSession(t)
+	output := drainClientOutput(client)
+
+	const extra = 5
+	sent := DefaultBurstRate + extra
+	for i := 0; i < sent; i++ {
+		if _, err := client.Write([]byte("봐\n")); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	received, throttled := awaitRateLimitOutcome(events, output, DefaultBurstRate, extra)
+	if received != DefaultBurstRate {
+		t.Fatalf("received %d line events, want exactly DefaultBurstRate (%d)", received, DefaultBurstRate)
+	}
+	if throttled != extra {
+		t.Fatalf("client received %d throttle messages, want %d", throttled, extra)
+	}
+
+	close(commands)
+	waitDone(t, done)
+	_ = client.Close()
+}
+
+// drainClientOutput copies everything the session writes to the client
+// connection into a buffer and returns an accessor for its contents. The
+// reader goroutine also keeps session writes (e.g. throttle notices) from
+// blocking on the unbuffered net.Pipe.
+func drainClientOutput(client net.Conn) func() string {
+	var mu sync.Mutex
+	var buf strings.Builder
+	go func() {
+		tmp := make([]byte, 256)
+		for {
+			n, err := client.Read(tmp)
+			if n > 0 {
+				mu.Lock()
+				buf.Write(tmp[:n])
+				mu.Unlock()
+			}
+			if err != nil {
+				return
+			}
+		}
+	}()
+	return func() string {
+		mu.Lock()
+		defer mu.Unlock()
+		return buf.String()
+	}
+}
+
+// awaitRateLimitOutcome polls until the session has emitted wantEvents line
+// events and written wantThrottles throttle notices, or a deadline passes.
+// It returns the observed counts so callers can assert exact values.
+func awaitRateLimitOutcome(events <-chan Event, output func() string, wantEvents, wantThrottles int) (int, int) {
+	received := 0
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		select {
+		case ev := <-events:
+			if ev.Kind == EventLine {
+				received++
+			}
+			continue
+		default:
+		}
+		throttled := strings.Count(output(), ThrottleMessage)
+		if received >= wantEvents && throttled >= wantThrottles {
+			return received, throttled
+		}
+		if received > wantEvents {
+			return received, throttled
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	return received, strings.Count(output(), ThrottleMessage)
 }
