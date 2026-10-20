@@ -264,6 +264,11 @@ func TestServerLoginCreatesNewPlayerLikeLegacyCreatePly(t *testing.T) {
 	login.Start("s-create")
 
 	handleServerTestLine(t, loop, "s-create", "새영웅")
+	assertServerCommandContains(t, commands, session.Command{}, "암호를 넣어 주십시요: ")
+	// #15: the name step no longer reveals that the name is new; the
+	// password gate password is discarded and the wizard asks for the new
+	// password again later.
+	handleServerTestLine(t, loop, "s-create", "임의암호")
 	assertServerCommandContains(t, commands, session.Command{}, "새영웅으로 하시겠습니까(예/아니오)? ")
 	handleServerTestLine(t, loop, "s-create", "예")
 	assertServerCommandContains(t, commands, session.Command{}, "[엔터]를 누르십시요.")
