@@ -81,7 +81,7 @@ services:
     environment:
       POSTGRES_DB: ${MUHAN_POSTGRES_DB:-muhan}
       POSTGRES_USER: ${MUHAN_POSTGRES_USER:-muhan}
-      POSTGRES_PASSWORD: ${MUHAN_POSTGRES_PASSWORD:-muhan_dev_password}
+      POSTGRES_PASSWORD: ${MUHAN_POSTGRES_PASSWORD:?MUHAN_POSTGRES_PASSWORD 환경 변수가 필요합니다}
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "127.0.0.1:${MUHAN_POSTGRES_PORT:-55432}:5432"
