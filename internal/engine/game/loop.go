@@ -23,6 +23,13 @@ var (
 	ErrSessionExists   = errors.New("game: session already registered")
 )
 
+// ErrSessionBackpressure is returned by sendCommand when the session's
+// command channel is full: the session's writer is not draining (slow or
+// stuck reader, see #13). The game loop must never block on a single slow
+// session, so callers drop the command and move on; the session's own
+// write deadline tears it down shortly after.
+var ErrSessionBackpressure = errors.New("game: session command channel full")
+
 type PromptFunc func(session.ID, *enginecmd.Context, enginecmd.Status) string
 
 type ErrorFormatter func(error) string
@@ -546,6 +553,8 @@ func sendCommand(ctx context.Context, commands chan<- session.Command, cmd sessi
 		return nil
 	case <-ctx.Done():
 		return ctx.Err()
+	default:
+		return ErrSessionBackpressure
 	}
 }
 

@@ -8,6 +8,7 @@ import (
 	"net"
 	"sync"
 	"sync/atomic"
+	"time"
 	"unicode/utf8"
 
 	"github.com/0xc0de1ab/muhan/internal/protocol"
@@ -16,6 +17,13 @@ import (
 const (
 	DefaultReadBufferSize = 128
 	MaxInputLineBytes     = 4096
+
+	// sessionWriteDeadline bounds every socket write of a session.
+	// Without it, a client that stops reading (receive window 0) wedges
+	// writeLoop inside writeAll forever; once the 16-deep command channel
+	// fills, the game loop wedges behind it too (#13). A timed-out write
+	// tears the session down through handleIOError instead.
+	sessionWriteDeadline = 15 * time.Second
 )
 
 type Option func(*Session)
@@ -154,7 +162,7 @@ func (s *Session) readLoop(ctx context.Context) error {
 				line = truncateUTF8(line, MaxInputLineBytes)
 				// Per-session rate limiter: reject commands exceeding burst/sustained limits.
 				if s.limiter != nil && !s.limiter.allow(nowFunc()) {
-					_ = writeAll(s.conn, []byte(ThrottleMessage))
+					_ = s.writeWithDeadline([]byte(ThrottleMessage))
 					continue
 				}
 				if !s.emit(ctx, Event{SessionID: s.id, Kind: EventLine, Line: line}) {
@@ -209,7 +217,7 @@ func (s *Session) applyCommand(ctx context.Context, cmd Command) error {
 	s.mu.Unlock()
 
 	if len(out) > 0 {
-		if err := writeAll(s.conn, out); err != nil {
+		if err := s.writeWithDeadline(out); err != nil {
 			return s.handleIOError(ctx, err)
 		}
 	}
@@ -285,6 +293,17 @@ func writeAll(w io.Writer, data []byte) error {
 		data = data[n:]
 	}
 	return nil
+}
+
+// writeWithDeadline writes data to the session connection with a bounded
+// write deadline, so a slow reader cannot stall the session writer (and,
+// through the full command channel, the game loop) indefinitely.
+func (s *Session) writeWithDeadline(data []byte) error {
+	if err := s.conn.SetWriteDeadline(time.Now().Add(sessionWriteDeadline)); err != nil {
+		return err
+	}
+	defer s.conn.SetWriteDeadline(time.Time{})
+	return writeAll(s.conn, data)
 }
 
 func isExpectedClose(err error) bool {

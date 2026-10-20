@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"sort"
 
 	enginecmd "github.com/0xc0de1ab/muhan/internal/engine/command"
@@ -216,6 +217,14 @@ func (l *Loop) broadcastTargets(ctx context.Context, targets []commandTarget, cm
 	}
 	for _, target := range targets {
 		if err := sendCommand(ctx, target.commands, cmd); err != nil {
+			if errors.Is(err, ErrSessionBackpressure) {
+				// Slow/stuck reader (#13): drop this session's copy
+				// rather than stalling the broadcast (and the game
+				// loop) behind it. The session's write deadline will
+				// tear it down shortly.
+				log.Printf("[LOOP] WARN broadcast dropped for slow session %q", target.id)
+				continue
+			}
 			return fmt.Errorf("game: send to session %q: %w", target.id, err)
 		}
 	}
