@@ -637,7 +637,7 @@ func TestUseHandlerUseFromFloorVisibilityUsesPDINVI(t *testing.T) {
 	}
 }
 
-func TestUseHandlerRoutesUseFromFloorWandToFloorObject(t *testing.T) {
+func TestUseHandlerFloorWandZeroMagicPowerBlockedLikeZap(t *testing.T) {
 	loaded := useWorld(t)
 	room := loaded.Rooms["room:plaza"]
 	room.Objects.ObjectIDs = append(room.Objects.ObjectIDs, "object:floor-wand")
@@ -663,16 +663,171 @@ func TestUseHandlerRoutesUseFromFloorWandToFloorObject(t *testing.T) {
 	if err != nil {
 		t.Fatalf("DispatchLine() error = %v", err)
 	}
-	if status != StatusDefault || ctx.OutputString() != "" {
-		t.Fatalf("status/output = %d/%q, want C-style floor wand no-op", status, ctx.OutputString())
+	if status != StatusDefault || ctx.OutputString() != "\n아무런 일도 일어나지 않습니다.\n" {
+		t.Fatalf("status/output = %d/%q, want zap-style power gate message", status, ctx.OutputString())
 	}
 	wand, _ := runtime.Object("object:floor-wand")
-	if got := wand.Properties["shotsCurrent"]; got != "1" {
-		t.Fatalf("floor wand shotsCurrent = %q, want pre-decremented 1", got)
+	if got := wand.Properties["shotsCurrent"]; got != "2" {
+		t.Fatalf("floor wand shotsCurrent = %q, want unchanged 2 (no charge consumed by blocked use)", got)
 	}
 }
 
-func TestUseHandlerFloorWandLightUsesZapObjDoubleChargeLikeC(t *testing.T) {
+func TestUseHandlerFloorWandWithoutChargesBlocked(t *testing.T) {
+	useSpellFailRoll(t, 0)
+	loaded := useWorld(t)
+	room := loaded.Rooms["room:plaza"]
+	room.Objects.ObjectIDs = append(room.Objects.ObjectIDs, "object:floor-wand")
+	loaded.Rooms[room.ID] = room
+	mustAddLookPrototype(t, loaded, model.ObjectPrototype{
+		ID:          "prototype:floor-wand",
+		Kind:        model.ObjectKindWand,
+		DisplayName: "바닥마법봉",
+		Properties:  map[string]string{"type": "8"},
+		Metadata:    model.Metadata{Tags: []string{"useFromFloor"}},
+	})
+	mustAddLookObject(t, loaded, model.ObjectInstance{
+		ID:          "object:floor-wand",
+		PrototypeID: "prototype:floor-wand",
+		Location:    model.ObjectLocation{RoomID: "room:plaza"},
+		Properties:  map[string]string{"shotsCurrent": "0", "magicPower": "3", "useOutput": "바닥번쩍"},
+	})
+	runtime := state.NewWorld(loaded)
+	dispatcher := useDispatcher(t, runtime)
+
+	ctx := &Context{ActorID: "player:alice"}
+	status, err := dispatcher.DispatchLine(ctx, "바닥마법봉 사용")
+	if err != nil {
+		t.Fatalf("DispatchLine() error = %v", err)
+	}
+	if status != StatusDefault || ctx.OutputString() != "\n모두 써버렸습니다.\n" {
+		t.Fatalf("status/output = %d/%q, want exhausted wand blocked", status, ctx.OutputString())
+	}
+	wand, _ := runtime.Object("object:floor-wand")
+	if got := wand.Properties["shotsCurrent"]; got != "0" {
+		t.Fatalf("floor wand shotsCurrent = %q, want unchanged 0 (no free cast)", got)
+	}
+}
+
+func TestUseHandlerFloorWandBlockedInNoMagicRoom(t *testing.T) {
+	useSpellFailRoll(t, 0)
+	loaded := useWorld(t)
+	room := loaded.Rooms["room:plaza"]
+	room.Metadata.Tags = []string{"noMagic"}
+	room.Objects.ObjectIDs = append(room.Objects.ObjectIDs, "object:floor-wand")
+	loaded.Rooms[room.ID] = room
+	mustAddLookPrototype(t, loaded, model.ObjectPrototype{
+		ID:          "prototype:floor-wand",
+		Kind:        model.ObjectKindWand,
+		DisplayName: "바닥마법봉",
+		Properties:  map[string]string{"type": "8"},
+		Metadata:    model.Metadata{Tags: []string{"useFromFloor"}},
+	})
+	mustAddLookObject(t, loaded, model.ObjectInstance{
+		ID:          "object:floor-wand",
+		PrototypeID: "prototype:floor-wand",
+		Location:    model.ObjectLocation{RoomID: "room:plaza"},
+		Properties:  map[string]string{"shotsCurrent": "2", "magicPower": "3", "useOutput": "바닥번쩍"},
+	})
+	runtime := state.NewWorld(loaded)
+	dispatcher := useDispatcher(t, runtime)
+
+	ctx := &Context{ActorID: "player:alice"}
+	status, err := dispatcher.DispatchLine(ctx, "바닥마법봉 사용")
+	if err != nil {
+		t.Fatalf("DispatchLine() error = %v", err)
+	}
+	if status != StatusDefault || ctx.OutputString() != "\n아무런 일도 일어나지 않습니다.\n" {
+		t.Fatalf("status/output = %d/%q, want noMagic room gate", status, ctx.OutputString())
+	}
+	wand, _ := runtime.Object("object:floor-wand")
+	if got := wand.Properties["shotsCurrent"]; got != "2" {
+		t.Fatalf("floor wand shotsCurrent = %q, want unchanged 2 (no charge consumed in no-magic room)", got)
+	}
+}
+
+func TestUseHandlerFloorWandClassRestricted(t *testing.T) {
+	useSpellFailRoll(t, 0)
+	loaded := useWorld(t)
+	creature := loaded.Creatures["creature:alice"]
+	creature.Stats = map[string]int{"class": model.ClassFighter}
+	loaded.Creatures[creature.ID] = creature
+	room := loaded.Rooms["room:plaza"]
+	room.Objects.ObjectIDs = append(room.Objects.ObjectIDs, "object:floor-wand")
+	loaded.Rooms[room.ID] = room
+	mustAddLookPrototype(t, loaded, model.ObjectPrototype{
+		ID:          "prototype:floor-wand",
+		Kind:        model.ObjectKindWand,
+		DisplayName: "바닥마법봉",
+		Properties:  map[string]string{"type": "8", "classSelective": "1", "classMage": "1"},
+		Metadata:    model.Metadata{Tags: []string{"useFromFloor"}},
+	})
+	mustAddLookObject(t, loaded, model.ObjectInstance{
+		ID:          "object:floor-wand",
+		PrototypeID: "prototype:floor-wand",
+		Location:    model.ObjectLocation{RoomID: "room:plaza"},
+		Properties:  map[string]string{"shotsCurrent": "2", "magicPower": "3", "useOutput": "바닥번쩍"},
+	})
+	runtime := state.NewWorld(loaded)
+	dispatcher := useDispatcher(t, runtime)
+
+	ctx := &Context{ActorID: "player:alice"}
+	status, err := dispatcher.DispatchLine(ctx, "바닥마법봉 사용")
+	if err != nil {
+		t.Fatalf("DispatchLine() error = %v", err)
+	}
+	if status != StatusDefault || ctx.OutputString() != "\n당신직업세계에서 금하는 물건이기에 사용할 수 없습니다.\n" {
+		t.Fatalf("status/output = %d/%q, want class restriction message", status, ctx.OutputString())
+	}
+	wand, _ := runtime.Object("object:floor-wand")
+	if got := wand.Properties["shotsCurrent"]; got != "2" {
+		t.Fatalf("floor wand shotsCurrent = %q, want unchanged 2 (no charge consumed by restricted use)", got)
+	}
+}
+
+func TestUseHandlerFloorWandSpellFailConsumesOneCharge(t *testing.T) {
+	useSpellFailRoll(t, 99)
+	loaded := useWorld(t)
+	creature := loaded.Creatures["creature:alice"]
+	creature.Stats = map[string]int{"class": model.ClassCleric}
+	loaded.Creatures[creature.ID] = creature
+	room := loaded.Rooms["room:plaza"]
+	room.Objects.ObjectIDs = append(room.Objects.ObjectIDs, "object:floor-wand")
+	loaded.Rooms[room.ID] = room
+	mustAddLookPrototype(t, loaded, model.ObjectPrototype{
+		ID:          "prototype:floor-wand",
+		Kind:        model.ObjectKindWand,
+		DisplayName: "바닥마법봉",
+		Properties:  map[string]string{"type": "8"},
+		Metadata:    model.Metadata{Tags: []string{"useFromFloor"}},
+	})
+	mustAddLookObject(t, loaded, model.ObjectInstance{
+		ID:          "object:floor-wand",
+		PrototypeID: "prototype:floor-wand",
+		Location:    model.ObjectLocation{RoomID: "room:plaza"},
+		Properties:  map[string]string{"shotsCurrent": "2", "magicPower": "3", "useOutput": "바닥번쩍"},
+	})
+	runtime := state.NewWorld(loaded)
+	dispatcher := useDispatcher(t, runtime)
+
+	ctx := &Context{ActorID: "player:alice"}
+	status, err := dispatcher.DispatchLine(ctx, "바닥마법봉 사용")
+	if err != nil {
+		t.Fatalf("DispatchLine() error = %v", err)
+	}
+	if status != StatusDefault || ctx.OutputString() != "" {
+		t.Fatalf("status/output = %d/%q, want silent spell-fail like zap", status, ctx.OutputString())
+	}
+	wand, _ := runtime.Object("object:floor-wand")
+	if got := wand.Properties["shotsCurrent"]; got != "1" {
+		t.Fatalf("floor wand shotsCurrent = %q, want exactly one charge consumed by spell-fail", got)
+	}
+	updated, _ := runtime.Creature("creature:alice")
+	if hasAnyNormalizedFlag(updated.Metadata.Tags, "PLIGHT", "light") {
+		t.Fatalf("creature tags = %+v, want spell effect skipped", updated.Metadata.Tags)
+	}
+}
+
+func TestUseHandlerFloorWandLightChargesOnce(t *testing.T) {
 	useSpellFailRoll(t, 0)
 	loaded := useWorld(t)
 	room := loaded.Rooms["room:plaza"]
@@ -708,8 +863,8 @@ func TestUseHandlerFloorWandLightUsesZapObjDoubleChargeLikeC(t *testing.T) {
 		t.Fatalf("creature tags = %+v, want PLIGHT", creature.Metadata.Tags)
 	}
 	wand, _ := runtime.Object("object:floor-wand")
-	if got := wand.Properties["shotsCurrent"]; got != "0" {
-		t.Fatalf("floor wand shotsCurrent = %q, want double-decremented 0", got)
+	if got := wand.Properties["shotsCurrent"]; got != "1" {
+		t.Fatalf("floor wand shotsCurrent = %q, want single-decremented 1", got)
 	}
 }
 

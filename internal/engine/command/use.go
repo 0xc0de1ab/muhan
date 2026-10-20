@@ -140,7 +140,7 @@ func NewUseHandlerWithRoot(world UseWorld, root string, drinkEffect DrinkEffectF
 			return NewReadScrollHandler(world, root, nil)(ctx, useTargetResolved(resolved))
 		case legacyObjectWand:
 			if onFloor {
-				return useFloorWand(ctx, world, creature, object, useTargetResolved(resolved))
+				return useFloorWand(ctx, world, creature, object, room, useTargetResolved(resolved))
 			}
 			return NewZapHandler(world, nil)(ctx, resolved)
 		case legacyObjectLightSource:
@@ -178,14 +178,33 @@ func clearUseActorHidden(world UseWorld, player model.Player, creature model.Cre
 	return player, creature, nil
 }
 
-func useFloorWand(ctx *Context, world UseWorld, creature model.Creature, object model.ObjectInstance, resolved ResolvedCommand) (Status, error) {
-	shots := objectIntPropertyOrZero(world, object, "shotsCurrent")
-	updated, err := world.SetObjectProperty(object.ID, "shotsCurrent", strconv.Itoa(shots-1))
-	if err != nil {
-		return StatusDefault, err
+// useFloorWand applies the same use gates as the inventory zap path
+// (NewZapHandler) before casting from a wand lying on the floor: the wand
+// must have charges left, the actor's class must be allowed, the room must
+// not suppress magic, and the cast can still spell-fail. Exactly one charge
+// is consumed per cast attempt that reaches spell resolution (spell-fail
+// included), mirroring zap — the old pre-decrement plus post-success
+// decrement (two charges per cast) is gone. Keep these gates in step with
+// NewZapHandler: the gate predicates are shared helpers so the two paths
+// can only drift in sequencing, not in what they check.
+func useFloorWand(ctx *Context, world UseWorld, creature model.Creature, object model.ObjectInstance, room model.Room, resolved ResolvedCommand) (Status, error) {
+	if objectIntPropertyOrZero(world, object, "shotsCurrent") < 1 {
+		ctx.WriteString("\n모두 써버렸습니다.\n")
+		return StatusDefault, nil
+	}
+	if magicObjectClassRestricted(world, creature, object) {
+		ctx.WriteString("\n당신직업세계에서 금하는 물건이기에 사용할 수 없습니다.\n")
+		return StatusDefault, nil
+	}
+	if roomHasAnyFlag(room, "noMagic", "rnomag") || zapMagicPower(world, object) < 1 {
+		ctx.WriteString("\n아무런 일도 일어나지 않습니다.\n")
+		return StatusDefault, nil
+	}
+	if spellFail(creature) {
+		return consumeFloorWandCharge(world, object)
 	}
 
-	success, err := defaultZapMagicEffect(ctx, world, creature, updated, resolved)
+	success, err := defaultZapMagicEffect(ctx, world, creature, object, resolved)
 	if err != nil {
 		return StatusDefault, err
 	}
@@ -193,12 +212,18 @@ func useFloorWand(ctx *Context, world UseWorld, creature model.Creature, object 
 		return StatusDefault, nil
 	}
 
-	if text := zapObjectUseOutput(world, updated); text != "" {
+	if text := zapObjectUseOutput(world, object); text != "" {
 		ctx.WriteString(ensureTrailingNewline(text))
 	}
-	shots = objectIntPropertyOrZero(world, updated, "shotsCurrent")
-	_, err = world.SetObjectProperty(object.ID, "shotsCurrent", strconv.Itoa(shots-1))
-	return StatusDefault, err
+	return consumeFloorWandCharge(world, object)
+}
+
+func consumeFloorWandCharge(world UseWorld, object model.ObjectInstance) (Status, error) {
+	shots := objectIntPropertyOrZero(world, object, "shotsCurrent")
+	if _, err := world.SetObjectProperty(object.ID, "shotsCurrent", strconv.Itoa(shots-1)); err != nil {
+		return StatusDefault, err
+	}
+	return StatusDefault, nil
 }
 
 func errUseRoomNotFound(roomID model.RoomID) error {
