@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"sort"
 
 	enginecmd "github.com/0xc0de1ab/muhan/internal/engine/command"
@@ -166,6 +167,13 @@ func (l *Loop) RoomBroadcast(ctx context.Context, roomID model.RoomID, excluded 
 		if errors.Is(err, ErrSessionNotFound) {
 			continue
 		}
+		if errors.Is(err, ErrSessionBackpressure) {
+			// Slow/stuck reader (#13): skip this session rather than
+			// aborting the room broadcast before the remaining healthy
+			// sessions, or failing the initiating command.
+			log.Printf("[LOOP] WARN room broadcast dropped for slow session %q", active.ID)
+			continue
+		}
 		if err != nil {
 			return err
 		}
@@ -204,6 +212,22 @@ func (l *Loop) commandTargets(excluded session.ID) []commandTarget {
 	return targets
 }
 
+// sendFanout delivers cmd to one target of a multi-session fan-out. A
+// slow/stuck reader (#13) must not abort delivery to the remaining sessions
+// or fail the initiating command (whose own actions were already applied),
+// so ErrSessionBackpressure drops that session's copy — logged — and
+// reports success. All other errors propagate unchanged.
+func sendFanout(send func(session.ID, session.Command) error, id session.ID, cmd session.Command) error {
+	if err := send(id, cmd); err != nil {
+		if errors.Is(err, ErrSessionBackpressure) {
+			log.Printf("[LOOP] WARN fan-out dropped for slow session %q", id)
+			return nil
+		}
+		return err
+	}
+	return nil
+}
+
 func (l *Loop) broadcastTargets(ctx context.Context, targets []commandTarget, cmd session.Command) error {
 	if ctx == nil {
 		ctx = context.Background()
@@ -216,6 +240,14 @@ func (l *Loop) broadcastTargets(ctx context.Context, targets []commandTarget, cm
 	}
 	for _, target := range targets {
 		if err := sendCommand(ctx, target.commands, cmd); err != nil {
+			if errors.Is(err, ErrSessionBackpressure) {
+				// Slow/stuck reader (#13): drop this session's copy
+				// rather than stalling the broadcast (and the game
+				// loop) behind it. The session's write deadline will
+				// tear it down shortly.
+				log.Printf("[LOOP] WARN broadcast dropped for slow session %q", target.id)
+				continue
+			}
 			return fmt.Errorf("game: send to session %q: %w", target.id, err)
 		}
 	}

@@ -351,7 +351,7 @@ func NewFamilyTalkHandler(world FamilyWorld) enginecmd.Handler {
 				ctx.WriteString(out)
 				continue
 			}
-			if err := send(activeSession.ID, session.Command{Write: out}); err != nil {
+			if err := sendFanout(send, activeSession.ID, session.Command{Write: out}); err != nil {
 				return enginecmd.StatusDefault, err
 			}
 		}
@@ -490,7 +490,7 @@ func NewActionHandler(world ActionWorld) enginecmd.Handler {
 			if target.OK && target.PlayerID == model.PlayerID(activeSession.ActorID) && message.Target != "" {
 				out = message.Target
 			}
-			if err := send(activeSession.ID, session.Command{Write: out}); err != nil {
+			if err := sendFanout(send, activeSession.ID, session.Command{Write: out}); err != nil {
 				return enginecmd.StatusDefault, err
 			}
 		}
@@ -546,7 +546,7 @@ func NewEmoteHandler(world ActionWorld) enginecmd.Handler {
 			if playerRoomID(world, model.PlayerID(activeSession.ActorID)) != actorRoom {
 				continue
 			}
-			if err := send(activeSession.ID, session.Command{Write: out}); err != nil {
+			if err := sendFanout(send, activeSession.ID, session.Command{Write: out}); err != nil {
 				return enginecmd.StatusDefault, err
 			}
 		}
@@ -604,11 +604,11 @@ func NewYellHandler(world ActionWorld) enginecmd.Handler {
 			targetRoom := playerRoomID(world, model.PlayerID(activeSession.ActorID))
 			switch {
 			case targetRoom == actorRoom:
-				if err := send(activeSession.ID, session.Command{Write: sameRoomOut}); err != nil {
+				if err := sendFanout(send, activeSession.ID, session.Command{Write: sameRoomOut}); err != nil {
 					return enginecmd.StatusDefault, err
 				}
 			case roomHasExitTo(room, targetRoom):
-				if err := send(activeSession.ID, session.Command{Write: adjacentOut}); err != nil {
+				if err := sendFanout(send, activeSession.ID, session.Command{Write: adjacentOut}); err != nil {
 					return enginecmd.StatusDefault, err
 				}
 			}
@@ -754,7 +754,7 @@ func broadcastSocialLine(ctx *enginecmd.Context, resolved enginecmd.ResolvedComm
 			ctx.WriteString(out)
 			continue
 		}
-		if err := send(activeSession.ID, session.Command{Write: out}); err != nil {
+		if err := sendFanout(send, activeSession.ID, session.Command{Write: out}); err != nil {
 			return enginecmd.StatusDefault, err
 		}
 	}
