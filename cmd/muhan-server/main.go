@@ -518,7 +518,12 @@ func serve(ctx context.Context, listener net.Listener, inputs runtimeInputs, act
 			return err
 		}
 
-		remoteIP := serverRemoteHost(conn.RemoteAddr())
+		// #14: resolve the effective remote IP. The websocket proxy dials from
+		// loopback and announces the real client IP in its first line; only a
+		// header from a loopback peer is honored (anti-spoofing), everything
+		// else keeps the socket peer IP.
+		peerIP := serverRemoteHost(conn.RemoteAddr())
+		conn, remoteIP := resolveProxiedRemoteIP(conn, peerIP)
 
 		// C3: 전체 동시 접속 수 확인
 		if atomic.LoadInt64(&activeConns) >= maxTotalConns {
@@ -587,7 +592,11 @@ func serve(ctx context.Context, listener net.Listener, inputs runtimeInputs, act
 			return err
 		}
 
-		fmt.Fprintf(stdout, "accepted: %s %s\n", id, conn.RemoteAddr())
+		if remoteIP != peerIP {
+			fmt.Fprintf(stdout, "accepted: %s %s (proxied for %s)\n", id, conn.RemoteAddr(), remoteIP)
+		} else {
+			fmt.Fprintf(stdout, "accepted: %s %s\n", id, conn.RemoteAddr())
+		}
 		if actorID == "" {
 			if lockoutMode == state.LockoutPassword {
 				login.StartWithSitePassword(id, sitePassword, remoteIP)

@@ -19,27 +19,40 @@ func startWebSocketProxy(wsListen string, tcpAddr string, stdout io.Writer) *htt
 	// C4: 허용된 Origin 목록 구성
 	allowedOrigins := wsAllowedOrigins(wsListen)
 
-	wsHandler := websocket.Handler(func(ws *websocket.Conn) {
-		defer ws.Close()
-		tcpConn, err := net.Dial("tcp", tcpAddr)
-		if err != nil {
-			log.Printf("WS Proxy dial error: %v", err)
-			return
-		}
-		defer tcpConn.Close()
+	// #14: announce the real client IP to the game server before proxying any
+	// bytes. The game server honors this header only when the TCP peer is
+	// loopback (the proxy dials 127.0.0.1), so it cannot be used to spoof a
+	// source address from the network.
+	newWSHandler := func(clientIP string) websocket.Handler {
+		return websocket.Handler(func(ws *websocket.Conn) {
+			defer ws.Close()
+			tcpConn, err := net.Dial("tcp", tcpAddr)
+			if err != nil {
+				log.Printf("WS Proxy dial error: %v", err)
+				return
+			}
+			defer tcpConn.Close()
 
-		errCh := make(chan error, 2)
-		go func() {
-			_, err := io.Copy(ws, tcpConn)
-			errCh <- err
-		}()
-		go func() {
-			_, err := io.Copy(tcpConn, ws)
-			errCh <- err
-		}()
+			if clientIP != "" {
+				if _, err := fmt.Fprintf(tcpConn, "%s%s\r\n", proxyIPHeaderPrefix, clientIP); err != nil {
+					log.Printf("WS Proxy header write error: %v", err)
+					return
+				}
+			}
 
-		<-errCh
-	})
+			errCh := make(chan error, 2)
+			go func() {
+				_, err := io.Copy(ws, tcpConn)
+				errCh <- err
+			}()
+			go func() {
+				_, err := io.Copy(tcpConn, ws)
+				errCh <- err
+			}()
+
+			<-errCh
+		})
+	}
 
 	// C4: Origin 검증 래퍼
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +62,11 @@ func startWebSocketProxy(wsListen string, tcpAddr string, stdout io.Writer) *htt
 			http.Error(w, "Forbidden", http.StatusForbidden)
 			return
 		}
-		wsHandler.ServeHTTP(w, r)
+		clientIP, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			clientIP = strings.TrimSpace(r.RemoteAddr)
+		}
+		newWSHandler(clientIP).ServeHTTP(w, r)
 	})
 
 	httpServer := &http.Server{
