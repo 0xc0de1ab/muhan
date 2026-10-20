@@ -159,10 +159,99 @@ func resaveRoomPropertiesHaveAnyFlag(properties map[string]string, names ...stri
 	return false
 }
 
+// loadRoomBundle reads and parses the legacy room file for roomID, along
+// with its saved JSON sidecar when one is readable, without touching world
+// state. Callers run it outside the domain locks so a slow or oversized
+// room file cannot stall the whole world; the returned bundle is installed
+// under the locks afterwards. saved is nil when no valid sidecar exists.
+func loadRoomBundle(dbRoot string, roomID model.RoomID) (roommap.Bundle, *SavedRoomState, error) {
+	path := legacyRoomDataPath(dbRoot, roomID)
+	data, err := roommap.ReadRoomFile(path)
+	if err != nil {
+		return roommap.Bundle{}, nil, fmt.Errorf("read room file %q: %w", path, err)
+	}
+
+	bundle, err := roommap.MapRoomFileBundle(path, data)
+	if err != nil {
+		return roommap.Bundle{}, nil, fmt.Errorf("map room bundle %q: %w", path, err)
+	}
+
+	jsonPath := filepath.Join(dbRoot, "rooms", "json", legacyRoomJSONFileName(roomID))
+	if jsonData, err := os.ReadFile(jsonPath); err == nil {
+		var saved SavedRoomState
+		if err := json.Unmarshal(jsonData, &saved); err == nil {
+			return bundle, &saved, nil
+		}
+	}
+	return bundle, nil, nil
+}
+
+// installRoomBundleLocked merges a parsed room bundle and its saved sidecar
+// state into the world. oldRoom, when non-nil, is the room definition being
+// replaced: its current occupants are carried over to the new definition.
+// The caller must hold all domain write locks.
+func (w *World) installRoomBundleLocked(bundle roommap.Bundle, saved *SavedRoomState, oldRoom *model.Room) {
+	if saved != nil {
+		bundle.Room.Objects.ObjectIDs = saved.FloorObjectIDs
+		if len(saved.Properties) > 0 {
+			if bundle.Room.Properties == nil {
+				bundle.Room.Properties = make(map[string]string, len(saved.Properties))
+			}
+			for key, value := range saved.Properties {
+				bundle.Room.Properties[key] = value
+			}
+		}
+		for _, obj := range saved.Objects {
+			w.objects[obj.ID] = obj
+		}
+	}
+
+	if oldRoom != nil {
+		bundle.Room.PlayerIDs = append([]model.PlayerID(nil), oldRoom.PlayerIDs...)
+		if len(bundle.Room.CreatureIDs) == 0 {
+			bundle.Room.CreatureIDs = append([]model.CreatureID(nil), oldRoom.CreatureIDs...)
+		}
+		if len(bundle.Room.Objects.ObjectIDs) == 0 {
+			bundle.Room.Objects = cloneObjectRefList(oldRoom.Objects)
+		}
+	}
+
+	w.rooms[bundle.Room.ID] = bundle.Room
+	for _, cr := range bundle.Creatures {
+		w.creatures[cr.ID] = cr
+	}
+	for _, obj := range bundle.Objects {
+		if _, ok := w.objects[obj.ID]; !ok {
+			w.objects[obj.ID] = obj
+		}
+	}
+}
+
 func (w *World) ReloadRoom(roomID model.RoomID) error {
 	if w == nil {
 		return fmt.Errorf("reload room: world state is nil")
 	}
+
+	// Cheap pre-check so reloading an unloaded room stays a silent no-op,
+	// matching the previous behavior. The authoritative check runs again
+	// under the write locks, after the lock-free read and parse below.
+	w.rLockDomains(false, true, false, false, false, false, false)
+	_, loaded := w.rooms[roomID]
+	w.rUnlockDomains(false, true, false, false, false, false, false)
+	if !loaded {
+		return nil
+	}
+
+	dbRoot := w.DBRoot()
+	if dbRoot == "" {
+		return fmt.Errorf("reload room %s: dbRoot is not set", roomID)
+	}
+
+	bundle, saved, err := loadRoomBundle(dbRoot, roomID)
+	if err != nil {
+		return err
+	}
+
 	w.lockDomains(true, true, true, true, true, true, true)
 	defer w.unlockDomains(true, true, true, true, true, true, true)
 
@@ -171,59 +260,7 @@ func (w *World) ReloadRoom(roomID model.RoomID) error {
 		return nil
 	}
 
-	if w.dbRoot == "" {
-		return fmt.Errorf("reload room %s: dbRoot is not set", roomID)
-	}
-
-	path := legacyRoomDataPath(w.dbRoot, roomID)
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return fmt.Errorf("read room file %q: %w", path, err)
-	}
-
-	bundle, err := roommap.MapRoomFileBundle(path, data)
-	if err != nil {
-		return fmt.Errorf("map room bundle %q: %w", path, err)
-	}
-
-	jsonDir := filepath.Join(w.dbRoot, "rooms", "json")
-	jsonPath := filepath.Join(jsonDir, legacyRoomJSONFileName(roomID))
-	if jsonData, err := os.ReadFile(jsonPath); err == nil {
-		var saved SavedRoomState
-		if err := json.Unmarshal(jsonData, &saved); err == nil {
-			bundle.Room.Objects.ObjectIDs = saved.FloorObjectIDs
-			if len(saved.Properties) > 0 {
-				if bundle.Room.Properties == nil {
-					bundle.Room.Properties = make(map[string]string, len(saved.Properties))
-				}
-				for key, value := range saved.Properties {
-					bundle.Room.Properties[key] = value
-				}
-			}
-			for _, obj := range saved.Objects {
-				w.objects[obj.ID] = obj
-			}
-		}
-	}
-
-	bundle.Room.PlayerIDs = append([]model.PlayerID(nil), oldRoom.PlayerIDs...)
-	if len(bundle.Room.CreatureIDs) == 0 {
-		bundle.Room.CreatureIDs = append([]model.CreatureID(nil), oldRoom.CreatureIDs...)
-	}
-	if len(bundle.Room.Objects.ObjectIDs) == 0 {
-		bundle.Room.Objects = cloneObjectRefList(oldRoom.Objects)
-	}
-
-	w.rooms[bundle.Room.ID] = bundle.Room
-	for _, cr := range bundle.Creatures {
-		w.creatures[cr.ID] = cr
-	}
-	for _, obj := range bundle.Objects {
-		if _, ok := w.objects[obj.ID]; !ok {
-			w.objects[obj.ID] = obj
-		}
-	}
-
+	w.installRoomBundleLocked(bundle, saved, &oldRoom)
 	return nil
 }
 
@@ -231,58 +268,36 @@ func (w *World) LoadRoom(roomID model.RoomID) error {
 	if w == nil {
 		return fmt.Errorf("load room: world state is nil")
 	}
-	w.lockDomains(true, true, true, true, true, true, true)
-	defer w.unlockDomains(true, true, true, true, true, true, true)
 
-	if _, ok := w.rooms[roomID]; ok {
+	// Fast path: an already-loaded room stays a no-op without touching the
+	// disk. LoadRoom is reached from gameplay paths (traps, potions), so
+	// this also avoids a redundant read and parse per call. The check runs
+	// again under the write locks before installing.
+	w.rLockDomains(false, true, false, false, false, false, false)
+	_, loaded := w.rooms[roomID]
+	w.rUnlockDomains(false, true, false, false, false, false, false)
+	if loaded {
 		return nil
 	}
 
-	if w.dbRoot == "" {
+	dbRoot := w.DBRoot()
+	if dbRoot == "" {
 		return fmt.Errorf("load room %s: dbRoot is not set", roomID)
 	}
 
-	path := legacyRoomDataPath(w.dbRoot, roomID)
-	data, err := os.ReadFile(path)
+	bundle, saved, err := loadRoomBundle(dbRoot, roomID)
 	if err != nil {
-		return fmt.Errorf("read room file %q: %w", path, err)
+		return err
 	}
 
-	bundle, err := roommap.MapRoomFileBundle(path, data)
-	if err != nil {
-		return fmt.Errorf("map room bundle %q: %w", path, err)
+	w.lockDomains(true, true, true, true, true, true, true)
+	defer w.unlockDomains(true, true, true, true, true, true, true)
+
+	if _, loaded := w.rooms[roomID]; loaded {
+		return nil
 	}
 
-	jsonDir := filepath.Join(w.dbRoot, "rooms", "json")
-	jsonPath := filepath.Join(jsonDir, legacyRoomJSONFileName(roomID))
-	if jsonData, err := os.ReadFile(jsonPath); err == nil {
-		var saved SavedRoomState
-		if err := json.Unmarshal(jsonData, &saved); err == nil {
-			bundle.Room.Objects.ObjectIDs = saved.FloorObjectIDs
-			if len(saved.Properties) > 0 {
-				if bundle.Room.Properties == nil {
-					bundle.Room.Properties = make(map[string]string, len(saved.Properties))
-				}
-				for key, value := range saved.Properties {
-					bundle.Room.Properties[key] = value
-				}
-			}
-			for _, obj := range saved.Objects {
-				w.objects[obj.ID] = obj
-			}
-		}
-	}
-
-	w.rooms[bundle.Room.ID] = bundle.Room
-	for _, cr := range bundle.Creatures {
-		w.creatures[cr.ID] = cr
-	}
-	for _, obj := range bundle.Objects {
-		if _, ok := w.objects[obj.ID]; !ok {
-			w.objects[obj.ID] = obj
-		}
-	}
-
+	w.installRoomBundleLocked(bundle, saved, nil)
 	return nil
 }
 
