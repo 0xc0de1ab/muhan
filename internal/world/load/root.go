@@ -162,7 +162,10 @@ func loadRooms(root string, summary *Summary, objectResolver protoresolve.Object
 		}
 
 		summary.Counts.RoomFiles++
-		data, err := os.ReadFile(path)
+		// ReadRoomFile caps the read so a single oversized legacy room
+		// file cannot exhaust memory at boot; oversized files are skipped
+		// with a warning like any other unreadable room file.
+		data, err := roommap.ReadRoomFile(path)
 		if err != nil {
 			summary.Counts.SkippedRooms++
 			summary.addWarning("read_room", relPath, "", "", err.Error())

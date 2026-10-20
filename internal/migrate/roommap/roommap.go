@@ -3,6 +3,8 @@ package roommap
 import (
 	"encoding/binary"
 	"fmt"
+	"io"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -74,6 +76,34 @@ func MapRoomFileBundle(path string, data []byte) (Bundle, error) {
 
 func MapRoomFileBundleWithOptions(path string, data []byte, opts Options) (Bundle, error) {
 	return NewMapper().MapRoomFileBundleWithOptions(path, data, opts)
+}
+
+// MaxRoomFileBytes bounds the size of a legacy room data file that will be
+// read into memory. The cbin parser caps every section of the format (room
+// header 480B, at most 1000 exits, at most 10000 creature/object records,
+// three descriptions of at most 1MiB each), and real legacy room files are
+// KiB-scale, so 16MiB leaves orders of magnitude of headroom while keeping a
+// single crafted file from exhausting memory or stalling the caller with a
+// huge read+parse.
+const MaxRoomFileBytes = 16 << 20
+
+// ReadRoomFile reads a legacy room data file, rejecting files larger than
+// MaxRoomFileBytes instead of loading them fully into memory. The read
+// itself is limited, so an oversized file is never buffered in full.
+func ReadRoomFile(path string) ([]byte, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	data, err := io.ReadAll(io.LimitReader(f, MaxRoomFileBytes+1))
+	if err != nil {
+		return nil, err
+	}
+	if len(data) > MaxRoomFileBytes {
+		return nil, fmt.Errorf("room file %q exceeds size limit of %d bytes", path, MaxRoomFileBytes)
+	}
+	return data, nil
 }
 
 func (m Mapper) MapRoomFile(path string, data []byte) (model.Room, []string, error) {
